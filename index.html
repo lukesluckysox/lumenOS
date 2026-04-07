@@ -1139,11 +1139,11 @@
   </div>
 </div>
 <script>
-/* ── Auth gate: immediate sessionStorage check (runs before paint) ── */
+/* ── Auth gate: immediate auth check (runs before paint) ── */
 (function () {
   var gate = document.getElementById('lumen-gate');
   if (!gate) return;
-  if (sessionStorage.getItem('lumen-auth') === 'granted') {
+  if (window.name === 'lumen:auth:granted') {
     gate.remove();
   } else {
     document.body.style.overflow = 'hidden';
@@ -1590,7 +1590,7 @@
     var hash = await sha256(val);
 
     if (hash === PASSPHRASE_HASH) {
-      sessionStorage.setItem('lumen-auth', 'granted');
+      window.name = 'lumen:auth:granted';
       document.body.style.overflow = '';
       gate.classList.add('gate--exit');
       gate.addEventListener('animationend', function () { gate.remove(); }, { once: true });
