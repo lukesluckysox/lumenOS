@@ -1527,11 +1527,9 @@
       const toggle = document.querySelector('[data-theme-toggle]');
       const root   = document.documentElement;
 
-      // Default: dark; respect system preference only if light
+      // Axiom OS defaults to dark — this is a dark-first philosophical interface.
+      // The toggle lets users switch to light if preferred.
       let theme = 'dark';
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-        theme = 'light';
-      }
       root.setAttribute('data-theme', theme);
 
       function syncIcon () {
