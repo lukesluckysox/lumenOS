@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Axiom OS — An Operating System for the Examined Life</title>
-  <meta name="description" content="Axiom OS is a four-part system for questioning belief, revealing pattern, testing hypothesis, and distilling truth. A constitutional framework for the self." />
-  <meta property="og:title" content="Axiom OS" />
+  <title>Lumen — An Operating System for the Examined Life</title>
+  <meta name="description" content="Lumen is a four-part philosophical operating system for questioning belief, revealing pattern, testing hypothesis, and distilling truth." />
+  <meta property="og:title" content="Lumen" />
   <meta property="og:description" content="An operating system for the examined life." />
   <meta property="og:type" content="website" />
 
-  <!-- Fonts: Cormorant (philosophical serif) + Satoshi (clean body) via Fontshare -->
+  <!-- Cormorant (display) + Satoshi (body) — Fontshare -->
   <link href="https://api.fontshare.com/v2/css?f[]=cormorant@300,400,500,600&f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet" />
 
   <style>
-    /* =============================================
-       DESIGN TOKENS
-    ============================================= */
+    /* ─────────────────────────────────────────────
+       TOKENS
+    ───────────────────────────────────────────── */
     :root {
       --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
       --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
@@ -25,104 +25,89 @@
       --text-2xl:  clamp(2rem,     1.2rem  + 2.5vw,  3.5rem);
       --text-3xl:  clamp(2.5rem,   1rem    + 4vw,    5rem);
 
-      --space-1:  0.25rem;
-      --space-2:  0.5rem;
-      --space-3:  0.75rem;
-      --space-4:  1rem;
-      --space-5:  1.25rem;
-      --space-6:  1.5rem;
-      --space-8:  2rem;
-      --space-10: 2.5rem;
-      --space-12: 3rem;
-      --space-16: 4rem;
-      --space-20: 5rem;
-      --space-24: 6rem;
-      --space-32: 8rem;
+      --sp-1: .25rem;  --sp-2: .5rem;   --sp-3: .75rem;
+      --sp-4: 1rem;    --sp-5: 1.25rem; --sp-6: 1.5rem;
+      --sp-8: 2rem;    --sp-10: 2.5rem; --sp-12: 3rem;
+      --sp-16: 4rem;   --sp-20: 5rem;   --sp-24: 6rem;
+      --sp-32: 8rem;
 
-      --radius-sm: 0.25rem;
-      --radius-md: 0.375rem;
-      --radius-lg: 0.625rem;
-
-      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-      --transition: 220ms var(--ease-out);
+      --r-sm: .25rem; --r-md: .375rem; --r-lg: .625rem;
+      --ease: cubic-bezier(.16,1,.3,1);
+      --t: 220ms var(--ease);
 
       --font-display: 'Cormorant', 'Georgia', serif;
       --font-body:    'Satoshi', 'Inter', system-ui, sans-serif;
 
-      --content-narrow:  640px;
-      --content-default: 960px;
-      --content-wide:    1240px;
+      --w-narrow:  640px;
+      --w-default: 960px;
+      --w-wide:   1240px;
     }
 
-    /* =============================================
-       COLOR SYSTEM — DARK (PRIMARY)
-    ============================================= */
-    :root,
-    [data-theme="dark"] {
-      --color-bg:             #1b1d2e;
-      --color-surface:        #21243a;
-      --color-surface-2:      #262944;
-      --color-surface-offset: #2B2D42;
+    /* ─────────────────────────────────────────────
+       DARK (primary)
+    ───────────────────────────────────────────── */
+    :root, [data-theme="dark"] {
+      --bg:        #191b2a;
+      --surface:   #1f2237;
+      --surface-2: #252944;
+      --surface-3: #2B2D42;
 
-      --color-border:         rgba(141, 153, 174, 0.10);
-      --color-border-mid:     rgba(141, 153, 174, 0.18);
-      --color-border-strong:  rgba(141, 153, 174, 0.28);
-      --color-divider:        rgba(141, 153, 174, 0.06);
+      --border:    rgba(141,153,174,.09);
+      --border-md: rgba(141,153,174,.17);
+      --border-lg: rgba(141,153,174,.27);
+      --divider:   rgba(141,153,174,.055);
 
-      --color-text:           #F4F5F8;
-      --color-text-muted:     #8D99AE;
-      --color-text-faint:     rgba(141, 153, 174, 0.42);
+      --text:      #F4F5F8;
+      --muted:     #8D99AE;
+      --faint:     rgba(141,153,174,.4);
 
-      --color-accent:         #FFD166;
-      --color-accent-dim:     rgba(255, 209, 102, 0.09);
-      --color-accent-glow:    rgba(255, 209, 102, 0.04);
+      --gold:      #FFD166;
+      --gold-dim:  rgba(255,209,102,.08);
+      --gold-glow: rgba(255,209,102,.035);
 
-      --shadow-sm:  0 1px 3px  rgba(0,0,0,0.35);
-      --shadow-md:  0 4px 20px rgba(0,0,0,0.45);
-      --shadow-lg:  0 16px 56px rgba(0,0,0,0.55);
+      --sh-sm:  0 1px 4px  rgba(0,0,0,.35);
+      --sh-md:  0 4px 20px rgba(0,0,0,.45);
+      --sh-lg:  0 20px 60px rgba(0,0,0,.55);
     }
 
-    /* =============================================
-       COLOR SYSTEM — LIGHT
-    ============================================= */
+    /* ─────────────────────────────────────────────
+       LIGHT
+    ───────────────────────────────────────────── */
     [data-theme="light"] {
-      --color-bg:             #F2F3F7;
-      --color-surface:        #FFFFFF;
-      --color-surface-2:      #F8F8FB;
-      --color-surface-offset: #EBEBF3;
+      --bg:        #F1F2F6;
+      --surface:   #FFFFFF;
+      --surface-2: #F7F8FB;
+      --surface-3: #EBEBF3;
 
-      --color-border:         rgba(43, 45, 66, 0.08);
-      --color-border-mid:     rgba(43, 45, 66, 0.14);
-      --color-border-strong:  rgba(43, 45, 66, 0.22);
-      --color-divider:        rgba(43, 45, 66, 0.05);
+      --border:    rgba(43,45,66,.07);
+      --border-md: rgba(43,45,66,.13);
+      --border-lg: rgba(43,45,66,.21);
+      --divider:   rgba(43,45,66,.045);
 
-      --color-text:           #1a1c2e;
-      --color-text-muted:     #5c657a;
-      --color-text-faint:     rgba(92, 101, 122, 0.48);
+      --text:      #18192b;
+      --muted:     #5c657a;
+      --faint:     rgba(92,101,122,.45);
 
-      --color-accent:         #b8870a;
-      --color-accent-dim:     rgba(184, 135, 10, 0.07);
-      --color-accent-glow:    rgba(184, 135, 10, 0.03);
+      --gold:      #a87200;
+      --gold-dim:  rgba(168,114,0,.07);
+      --gold-glow: rgba(168,114,0,.03);
 
-      --shadow-sm:  0 1px 3px  rgba(43,45,66,0.07);
-      --shadow-md:  0 4px 20px rgba(43,45,66,0.10);
-      --shadow-lg:  0 16px 56px rgba(43,45,66,0.14);
+      --sh-sm:  0 1px 4px  rgba(43,45,66,.07);
+      --sh-md:  0 4px 20px rgba(43,45,66,.10);
+      --sh-lg:  0 20px 60px rgba(43,45,66,.14);
     }
 
-    /* =============================================
-       BASE RESET
-    ============================================= */
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0; padding: 0;
-    }
+    /* ─────────────────────────────────────────────
+       RESET
+    ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html {
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
       scroll-behavior: smooth;
-      scroll-padding-top: var(--space-16);
+      scroll-padding-top: var(--sp-16);
       hanging-punctuation: first last;
     }
 
@@ -130,250 +115,207 @@
       min-height: 100dvh;
       font-family: var(--font-body);
       font-size: var(--text-base);
-      color: var(--color-text);
-      background-color: var(--color-bg);
+      color: var(--text);
+      background: var(--bg);
       line-height: 1.65;
-      transition: background-color 0.35s var(--ease-out), color 0.35s var(--ease-out);
+      transition: background .35s var(--ease), color .35s var(--ease);
     }
 
-    img, svg     { display: block; max-width: 100%; height: auto; }
-    ul, ol       { list-style: none; }
-    button       { cursor: pointer; background: none; border: none; font: inherit; color: inherit; }
-    a            { color: inherit; text-decoration: none; }
+    img, svg   { display: block; max-width: 100%; height: auto; }
+    ul, ol     { list-style: none; }
+    button     { cursor: pointer; background: none; border: none; font: inherit; color: inherit; }
+    a          { color: inherit; text-decoration: none; }
 
-    h1, h2, h3, h4, h5, h6 {
+    h1,h2,h3,h4,h5,h6 {
       font-family: var(--font-display);
       text-wrap: balance;
       line-height: 1.1;
     }
     p { text-wrap: pretty; }
 
-    ::selection {
-      background: rgba(255, 209, 102, 0.18);
-      color: var(--color-text);
-    }
-
-    :focus-visible {
-      outline: 1.5px solid var(--color-accent);
-      outline-offset: 3px;
-      border-radius: var(--radius-sm);
-    }
+    ::selection { background: rgba(255,209,102,.16); color: var(--text); }
+    :focus-visible { outline: 1.5px solid var(--gold); outline-offset: 3px; border-radius: var(--r-sm); }
 
     a, button, [role="button"] {
-      transition:
-        color var(--transition),
-        background var(--transition),
-        border-color var(--transition),
-        opacity var(--transition);
+      transition: color var(--t), background var(--t), border-color var(--t), opacity var(--t);
     }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
         scroll-behavior: auto !important;
       }
     }
 
-    /* =============================================
+    /* ─────────────────────────────────────────────
        LAYOUT
-    ============================================= */
-    .container {
-      width: 100%;
-      max-width: var(--content-wide);
-      margin-inline: auto;
-      padding-inline: clamp(var(--space-5), 5vw, var(--space-16));
-    }
-    .container--narrow  { max-width: var(--content-narrow); }
-    .container--default { max-width: var(--content-default); }
+    ───────────────────────────────────────────── */
+    .wrap        { width: 100%; max-width: var(--w-wide);    margin-inline: auto; padding-inline: clamp(var(--sp-5), 5vw, var(--sp-16)); }
+    .wrap--tight { max-width: var(--w-narrow); }
+    .wrap--mid   { max-width: var(--w-default); }
 
-    /* =============================================
-       NAVIGATION
-    ============================================= */
+    /* ─────────────────────────────────────────────
+       NAV
+    ───────────────────────────────────────────── */
     .nav {
       position: fixed;
-      inset-block-start: 0;
-      inset-inline: 0;
+      inset-block-start: 0; inset-inline: 0;
       z-index: 100;
-      padding-block: var(--space-4);
+      padding-block: var(--sp-4);
       border-bottom: 1px solid transparent;
-      transition:
-        background 0.4s var(--ease-out),
-        border-color 0.4s var(--ease-out),
-        backdrop-filter 0.4s var(--ease-out);
+      transition: background .4s var(--ease), border-color .4s var(--ease);
     }
-
-    .nav.is-scrolled {
-      background: color-mix(in oklch, var(--color-bg) 88%, transparent);
+    .nav.scrolled {
+      background: color-mix(in oklch, var(--bg) 88%, transparent);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-color: var(--color-border);
+      border-color: var(--border);
     }
 
-    .nav__inner {
+    .nav__row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: var(--space-8);
+      gap: var(--sp-8);
     }
 
     .nav__brand {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: var(--sp-3);
       flex-shrink: 0;
     }
 
-    .nav__wordmark {
+    .nav__name {
       font-family: var(--font-display);
-      font-size: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+      font-size: clamp(1rem,.9rem + .5vw,1.3rem);
       font-weight: 400;
-      letter-spacing: 0.14em;
+      letter-spacing: .18em;
       text-transform: uppercase;
-      color: var(--color-text);
+      color: var(--text);
     }
 
     .nav__links {
       display: flex;
       align-items: center;
-      gap: var(--space-8);
+      gap: var(--sp-8);
     }
-
     .nav__link {
       font-size: var(--text-xs);
       font-weight: 500;
-      letter-spacing: 0.14em;
+      letter-spacing: .14em;
       text-transform: uppercase;
-      color: var(--color-text-muted);
+      color: var(--muted);
     }
+    .nav__link:hover { color: var(--text); }
 
-    .nav__link:hover { color: var(--color-text); }
-
-    .nav__actions {
+    .nav__right {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: var(--sp-3);
     }
 
-    .theme-toggle {
-      width: 34px;
-      height: 34px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-md);
-      color: var(--color-text-muted);
-    }
-
-    .theme-toggle:hover {
-      color: var(--color-text);
-      background: var(--color-border);
-    }
-
-    .nav__enter-btn {
+    .btn-ghost {
       display: inline-flex;
       align-items: center;
-      gap: var(--space-2);
+      gap: var(--sp-2);
       font-size: var(--text-xs);
       font-weight: 500;
-      letter-spacing: 0.14em;
+      letter-spacing: .15em;
       text-transform: uppercase;
-      color: var(--color-accent);
-      padding: var(--space-2) var(--space-4);
-      border: 1px solid rgba(255, 209, 102, 0.28);
-      border-radius: var(--radius-sm);
+      color: var(--gold);
+      padding: var(--sp-2) var(--sp-4);
+      border: 1px solid rgba(255,209,102,.26);
+      border-radius: var(--r-sm);
+    }
+    .btn-ghost:hover {
+      background: var(--gold-dim);
+      border-color: rgba(255,209,102,.44);
     }
 
-    .nav__enter-btn:hover {
-      background: var(--color-accent-dim);
-      border-color: rgba(255, 209, 102, 0.45);
+    .icon-btn {
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--r-md);
+      color: var(--muted);
     }
+    .icon-btn:hover { color: var(--text); background: var(--border); }
 
     @media (max-width: 640px) {
-      .nav__links, .nav__enter-btn { display: none; }
+      .nav__links, .btn-ghost { display: none; }
     }
 
-    /* =============================================
+    /* ─────────────────────────────────────────────
        HERO
-    ============================================= */
+    ───────────────────────────────────────────── */
     .hero {
       min-height: 100dvh;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding-block: clamp(var(--space-20), 14vw, var(--space-32));
-      padding-top: calc(clamp(var(--space-20), 14vw, var(--space-32)) + 72px);
+      padding-block: clamp(var(--sp-20), 14vw, var(--sp-32));
+      padding-top: calc(clamp(var(--sp-20), 14vw, var(--sp-32)) + 72px);
       position: relative;
       overflow: hidden;
     }
 
-    /* Atmospheric background */
-    .hero__atmosphere {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      overflow: hidden;
-      z-index: 0;
+    /* Atmosphere */
+    .hero__atmo {
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 0; overflow: hidden;
     }
-
     .hero__glow {
       position: absolute;
       border-radius: 50%;
-      filter: blur(140px);
+      filter: blur(150px);
     }
-
-    .hero__glow--gold {
-      width: 700px; height: 700px;
-      top: -200px; left: -100px;
-      background: radial-gradient(circle, rgba(255,209,102,0.07) 0%, transparent 70%);
+    .hero__glow--a {
+      width: 800px; height: 800px;
+      top: -250px; left: 50%; transform: translateX(-50%);
+      background: radial-gradient(circle, rgba(255,209,102,.06) 0%, transparent 65%);
     }
-
-    .hero__glow--slate {
-      width: 600px; height: 600px;
-      bottom: -150px; right: -80px;
-      background: radial-gradient(circle, rgba(141,153,174,0.06) 0%, transparent 70%);
+    .hero__glow--b {
+      width: 500px; height: 500px;
+      bottom: -100px; right: -60px;
+      background: radial-gradient(circle, rgba(141,153,174,.05) 0%, transparent 70%);
     }
-
-    /* Subtle grid overlay */
+    /* Dot grid */
     .hero__grid {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background-image:
-        linear-gradient(rgba(141,153,174,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(141,153,174,0.04) 1px, transparent 1px);
-      background-size: 64px 64px;
-      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 75%);
+        radial-gradient(circle, rgba(141,153,174,.12) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse 75% 75% at 50% 40%, black 0%, transparent 80%);
     }
 
-    .hero__content {
-      position: relative;
-      z-index: 1;
+    .hero__body {
+      position: relative; z-index: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: var(--space-8);
+      gap: var(--sp-8);
     }
 
-    /* Axiom mark */
-    .hero__mark {
-      margin-bottom: var(--space-2);
-      animation: mark-breathe 6s ease-in-out infinite;
+    /* Mark */
+    .hero__mark { margin-bottom: var(--sp-2); }
+
+    .lumen-mark {
+      animation: lumen-pulse 5s ease-in-out infinite;
+    }
+    @keyframes lumen-pulse {
+      0%,100% { opacity: .8;  filter: drop-shadow(0 0 8px rgba(255,209,102,0)); }
+      50%      { opacity: 1;  filter: drop-shadow(0 0 14px rgba(255,209,102,.25)); }
     }
 
-    @keyframes mark-breathe {
-      0%, 100% { opacity: 0.85; transform: scale(1); }
-      50%       { opacity: 1;    transform: scale(1.02); }
-    }
-
-    .hero__eyebrow {
-      display: block;
+    .hero__kicker {
       font-size: var(--text-xs);
       font-weight: 500;
-      letter-spacing: 0.24em;
+      letter-spacing: .26em;
       text-transform: uppercase;
-      color: var(--color-accent);
-      opacity: 0.85;
+      color: var(--gold);
+      opacity: .82;
     }
 
     .hero__headline {
@@ -381,467 +323,402 @@
       font-size: var(--text-3xl);
       font-weight: 300;
       font-style: italic;
-      color: var(--color-text);
-      max-width: 820px;
-      line-height: 1.15;
-      letter-spacing: -0.01em;
+      color: var(--text);
+      max-width: 800px;
+      line-height: 1.12;
+      letter-spacing: -.01em;
     }
 
-    .hero__subhead {
+    .hero__sub {
       font-size: var(--text-base);
-      color: var(--color-text-muted);
+      color: var(--muted);
       max-width: 52ch;
       line-height: 1.75;
-      font-weight: 400;
     }
 
-    /* Four-tool progression */
-    .hero__progression {
+    /* Progression chain */
+    .chain {
       display: flex;
       align-items: center;
       justify-content: center;
       flex-wrap: wrap;
       gap: 0;
-      margin-top: var(--space-4);
+      margin-top: var(--sp-4);
     }
 
-    .prog__item {
-      display: flex;
-      align-items: center;
-    }
-
-    .prog__name {
+    .chain__pill {
       font-family: var(--font-body);
       font-size: var(--text-xs);
       font-weight: 500;
-      letter-spacing: 0.18em;
+      letter-spacing: .18em;
       text-transform: uppercase;
-      color: var(--color-text-muted);
-      padding: var(--space-2) var(--space-5);
-      border: 1px solid var(--color-border-mid);
-      position: relative;
-      transition: all var(--transition);
+      color: var(--muted);
+      padding: var(--sp-2) var(--sp-5);
+      border: 1px solid var(--border-md);
+      transition: all var(--t);
       white-space: nowrap;
     }
-
-    .prog__name:hover {
-      color: var(--color-text);
-      border-color: var(--color-border-strong);
-      background: var(--color-surface);
+    .chain__pill:hover {
+      color: var(--text);
+      border-color: var(--border-lg);
+      background: var(--surface);
+    }
+    .chain__pill--apex {
+      color: var(--gold);
+      border-color: rgba(255,209,102,.32);
+    }
+    .chain__pill--apex:hover {
+      background: var(--gold-dim);
+      border-color: rgba(255,209,102,.5);
     }
 
-    .prog__name--axiom {
-      color: var(--color-accent);
-      border-color: rgba(255, 209, 102, 0.35);
+    .chain__sep {
+      padding: 0 var(--sp-1);
+      color: var(--border-lg);
+      flex-shrink: 0;
     }
 
-    .prog__name--axiom:hover {
-      background: var(--color-accent-dim);
-      border-color: rgba(255, 209, 102, 0.55);
-    }
-
-    .prog__arrow {
-      display: flex;
-      align-items: center;
-      padding: 0 var(--space-1);
-      color: var(--color-border-strong);
-    }
-
-    /* Scroll indicator */
-    .hero__scroll {
+    /* Scroll cue */
+    .hero__cue {
       position: absolute;
-      bottom: var(--space-8);
-      left: 50%;
+      bottom: var(--sp-8); left: 50%;
       transform: translateX(-50%);
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: var(--space-2);
-      color: var(--color-text-faint);
+      gap: var(--sp-2);
+      color: var(--faint);
       font-size: var(--text-xs);
-      letter-spacing: 0.12em;
+      letter-spacing: .12em;
       text-transform: uppercase;
-      animation: scroll-float 2.5s ease-in-out infinite;
+      animation: float-cue 2.5s ease-in-out infinite;
+    }
+    @keyframes float-cue {
+      0%,100% { opacity:.38; transform: translateX(-50%) translateY(0); }
+      50%      { opacity:.65; transform: translateX(-50%) translateY(5px); }
     }
 
-    @keyframes scroll-float {
-      0%, 100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
-      50%       { opacity: 0.7; transform: translateX(-50%) translateY(5px); }
-    }
-
-    /* =============================================
+    /* ─────────────────────────────────────────────
        SECTION SCAFFOLD
-    ============================================= */
+    ───────────────────────────────────────────── */
     .section {
-      padding-block: clamp(var(--space-16), 10vw, var(--space-32));
+      padding-block: clamp(var(--sp-16), 10vw, var(--sp-32));
     }
 
-    .section__header {
-      margin-bottom: clamp(var(--space-12), 6vw, var(--space-20));
+    .section__head {
+      margin-bottom: clamp(var(--sp-12), 6vw, var(--sp-20));
     }
-
-    .section__eyebrow {
+    .section__eye {
       display: block;
       font-size: var(--text-xs);
       font-weight: 500;
-      letter-spacing: 0.22em;
+      letter-spacing: .24em;
       text-transform: uppercase;
-      color: var(--color-accent);
-      opacity: 0.85;
-      margin-bottom: var(--space-4);
+      color: var(--gold);
+      opacity: .82;
+      margin-bottom: var(--sp-4);
     }
-
     .section__title {
       font-family: var(--font-display);
       font-size: var(--text-xl);
       font-weight: 400;
-      color: var(--color-text);
+      color: var(--text);
       line-height: 1.15;
     }
-
     .section__desc {
-      margin-top: var(--space-5);
+      margin-top: var(--sp-5);
       font-size: var(--text-base);
-      color: var(--color-text-muted);
+      color: var(--muted);
       max-width: 58ch;
       line-height: 1.75;
     }
 
-    /* =============================================
-       TOOLS SECTION
-    ============================================= */
-    .tools-section {
-      background: var(--color-surface);
-      border-top: 1px solid var(--color-border);
-      border-bottom: 1px solid var(--color-border);
+    /* ─────────────────────────────────────────────
+       TOOLS
+    ───────────────────────────────────────────── */
+    .tools-band {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
 
     .tools-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1px;
-      background: var(--color-border-mid);
-      border: 1px solid var(--color-border-mid);
+      background: var(--border-md);
+      border: 1px solid var(--border-md);
     }
+    @media (max-width: 600px) { .tools-grid { grid-template-columns: 1fr; } }
 
-    @media (max-width: 620px) {
-      .tools-grid { grid-template-columns: 1fr; }
-    }
-
-    .tool-card {
-      background: var(--color-surface);
-      padding: clamp(var(--space-8), 4vw, var(--space-12));
+    .card {
+      background: var(--surface);
+      padding: clamp(var(--sp-8), 4vw, var(--sp-12));
       display: flex;
       flex-direction: column;
-      gap: var(--space-5);
+      gap: var(--sp-5);
       position: relative;
       overflow: hidden;
-      transition: background var(--transition);
+      transition: background var(--t);
     }
 
-    .tool-card::after {
+    /* Reveal bar on hover */
+    .card::after {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 1px;
-      background: var(--tc-accent, rgba(141,153,174,0.4));
+      background: var(--c-accent, rgba(141,153,174,.5));
       transform: scaleX(0);
       transform-origin: left;
-      transition: transform 0.45s var(--ease-out);
+      transition: transform .48s var(--ease);
     }
+    .card:hover { background: var(--surface-2); }
+    .card:hover::after { transform: scaleX(1); }
 
-    .tool-card:hover { background: var(--color-surface-2); }
-    .tool-card:hover::after { transform: scaleX(1); }
+    .card--liminal  { --c-accent: rgba(141,153,174,.7); }
+    .card--parallax { --c-accent: rgba(100,170,185,.7); }
+    .card--praxis   { --c-accent: rgba(210,160,85,.7);  }
+    .card--axiom    { --c-accent: rgba(255,209,102,.9); }
 
-    .tool-card--liminal  { --tc-accent: rgba(141, 153, 174, 0.65); }
-    .tool-card--parallax { --tc-accent: rgba(100, 165, 185, 0.65); }
-    .tool-card--praxis   { --tc-accent: rgba(205, 160, 90,  0.65); }
-    .tool-card--axiom    { --tc-accent: rgba(255, 209, 102, 0.85); }
-
-    .tool-card__index {
+    .card__idx {
       font-size: var(--text-xs);
-      letter-spacing: 0.16em;
-      color: var(--color-text-faint);
-      font-weight: 400;
+      letter-spacing: .16em;
+      color: var(--faint);
     }
+    .card__hd { display: flex; flex-direction: column; gap: var(--sp-1); }
 
-    .tool-card__header { display: flex; flex-direction: column; gap: var(--space-1); }
-
-    .tool-card__name {
+    .card__name {
       font-family: var(--font-display);
       font-size: var(--text-xl);
       font-weight: 400;
-      color: var(--color-text);
+      color: var(--text);
       line-height: 1;
     }
-
-    .tool-card__function {
+    .card__fn {
       font-size: var(--text-xs);
-      letter-spacing: 0.20em;
+      letter-spacing: .2em;
       text-transform: uppercase;
-      color: var(--color-accent);
+      color: var(--gold);
       font-weight: 500;
-      opacity: 0.85;
+      opacity: .82;
     }
-
-    .tool-card__desc {
+    .card__desc {
       font-size: var(--text-sm);
-      color: var(--color-text-muted);
+      color: var(--muted);
       line-height: 1.7;
       flex: 1;
       max-width: 46ch;
     }
-
-    .tool-card__footer {
+    .card__foot {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-top: var(--space-6);
-      border-top: 1px solid var(--color-divider);
+      padding-top: var(--sp-6);
+      border-top: 1px solid var(--divider);
     }
-
-    .tool-card__status {
+    .card__status {
       font-size: var(--text-xs);
-      letter-spacing: 0.12em;
+      letter-spacing: .12em;
       text-transform: uppercase;
-      color: var(--color-text-faint);
+      color: var(--faint);
     }
-
-    .tool-card__cta {
+    .card__cta {
       display: inline-flex;
       align-items: center;
-      gap: var(--space-2);
+      gap: var(--sp-2);
       font-size: var(--text-xs);
       font-weight: 500;
-      letter-spacing: 0.14em;
+      letter-spacing: .14em;
       text-transform: uppercase;
-      color: var(--color-text-muted);
-      padding: var(--space-2) var(--space-4);
-      border: 1px solid var(--color-border-strong);
-      border-radius: var(--radius-sm);
+      color: var(--muted);
+      padding: var(--sp-2) var(--sp-4);
+      border: 1px solid var(--border-lg);
+      border-radius: var(--r-sm);
+    }
+    .card__cta:hover {
+      color: var(--gold);
+      border-color: rgba(255,209,102,.3);
+      background: var(--gold-dim);
+    }
+    .card--axiom .card__cta {
+      color: var(--gold);
+      border-color: rgba(255,209,102,.3);
     }
 
-    .tool-card__cta:hover {
-      color: var(--color-accent);
-      border-color: rgba(255, 209, 102, 0.32);
-      background: var(--color-accent-dim);
-    }
-
-    .tool-card--axiom .tool-card__cta {
-      color: var(--color-accent);
-      border-color: rgba(255, 209, 102, 0.32);
-    }
-
-    /* =============================================
-       SYSTEM LOOP
-    ============================================= */
-    .loop-section {
-      background: var(--color-bg);
+    /* ─────────────────────────────────────────────
+       LOOP
+    ───────────────────────────────────────────── */
+    .loop-band {
+      background: var(--bg);
       position: relative;
       overflow: hidden;
     }
-
-    .loop-section::before {
+    .loop-band::before {
       content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 70% 60% at 50% 50%,
-        rgba(255, 209, 102, 0.025) 0%, transparent 65%);
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 55% at 50% 50%,
+        rgba(255,209,102,.022) 0%, transparent 65%);
       pointer-events: none;
     }
 
-    /* Horizontal steps */
-    .loop-steps {
+    /* Step row */
+    .loop-row {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4,1fr);
       position: relative;
     }
 
-    .loop-steps::before {
+    /* Gradient line behind nodes */
+    .loop-row::before {
       content: '';
       position: absolute;
-      top: 2.5rem; left: 0; right: 0;
+      top: 2.2rem; left: 5%; right: 5%;
       height: 1px;
       background: linear-gradient(
         to right,
-        var(--color-border) 0%,
-        var(--color-border-mid) 30%,
-        rgba(255, 209, 102, 0.3) 75%,
-        rgba(255, 209, 102, 0.45) 100%
+        var(--border-md) 0%,
+        var(--border-md) 55%,
+        rgba(255,209,102,.35) 85%,
+        rgba(255,209,102,.5) 100%
       );
       z-index: 0;
     }
 
-    @media (max-width: 700px) {
-      .loop-steps {
-        grid-template-columns: 1fr 1fr;
-        gap: var(--space-8);
-      }
-      .loop-steps::before { display: none; }
+    @media (max-width: 680px) {
+      .loop-row { grid-template-columns: 1fr 1fr; gap: var(--sp-8); }
+      .loop-row::before { display: none; }
     }
-
-    @media (max-width: 420px) {
-      .loop-steps { grid-template-columns: 1fr; }
+    @media (max-width: 380px) {
+      .loop-row { grid-template-columns: 1fr; }
     }
 
     .loop-step {
-      padding: 0 var(--space-6) var(--space-8);
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      position: relative;
-      z-index: 1;
+      padding: 0 var(--sp-5) var(--sp-8);
+      position: relative; z-index: 1;
     }
 
     .loop-step__node {
-      width: 40px; height: 40px;
+      width: 44px; height: 44px;
       border-radius: 50%;
-      border: 1px solid var(--color-border-mid);
-      background: var(--color-bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: var(--space-6);
+      border: 1px solid var(--border-md);
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
       font-size: var(--text-xs);
       font-weight: 500;
-      letter-spacing: 0.1em;
-      color: var(--color-text-faint);
+      letter-spacing: .1em;
+      color: var(--faint);
+      margin-bottom: var(--sp-6);
       flex-shrink: 0;
-      transition: all var(--transition);
+      transition: all var(--t);
     }
-
     .loop-step:hover .loop-step__node {
-      border-color: var(--color-accent);
-      color: var(--color-accent);
+      border-color: var(--gold);
+      color: var(--gold);
     }
-
-    .loop-step--axiom .loop-step__node {
-      border-color: rgba(255, 209, 102, 0.45);
-      color: var(--color-accent);
+    .loop-step--apex .loop-step__node {
+      border-color: rgba(255,209,102,.4);
+      color: var(--gold);
     }
 
     .loop-step__name {
       font-family: var(--font-display);
       font-size: var(--text-lg);
       font-weight: 400;
-      color: var(--color-text);
-      margin-bottom: var(--space-2);
+      color: var(--text);
+      margin-bottom: var(--sp-2);
     }
-
     .loop-step__verb {
       display: block;
       font-size: var(--text-xs);
-      letter-spacing: 0.18em;
+      letter-spacing: .18em;
       text-transform: uppercase;
-      color: var(--color-accent);
-      opacity: 0.8;
-      margin-bottom: var(--space-4);
+      color: var(--gold);
+      opacity: .78;
+      margin-bottom: var(--sp-4);
     }
-
     .loop-step__desc {
       font-size: var(--text-sm);
-      color: var(--color-text-muted);
+      color: var(--muted);
       line-height: 1.65;
       max-width: 24ch;
     }
 
-    /* Recursive loop callout */
+    /* Return callout */
     .loop-return {
-      margin-top: var(--space-12);
+      margin-top: var(--sp-12);
       display: flex;
       align-items: center;
-      gap: var(--space-4);
-      padding: var(--space-5) var(--space-8);
-      border: 1px solid var(--color-border-mid);
+      gap: var(--sp-5);
+      padding: var(--sp-5) var(--sp-8);
+      border: 1px solid var(--border-md);
       max-width: 680px;
       margin-inline: auto;
     }
+    .loop-return__ico { flex-shrink: 0; color: var(--gold); opacity: .7; }
+    .loop-return__txt { font-size: var(--text-sm); color: var(--muted); line-height: 1.65; }
+    .loop-return__em  { color: var(--gold); }
 
-    .loop-return__icon {
-      flex-shrink: 0;
-      color: var(--color-accent);
-      opacity: 0.7;
+    /* ─────────────────────────────────────────────
+       SHELL
+    ───────────────────────────────────────────── */
+    .shell-band {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
 
-    .loop-return__text {
-      font-size: var(--text-sm);
-      color: var(--color-text-muted);
-      line-height: 1.65;
-    }
-
-    .loop-return__em { color: var(--color-accent); }
-
-    /* =============================================
-       SHELL PREVIEW
-    ============================================= */
-    .shell-section {
-      background: var(--color-surface);
-      border-top: 1px solid var(--color-border);
-      border-bottom: 1px solid var(--color-border);
-    }
-
-    /* OS chrome frame */
     .shell-frame {
-      border: 1px solid var(--color-border-mid);
-      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-md);
+      border-radius: var(--r-lg);
       overflow: hidden;
-      background: var(--color-bg);
-      box-shadow: var(--shadow-lg);
+      background: var(--bg);
+      box-shadow: var(--sh-lg);
     }
 
-    .shell-titlebar {
-      display: flex;
-      align-items: center;
+    .shell-bar {
+      display: flex; align-items: center;
       justify-content: space-between;
-      padding: var(--space-3) var(--space-6);
-      background: var(--color-surface);
-      border-bottom: 1px solid var(--color-border);
-      gap: var(--space-4);
+      padding: var(--sp-3) var(--sp-6);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      gap: var(--sp-4);
     }
-
-    .shell-titlebar__dots {
-      display: flex;
-      gap: var(--space-2);
-    }
-
-    .shell-titlebar__dot {
+    .shell-bar__dots { display: flex; gap: var(--sp-2); }
+    .shell-bar__dot  {
       width: 10px; height: 10px;
       border-radius: 50%;
-      background: var(--color-border-strong);
-      opacity: 0.4;
+      background: var(--border-lg);
+      opacity: .4;
     }
-
-    .shell-titlebar__label {
+    .shell-bar__label {
       font-size: var(--text-xs);
-      letter-spacing: 0.18em;
+      letter-spacing: .18em;
       text-transform: uppercase;
-      color: var(--color-text-faint);
+      color: var(--faint);
       font-weight: 500;
-      flex: 1;
-      text-align: center;
+      flex: 1; text-align: center;
     }
-
-    .shell-titlebar__status {
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
+    .shell-bar__state {
+      display: flex; align-items: center;
+      gap: var(--sp-2);
       font-size: var(--text-xs);
-      color: var(--color-text-faint);
-      letter-spacing: 0.08em;
+      color: var(--faint);
+      letter-spacing: .08em;
     }
-
     .shell-pulse {
       width: 6px; height: 6px;
       border-radius: 50%;
-      background: var(--color-accent);
-      opacity: 0.6;
+      background: var(--gold); opacity: .55;
       animation: pulse 2.5s ease-in-out infinite;
     }
-
     @keyframes pulse {
-      0%, 100% { opacity: 0.5; transform: scale(1); }
-      50%       { opacity: 0.9; transform: scale(1.15); }
+      0%,100% { opacity:.45; transform: scale(1); }
+      50%      { opacity:.85; transform: scale(1.2); }
     }
 
     .shell-body {
@@ -849,239 +726,195 @@
       grid-template-columns: 200px 1fr;
       min-height: 380px;
     }
+    @media (max-width: 560px) { .shell-body { grid-template-columns: 1fr; } }
 
-    @media (max-width: 580px) { .shell-body { grid-template-columns: 1fr; } }
-
-    .shell-sidebar {
-      border-right: 1px solid var(--color-border);
-      padding: var(--space-5) var(--space-4);
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+    .shell-nav {
+      border-right: 1px solid var(--border);
+      padding: var(--sp-5) var(--sp-4);
+      display: flex; flex-direction: column; gap: 2px;
     }
-
-    @media (max-width: 580px) {
-      .shell-sidebar {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: var(--space-2);
+    @media (max-width: 560px) {
+      .shell-nav {
+        flex-direction: row; flex-wrap: wrap;
+        gap: var(--sp-2);
         border-right: none;
-        border-bottom: 1px solid var(--color-border);
+        border-bottom: 1px solid var(--border);
       }
     }
 
-    .shell-sidebar__label {
+    .shell-nav__lbl {
       font-size: var(--text-xs);
-      letter-spacing: 0.16em;
+      letter-spacing: .16em;
       text-transform: uppercase;
-      color: var(--color-text-faint);
-      padding: var(--space-2) var(--space-3);
-      margin-bottom: var(--space-2);
+      color: var(--faint);
+      padding: var(--sp-2) var(--sp-3);
+      margin-bottom: var(--sp-2);
     }
-
-    .shell-nav-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-      padding: var(--space-2) var(--space-3);
-      border-radius: var(--radius-sm);
+    .shell-item {
+      display: flex; align-items: center; gap: var(--sp-3);
+      padding: var(--sp-2) var(--sp-3);
+      border-radius: var(--r-sm);
       font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      letter-spacing: 0.08em;
+      color: var(--muted);
+      letter-spacing: .08em;
       cursor: default;
-      transition: all var(--transition);
+      transition: all var(--t);
     }
+    .shell-item:hover { background: var(--surface-2); color: var(--text); }
+    .shell-item--on   { background: var(--gold-dim); color: var(--gold); }
+    .shell-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: .5; flex-shrink: 0; }
 
-    .shell-nav-item:hover {
-      background: var(--color-surface-2);
-      color: var(--color-text);
-    }
-
-    .shell-nav-item--active {
-      background: var(--color-accent-dim);
-      color: var(--color-accent);
-    }
-
-    .shell-nav-dot {
-      width: 4px; height: 4px;
-      border-radius: 50%;
-      background: currentColor;
-      opacity: 0.55;
-      flex-shrink: 0;
-    }
-
-    .shell-main {
-      padding: var(--space-5);
+    .shell-grid {
+      padding: var(--sp-5);
       display: grid;
       grid-template-columns: 1fr 1fr;
-      grid-template-rows: auto auto auto;
-      gap: var(--space-3);
+      gap: var(--sp-3);
       align-content: start;
     }
+    @media (max-width: 400px) { .shell-grid { grid-template-columns: 1fr; } }
 
-    @media (max-width: 420px) { .shell-main { grid-template-columns: 1fr; } }
-
-    .shell-module {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: var(--space-4) var(--space-5);
+    .shell-mod {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--sp-4) var(--sp-5);
     }
+    .shell-mod--wide { grid-column: span 2; }
+    @media (max-width: 400px) { .shell-mod--wide { grid-column: span 1; } }
 
-    .shell-module--wide { grid-column: span 2; }
-    @media (max-width: 420px) { .shell-module--wide { grid-column: span 1; } }
-
-    .shell-module__label {
+    .shell-mod__lbl {
       font-size: var(--text-xs);
-      letter-spacing: 0.16em;
+      letter-spacing: .16em;
       text-transform: uppercase;
-      color: var(--color-text-faint);
-      margin-bottom: var(--space-3);
+      color: var(--faint);
+      margin-bottom: var(--sp-3);
     }
-
-    .shell-module__empty {
+    .shell-mod__empty {
       font-size: var(--text-xs);
-      color: var(--color-text-faint);
+      color: var(--faint);
       font-style: italic;
-      padding: var(--space-3);
+      padding: var(--sp-3);
       text-align: center;
-      border: 1px dashed var(--color-border-mid);
-      border-radius: var(--radius-sm);
+      border: 1px dashed var(--border-md);
+      border-radius: var(--r-sm);
       line-height: 1.5;
     }
-
-    .shell-module__line {
+    .shell-mod__line {
       font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      padding: var(--space-2) var(--space-3);
-      background: var(--color-bg);
-      border-radius: var(--radius-sm);
+      color: var(--muted);
+      padding: var(--sp-2) var(--sp-3);
+      background: var(--bg);
+      border-radius: var(--r-sm);
+      border-left: 1.5px solid var(--gold);
       line-height: 1.5;
-      border-left: 1.5px solid var(--color-accent);
     }
 
-    /* =============================================
-       CLOSING SECTION
-    ============================================= */
-    .closing-section {
+    /* ─────────────────────────────────────────────
+       CLOSING
+    ───────────────────────────────────────────── */
+    .close-band {
       text-align: center;
-      padding-block: clamp(var(--space-20), 14vw, var(--space-32));
+      padding-block: clamp(var(--sp-20), 14vw, var(--sp-32));
     }
 
-    .closing__rule {
-      width: 1px;
-      height: 56px;
-      background: linear-gradient(to bottom, var(--color-border-mid), var(--color-accent));
-      margin: 0 auto var(--space-12);
-      opacity: 0.6;
+    /* Vertical rule leading into the quote */
+    .close-rule {
+      width: 1px; height: 64px;
+      background: linear-gradient(to bottom, var(--border-md), var(--gold));
+      margin: 0 auto var(--sp-12);
+      opacity: .55;
     }
 
-    .closing__quote {
+    .close-quote {
       font-family: var(--font-display);
       font-size: var(--text-2xl);
       font-weight: 300;
       font-style: italic;
-      color: var(--color-text);
+      color: var(--text);
       max-width: 780px;
       margin-inline: auto;
       line-height: 1.25;
-      letter-spacing: -0.01em;
+      letter-spacing: -.01em;
     }
 
-    .closing__divider {
-      width: 40px;
-      height: 1px;
-      background: var(--color-accent);
-      margin: var(--space-10) auto;
-      opacity: 0.5;
+    .close-divider {
+      width: 40px; height: 1px;
+      background: var(--gold);
+      margin: var(--sp-10) auto;
+      opacity: .45;
     }
 
-    .closing__body {
+    .close-body {
       font-size: var(--text-base);
-      color: var(--color-text-muted);
+      color: var(--muted);
       max-width: 50ch;
       margin-inline: auto;
       line-height: 1.8;
     }
+    .close-body + .close-body { margin-top: var(--sp-5); }
 
-    .closing__body + .closing__body {
-      margin-top: var(--space-5);
-    }
-
-    .closing__cta {
+    .close-cta {
       display: inline-flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: var(--sp-3);
       font-size: var(--text-xs);
       font-weight: 500;
-      letter-spacing: 0.2em;
+      letter-spacing: .2em;
       text-transform: uppercase;
-      color: var(--color-accent);
-      padding: var(--space-4) var(--space-10);
-      border: 1px solid rgba(255, 209, 102, 0.28);
-      border-radius: var(--radius-sm);
-      margin-top: var(--space-10);
+      color: var(--gold);
+      padding: var(--sp-4) var(--sp-10);
+      border: 1px solid rgba(255,209,102,.26);
+      border-radius: var(--r-sm);
+      margin-top: var(--sp-10);
+    }
+    .close-cta:hover {
+      background: var(--gold-dim);
+      border-color: rgba(255,209,102,.48);
     }
 
-    .closing__cta:hover {
-      background: var(--color-accent-dim);
-      border-color: rgba(255, 209, 102, 0.5);
-    }
-
-    /* =============================================
+    /* ─────────────────────────────────────────────
        FOOTER
-    ============================================= */
+    ───────────────────────────────────────────── */
     .footer {
-      padding-block: var(--space-8);
-      border-top: 1px solid var(--color-border);
+      padding-block: var(--sp-8);
+      border-top: 1px solid var(--border);
     }
-
-    .footer__inner {
+    .footer__row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: var(--space-4);
+      gap: var(--sp-4);
     }
-
     .footer__brand {
       font-family: var(--font-display);
       font-size: var(--text-sm);
-      letter-spacing: 0.14em;
+      letter-spacing: .16em;
       text-transform: uppercase;
-      color: var(--color-text-faint);
+      color: var(--faint);
     }
-
-    .footer__tagline {
+    .footer__tag {
       font-size: var(--text-xs);
-      letter-spacing: 0.1em;
-      color: var(--color-text-faint);
+      letter-spacing: .1em;
+      color: var(--faint);
     }
 
-    /* =============================================
-       SCROLL ANIMATIONS
-    ============================================= */
-    .fade-up {
+    /* ─────────────────────────────────────────────
+       SCROLL REVEAL
+    ───────────────────────────────────────────── */
+    .up {
       opacity: 0;
       transform: translateY(18px);
       transition:
-        opacity  0.75s var(--ease-out),
-        transform 0.75s var(--ease-out);
+        opacity  .75s var(--ease),
+        transform .75s var(--ease);
     }
+    .up.in { opacity: 1; transform: translateY(0); }
+    .up.d1 { transition-delay: .08s; }
+    .up.d2 { transition-delay: .16s; }
+    .up.d3 { transition-delay: .24s; }
+    .up.d4 { transition-delay: .32s; }
 
-    .fade-up.is-visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .fade-up--d1 { transition-delay: 0.08s; }
-    .fade-up--d2 { transition-delay: 0.16s; }
-    .fade-up--d3 { transition-delay: 0.24s; }
-    .fade-up--d4 { transition-delay: 0.32s; }
-
-    /* =============================================
-       UTILITY
-    ============================================= */
     .sr-only {
       position: absolute; width: 1px; height: 1px;
       padding: 0; margin: -1px; overflow: hidden;
@@ -1091,520 +924,454 @@
 </head>
 <body>
 
-  <!-- =============================================
-       NAVIGATION
-  ============================================= -->
-  <header>
-    <nav class="nav" id="main-nav" aria-label="Main navigation">
-      <div class="container nav__inner">
+<!-- ╔══════════════════════════════════════════
+     NAV
+═══════════════════════════════════════════╗ -->
+<header>
+  <nav class="nav" id="nav" aria-label="Main navigation">
+    <div class="wrap nav__row">
 
-        <!-- Brand -->
-        <a href="#" class="nav__brand" aria-label="Axiom OS home">
-          <!-- Logo mark: four-point cycle -->
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <circle cx="16" cy="16" r="14.5" stroke="currentColor" stroke-width="0.6" opacity="0.25"/>
-            <!-- Four nodes -->
-            <circle cx="16" cy="1.5"  r="2" fill="#FFD166"/>
-            <circle cx="30.5" cy="16" r="2" fill="currentColor" opacity="0.4"/>
-            <circle cx="16" cy="30.5" r="2" fill="currentColor" opacity="0.4"/>
-            <circle cx="1.5"  cy="16" r="2" fill="currentColor" opacity="0.4"/>
-            <!-- Inner diamond -->
-            <path d="M16 1.5 L30.5 16 L16 30.5 L1.5 16 Z"
-                  stroke="currentColor" stroke-width="0.4" fill="none" opacity="0.18"/>
-            <!-- Center -->
-            <circle cx="16" cy="16" r="3" fill="none"
-                    stroke="#FFD166" stroke-width="0.8" opacity="0.55"/>
+      <a href="#" class="nav__brand" aria-label="Lumen home">
+        <!-- Lumen mark — radiant light source -->
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <!-- Cardinal rays -->
+          <line x1="16" y1="2"  x2="16" y2="8"  stroke="#FFD166" stroke-width="1.2" stroke-linecap="round" opacity=".9"/>
+          <line x1="30" y1="16" x2="24" y2="16" stroke="currentColor" stroke-width=".7" stroke-linecap="round" opacity=".3"/>
+          <line x1="16" y1="30" x2="16" y2="24" stroke="currentColor" stroke-width=".7" stroke-linecap="round" opacity=".3"/>
+          <line x1="2"  y1="16" x2="8"  y2="16" stroke="currentColor" stroke-width=".7" stroke-linecap="round" opacity=".3"/>
+          <!-- Diagonal rays (shorter) -->
+          <line x1="5.6"  y1="5.6"  x2="9.5"  y2="9.5"  stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="26.4" y1="5.6"  x2="22.5" y2="9.5"  stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="5.6"  y1="26.4" x2="9.5"  y2="22.5" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="26.4" y1="26.4" x2="22.5" y2="22.5" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <!-- Centre -->
+          <circle cx="16" cy="16" r="4"   fill="#FFD166" opacity=".7"/>
+          <circle cx="16" cy="16" r="2.2" fill="#FFD166" opacity=".95"/>
+        </svg>
+        <span class="nav__name">Lumen</span>
+      </a>
+
+      <ul class="nav__links" role="list">
+        <li><a href="#tools"  class="nav__link">Tools</a></li>
+        <li><a href="#loop"   class="nav__link">System</a></li>
+        <li><a href="#shell"  class="nav__link">Shell</a></li>
+        <li><a href="#close"  class="nav__link">Philosophy</a></li>
+      </ul>
+
+      <div class="nav__right">
+        <button class="icon-btn" data-theme-toggle aria-label="Switch to light mode">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
           </svg>
-          <span class="nav__wordmark">Axiom OS</span>
+        </button>
+        <a href="#tools" class="btn-ghost">
+          Enter
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
-
-        <!-- Links -->
-        <ul class="nav__links" role="list">
-          <li><a href="#tools"      class="nav__link">Tools</a></li>
-          <li><a href="#loop"       class="nav__link">System</a></li>
-          <li><a href="#shell"      class="nav__link">Shell</a></li>
-          <li><a href="#philosophy" class="nav__link">Philosophy</a></li>
-        </ul>
-
-        <!-- Actions -->
-        <div class="nav__actions">
-          <button class="theme-toggle" data-theme-toggle aria-label="Switch to light mode">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-            </svg>
-          </button>
-          <a href="#tools" class="nav__enter-btn">
-            Enter
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </a>
-        </div>
-
       </div>
+
+    </div>
+  </nav>
+</header>
+
+
+<main>
+
+<!-- ╔══════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════╗ -->
+<section class="hero" id="hero" aria-label="Introduction">
+
+  <div class="hero__atmo" aria-hidden="true">
+    <div class="hero__glow hero__glow--a"></div>
+    <div class="hero__glow hero__glow--b"></div>
+    <div class="hero__grid"></div>
+  </div>
+
+  <div class="wrap hero__body">
+
+    <!-- Large mark -->
+    <div class="hero__mark" aria-hidden="true">
+      <svg class="lumen-mark" width="80" height="80" viewBox="0 0 80 80" fill="none" aria-hidden="true">
+        <!-- Outer diffusion rings -->
+        <circle cx="40" cy="40" r="38"  stroke="currentColor" stroke-width=".4" opacity=".1"/>
+        <circle cx="40" cy="40" r="27"  stroke="currentColor" stroke-width=".4" opacity=".08"/>
+        <circle cx="40" cy="40" r="16"  stroke="#FFD166"      stroke-width=".5" opacity=".22"/>
+        <!-- Cardinal rays -->
+        <line x1="40" y1="2"  x2="40" y2="24" stroke="#FFD166" stroke-width="1"   stroke-linecap="round" opacity=".75"/>
+        <line x1="78" y1="40" x2="56" y2="40" stroke="currentColor" stroke-width=".65" stroke-linecap="round" opacity=".22"/>
+        <line x1="40" y1="78" x2="40" y2="56" stroke="currentColor" stroke-width=".65" stroke-linecap="round" opacity=".22"/>
+        <line x1="2"  y1="40" x2="24" y2="40" stroke="currentColor" stroke-width=".65" stroke-linecap="round" opacity=".22"/>
+        <!-- Diagonal rays -->
+        <line x1="11.7" y1="11.7" x2="22.5" y2="22.5" stroke="currentColor" stroke-width=".4" opacity=".14"/>
+        <line x1="68.3" y1="11.7" x2="57.5" y2="22.5" stroke="currentColor" stroke-width=".4" opacity=".14"/>
+        <line x1="11.7" y1="68.3" x2="22.5" y2="57.5" stroke="currentColor" stroke-width=".4" opacity=".14"/>
+        <line x1="68.3" y1="68.3" x2="57.5" y2="57.5" stroke="currentColor" stroke-width=".4" opacity=".14"/>
+        <!-- Centre glow -->
+        <circle cx="40" cy="40" r="9"   fill="#FFD166" opacity=".55"/>
+        <circle cx="40" cy="40" r="5.5" fill="#FFD166" opacity=".8"/>
+        <circle cx="40" cy="40" r="2.8" fill="#FFD166"/>
+      </svg>
+    </div>
+
+    <span class="hero__kicker">Lumen</span>
+
+    <h1 class="hero__headline up">
+      Where reflection<br>becomes structure.
+    </h1>
+
+    <p class="hero__sub up d1">
+      A four-part operating system for questioning belief, revealing pattern,
+      testing hypothesis, and distilling truth. Not a productivity tool.
+      A constitutional framework for the examined life.
+    </p>
+
+    <!-- Four-tool chain -->
+    <nav class="chain up d2" aria-label="Four-tool progression">
+      <a href="#tools" class="chain__pill">Liminal</a>
+      <span class="chain__sep" aria-hidden="true">
+        <svg width="22" height="1" viewBox="0 0 22 1" fill="none"><line x1="0" y1=".5" x2="17" y2=".5" stroke="currentColor" stroke-opacity=".35"/><path d="M15 -2L21 .5L15 3" stroke="currentColor" stroke-opacity=".35" stroke-width=".9" fill="none"/></svg>
+      </span>
+      <a href="#tools" class="chain__pill">Parallax</a>
+      <span class="chain__sep" aria-hidden="true">
+        <svg width="22" height="1" viewBox="0 0 22 1" fill="none"><line x1="0" y1=".5" x2="17" y2=".5" stroke="currentColor" stroke-opacity=".35"/><path d="M15 -2L21 .5L15 3" stroke="currentColor" stroke-opacity=".35" stroke-width=".9" fill="none"/></svg>
+      </span>
+      <a href="#tools" class="chain__pill">Praxis</a>
+      <span class="chain__sep" aria-hidden="true">
+        <svg width="22" height="1" viewBox="0 0 22 1" fill="none"><line x1="0" y1=".5" x2="17" y2=".5" stroke="currentColor" stroke-opacity=".35"/><path d="M15 -2L21 .5L15 3" stroke="currentColor" stroke-opacity=".35" stroke-width=".9" fill="none"/></svg>
+      </span>
+      <a href="#tools" class="chain__pill chain__pill--apex">Axiom</a>
     </nav>
-  </header>
+
+  </div>
+
+  <div class="hero__cue" aria-hidden="true">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M12 5v14M5 12l7 7 7-7"/>
+    </svg>
+  </div>
+
+</section>
 
 
-  <main>
+<!-- ╔══════════════════════════════════════════
+     TOOLS
+═══════════════════════════════════════════╗ -->
+<section class="section tools-band" id="tools" aria-label="The four tools">
+  <div class="wrap">
+    <div class="section__head">
+      <span class="section__eye">The Architecture</span>
+      <h2 class="section__title">Four instruments.<br>One epistemic loop.</h2>
+      <p class="section__desc">Each tool operates independently, but their power is in sequence. Together they close a system of reflective inquiry — one that spirals toward earned understanding, not comfortable answers.</p>
+    </div>
+  </div>
 
-    <!-- =============================================
-         HERO
-    ============================================= -->
-    <section class="hero" id="hero" aria-label="Introduction">
+  <div class="tools-grid" role="list">
 
-      <!-- Atmospheric background -->
-      <div class="hero__atmosphere" aria-hidden="true">
-        <div class="hero__glow hero__glow--gold"></div>
-        <div class="hero__glow hero__glow--slate"></div>
-        <div class="hero__grid"></div>
+    <!-- Liminal -->
+    <article class="card card--liminal up" role="listitem">
+      <p class="card__idx">01</p>
+      <div class="card__hd">
+        <h3 class="card__name">Liminal</h3>
+        <span class="card__fn">Questions belief</span>
+      </div>
+      <p class="card__desc">The threshold instrument. Liminal surfaces assumptions you did not know you held — the inherited frameworks, silent priors, and borrowed certainties that quietly shape every judgment. Where inquiry begins and nothing is taken as given.</p>
+      <div class="card__foot">
+        <span class="card__status">In development</span>
+        <a href="#" class="card__cta" aria-label="Enter Liminal">
+          Enter
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </article>
+
+    <!-- Parallax -->
+    <article class="card card--parallax up d1" role="listitem">
+      <p class="card__idx">02</p>
+      <div class="card__hd">
+        <h3 class="card__name">Parallax</h3>
+        <span class="card__fn">Reveals pattern</span>
+      </div>
+      <p class="card__desc">The pattern instrument. Parallax reads across time — your writing, responses, and choices — to surface recurring structures in thought, emotion, and behavior. What persists beneath the noise is what matters. What repeats is what you are.</p>
+      <div class="card__foot">
+        <span class="card__status">In development</span>
+        <a href="#" class="card__cta" aria-label="Enter Parallax">
+          Enter
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </article>
+
+    <!-- Praxis -->
+    <article class="card card--praxis up d2" role="listitem">
+      <p class="card__idx">03</p>
+      <div class="card__hd">
+        <h3 class="card__name">Praxis</h3>
+        <span class="card__fn">Tests hypothesis</span>
+      </div>
+      <p class="card__desc">The experimental instrument. Praxis converts insight into lived experiment. If Liminal surfaces the question and Parallax reveals the pattern, Praxis asks: what remains true when tested against experience, and what dissolves under contact with reality?</p>
+      <div class="card__foot">
+        <span class="card__status">In development</span>
+        <a href="#" class="card__cta" aria-label="Enter Praxis">
+          Enter
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </article>
+
+    <!-- Axiom -->
+    <article class="card card--axiom up d3" role="listitem">
+      <p class="card__idx">04</p>
+      <div class="card__hd">
+        <h3 class="card__name">Axiom</h3>
+        <span class="card__fn">Distills truth</span>
+      </div>
+      <p class="card__desc">The synthesis instrument. Axiom receives the outputs of the other three and distills them into durable principles, active tensions, and earned doctrines — the raw material of a personal constitution built from tested experience, not received wisdom.</p>
+      <div class="card__foot">
+        <span class="card__status">In development</span>
+        <a href="#" class="card__cta" aria-label="Enter Axiom">
+          Enter
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+
+<!-- ╔══════════════════════════════════════════
+     LOOP
+═══════════════════════════════════════════╗ -->
+<section class="section loop-band" id="loop" aria-label="The system loop">
+  <div class="wrap">
+
+    <div class="section__head">
+      <span class="section__eye">The System</span>
+      <h2 class="section__title">Not a sequence.<br>A cycle.</h2>
+      <p class="section__desc">Each pass through the loop refines what came before. The light Lumen produces — the truths Axiom distills — becomes the next layer of darkness that Liminal interrogates. The cycle is the method.</p>
+    </div>
+
+    <!-- Step nodes -->
+    <div class="loop-row" role="list">
+
+      <div class="loop-step up" role="listitem">
+        <div class="loop-step__node" aria-hidden="true">01</div>
+        <h3 class="loop-step__name">Liminal</h3>
+        <span class="loop-step__verb">Questions belief</span>
+        <p class="loop-step__desc">Surfaces hidden assumptions. Identifies what you believe that you have not chosen to believe.</p>
       </div>
 
-      <div class="container hero__content">
-
-        <!-- Hero mark -->
-        <div class="hero__mark" aria-hidden="true">
-          <svg width="72" height="72" viewBox="0 0 72 72" fill="none" role="img" aria-label="Axiom OS system mark">
-            <circle cx="36" cy="36" r="34" stroke="currentColor" stroke-width="0.5" opacity="0.2"/>
-            <circle cx="36" cy="36" r="22" stroke="currentColor" stroke-width="0.4" opacity="0.12"/>
-            <!-- Four outer nodes -->
-            <circle cx="36" cy="2"  r="3.5" fill="#FFD166" opacity="0.9"/>
-            <circle cx="70" cy="36" r="3.5" fill="currentColor" opacity="0.35"/>
-            <circle cx="36" cy="70" r="3.5" fill="currentColor" opacity="0.35"/>
-            <circle cx="2"  cy="36" r="3.5" fill="currentColor" opacity="0.35"/>
-            <!-- Diamond path -->
-            <path d="M36 2 L70 36 L36 70 L2 36 Z"
-                  stroke="currentColor" stroke-width="0.5" fill="none" opacity="0.15"/>
-            <!-- Center ring -->
-            <circle cx="36" cy="36" r="6" fill="none"
-                    stroke="#FFD166" stroke-width="1" opacity="0.5"/>
-            <circle cx="36" cy="36" r="2" fill="#FFD166" opacity="0.6"/>
-          </svg>
-        </div>
-
-        <span class="hero__eyebrow">Axiom OS</span>
-
-        <h1 class="hero__headline fade-up">
-          An operating system<br>for the examined life.
-        </h1>
-
-        <p class="hero__subhead fade-up fade-up--d1">
-          A four-part system for questioning belief, revealing pattern, testing hypothesis,
-          and distilling truth. Not productivity software. A constitutional framework for the self.
-        </p>
-
-        <!-- Four-tool progression chain -->
-        <nav class="hero__progression fade-up fade-up--d2" aria-label="Four-tool progression">
-          <div class="prog__item">
-            <a href="#tools" class="prog__name">Liminal</a>
-            <span class="prog__arrow" aria-hidden="true">
-              <svg width="28" height="1" viewBox="0 0 28 1"><line x1="0" y1="0.5" x2="22" y2="0.5" stroke="currentColor" stroke-opacity="0.35"/><path d="M20 -2 L26 0.5 L20 3" stroke="currentColor" stroke-opacity="0.35" stroke-width="1" fill="none"/></svg>
-            </span>
-          </div>
-          <div class="prog__item">
-            <a href="#tools" class="prog__name">Parallax</a>
-            <span class="prog__arrow" aria-hidden="true">
-              <svg width="28" height="1" viewBox="0 0 28 1"><line x1="0" y1="0.5" x2="22" y2="0.5" stroke="currentColor" stroke-opacity="0.35"/><path d="M20 -2 L26 0.5 L20 3" stroke="currentColor" stroke-opacity="0.35" stroke-width="1" fill="none"/></svg>
-            </span>
-          </div>
-          <div class="prog__item">
-            <a href="#tools" class="prog__name">Praxis</a>
-            <span class="prog__arrow" aria-hidden="true">
-              <svg width="28" height="1" viewBox="0 0 28 1"><line x1="0" y1="0.5" x2="22" y2="0.5" stroke="currentColor" stroke-opacity="0.35"/><path d="M20 -2 L26 0.5 L20 3" stroke="currentColor" stroke-opacity="0.35" stroke-width="1" fill="none"/></svg>
-            </span>
-          </div>
-          <div class="prog__item">
-            <a href="#tools" class="prog__name prog__name--axiom">Axiom</a>
-          </div>
-        </nav>
-
+      <div class="loop-step up d1" role="listitem">
+        <div class="loop-step__node" aria-hidden="true">02</div>
+        <h3 class="loop-step__name">Parallax</h3>
+        <span class="loop-step__verb">Reveals pattern</span>
+        <p class="loop-step__desc">Reads across time. Finds recurring structures in thought, behavior, and emotional response.</p>
       </div>
 
-      <!-- Scroll hint -->
-      <div class="hero__scroll" aria-hidden="true">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M12 5v14M5 12l7 7 7-7"/>
+      <div class="loop-step up d2" role="listitem">
+        <div class="loop-step__node" aria-hidden="true">03</div>
+        <h3 class="loop-step__name">Praxis</h3>
+        <span class="loop-step__verb">Tests hypothesis</span>
+        <p class="loop-step__desc">Turns insight into experiment. Measures belief against lived experience before committing to it.</p>
+      </div>
+
+      <div class="loop-step loop-step--apex up d3" role="listitem">
+        <div class="loop-step__node" aria-hidden="true">04</div>
+        <h3 class="loop-step__name">Axiom</h3>
+        <span class="loop-step__verb">Distills truth</span>
+        <p class="loop-step__desc">Synthesizes what survived. Extracts durable principles, active tensions, and earned doctrines.</p>
+      </div>
+
+    </div>
+
+    <!-- Recursive callout -->
+    <div class="loop-return up" role="note">
+      <div class="loop-return__ico" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M1 4v6h6M23 20v-6h-6"/>
+          <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/>
         </svg>
       </div>
-
-    </section>
-
-
-    <!-- =============================================
-         FOUR TOOLS
-    ============================================= -->
-    <section class="section tools-section" id="tools" aria-label="The four tools">
-      <div class="container">
-        <div class="section__header">
-          <span class="section__eyebrow">The Architecture</span>
-          <h2 class="section__title">Four instruments.<br>One epistemic loop.</h2>
-          <p class="section__desc">Each tool operates independently, but their power emerges from sequence. Together they form a closed system of reflective inquiry — one that spirals toward durable understanding, not easy answers.</p>
-        </div>
-      </div>
-
-      <div class="tools-grid" role="list">
-
-        <!-- 01 — Liminal -->
-        <article class="tool-card tool-card--liminal fade-up" role="listitem">
-          <p class="tool-card__index">01</p>
-          <div class="tool-card__header">
-            <h3 class="tool-card__name">Liminal</h3>
-            <span class="tool-card__function">Questions belief</span>
-          </div>
-          <p class="tool-card__desc">
-            The threshold instrument. Liminal surfaces assumptions you did not know you held — the inherited frameworks, silent priors, and borrowed certainties that quietly shape every judgment. Where inquiry begins and nothing is taken for granted.
-          </p>
-          <div class="tool-card__footer">
-            <span class="tool-card__status">In development</span>
-            <a href="#" class="tool-card__cta" aria-label="Enter Liminal">
-              Enter
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-          </div>
-        </article>
-
-        <!-- 02 — Parallax -->
-        <article class="tool-card tool-card--parallax fade-up fade-up--d1" role="listitem">
-          <p class="tool-card__index">02</p>
-          <div class="tool-card__header">
-            <h3 class="tool-card__name">Parallax</h3>
-            <span class="tool-card__function">Reveals pattern</span>
-          </div>
-          <p class="tool-card__desc">
-            The pattern instrument. Parallax reads across time — your writing, responses, and choices — to surface recurring structures in thought, emotion, and behavior. What persists beneath the noise is what matters. What repeats is what you are.
-          </p>
-          <div class="tool-card__footer">
-            <span class="tool-card__status">In development</span>
-            <a href="#" class="tool-card__cta" aria-label="Enter Parallax">
-              Enter
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-          </div>
-        </article>
-
-        <!-- 03 — Praxis -->
-        <article class="tool-card tool-card--praxis fade-up fade-up--d2" role="listitem">
-          <p class="tool-card__index">03</p>
-          <div class="tool-card__header">
-            <h3 class="tool-card__name">Praxis</h3>
-            <span class="tool-card__function">Tests hypothesis</span>
-          </div>
-          <p class="tool-card__desc">
-            The experimental instrument. Praxis converts insight into lived experiment. If Liminal surfaces the question and Parallax reveals the pattern, Praxis asks what remains true when tested against experience — and what dissolves under contact with reality.
-          </p>
-          <div class="tool-card__footer">
-            <span class="tool-card__status">In development</span>
-            <a href="#" class="tool-card__cta" aria-label="Enter Praxis">
-              Enter
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-          </div>
-        </article>
-
-        <!-- 04 — Axiom -->
-        <article class="tool-card tool-card--axiom fade-up fade-up--d3" role="listitem">
-          <p class="tool-card__index">04</p>
-          <div class="tool-card__header">
-            <h3 class="tool-card__name">Axiom</h3>
-            <span class="tool-card__function">Distills truth</span>
-          </div>
-          <p class="tool-card__desc">
-            The synthesis instrument. Axiom receives the outputs of the other three and distills them into durable principles, active tensions, and earned doctrines — the raw material of a personal constitution built from tested experience rather than received wisdom.
-          </p>
-          <div class="tool-card__footer">
-            <span class="tool-card__status">In development</span>
-            <a href="#" class="tool-card__cta" aria-label="Enter Axiom">
-              Enter
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </a>
-          </div>
-        </article>
-
-      </div>
-    </section>
-
-
-    <!-- =============================================
-         SYSTEM LOOP
-    ============================================= -->
-    <section class="section loop-section" id="loop" aria-label="The system loop">
-      <div class="container">
-
-        <div class="section__header">
-          <span class="section__eyebrow">The System</span>
-          <h2 class="section__title">Not a sequence.<br>A cycle.</h2>
-          <p class="section__desc">Each pass through the loop refines what came before. The truths Axiom distills become the assumptions Liminal interrogates in the next turn. The method is the recursion.</p>
-        </div>
-
-        <!-- Step grid -->
-        <div class="loop-steps" role="list">
-
-          <div class="loop-step fade-up" role="listitem">
-            <div class="loop-step__node" aria-hidden="true">01</div>
-            <h3 class="loop-step__name">Liminal</h3>
-            <span class="loop-step__verb">Questions belief</span>
-            <p class="loop-step__desc">Surfaces hidden assumptions. Identifies what you believe that you have not chosen to believe.</p>
-          </div>
-
-          <div class="loop-step fade-up fade-up--d1" role="listitem">
-            <div class="loop-step__node" aria-hidden="true">02</div>
-            <h3 class="loop-step__name">Parallax</h3>
-            <span class="loop-step__verb">Reveals pattern</span>
-            <p class="loop-step__desc">Reads across time. Finds recurring structures in thought, behavior, and emotional response.</p>
-          </div>
-
-          <div class="loop-step fade-up fade-up--d2" role="listitem">
-            <div class="loop-step__node" aria-hidden="true">03</div>
-            <h3 class="loop-step__name">Praxis</h3>
-            <span class="loop-step__verb">Tests hypothesis</span>
-            <p class="loop-step__desc">Turns insight into experiment. Measures belief against lived experience before committing to it.</p>
-          </div>
-
-          <div class="loop-step loop-step--axiom fade-up fade-up--d3" role="listitem">
-            <div class="loop-step__node" aria-hidden="true">04</div>
-            <h3 class="loop-step__name">Axiom</h3>
-            <span class="loop-step__verb">Distills truth</span>
-            <p class="loop-step__desc">Synthesizes what survived. Extracts durable principles, active tensions, and earned doctrines.</p>
-          </div>
-
-        </div>
-
-        <!-- Recursive return -->
-        <div class="loop-return fade-up" role="note">
-          <div class="loop-return__icon" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M1 4v6h6M23 20v-6h-6"/>
-              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/>
-            </svg>
-          </div>
-          <p class="loop-return__text">
-            The truths distilled by <span class="loop-return__em">Axiom</span> become the assumptions interrogated by
-            <span class="loop-return__em">Liminal</span> in the next cycle. The loop does not close — it spirals inward.
-          </p>
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- =============================================
-         SHELL PREVIEW
-    ============================================= -->
-    <section class="section shell-section" id="shell" aria-label="Shell preview">
-      <div class="container">
-
-        <div class="section__header">
-          <span class="section__eyebrow">The Shell</span>
-          <h2 class="section__title">A unified interface<br>for all four instruments.</h2>
-          <p class="section__desc">The Axiom OS shell will serve as the parent environment — a single interface through which the four tools share state, communicate findings, and compound their outputs into a living personal constitution.</p>
-        </div>
-
-        <!-- OS frame -->
-        <div class="shell-frame fade-up" role="img" aria-label="Axiom OS shell interface preview — currently in development">
-          <div class="shell-titlebar">
-            <div class="shell-titlebar__dots" aria-hidden="true">
-              <span class="shell-titlebar__dot"></span>
-              <span class="shell-titlebar__dot"></span>
-              <span class="shell-titlebar__dot"></span>
-            </div>
-            <span class="shell-titlebar__label">Axiom OS — Shell&nbsp; v0.1&nbsp; · &nbsp;Preview</span>
-            <div class="shell-titlebar__status">
-              <span class="shell-pulse" aria-hidden="true"></span>
-              Assembling
-            </div>
-          </div>
-
-          <div class="shell-body">
-
-            <!-- Sidebar nav -->
-            <nav class="shell-sidebar" aria-label="Shell navigation">
-              <span class="shell-sidebar__label">Overview</span>
-              <div class="shell-nav-item shell-nav-item--active">
-                <span class="shell-nav-dot"></span> Dashboard
-              </div>
-              <div class="shell-nav-item">
-                <span class="shell-nav-dot"></span> Liminal
-              </div>
-              <div class="shell-nav-item">
-                <span class="shell-nav-dot"></span> Parallax
-              </div>
-              <div class="shell-nav-item">
-                <span class="shell-nav-dot"></span> Praxis
-              </div>
-              <div class="shell-nav-item">
-                <span class="shell-nav-dot"></span> Axiom
-              </div>
-            </nav>
-
-            <!-- Module grid -->
-            <div class="shell-main" aria-label="Dashboard modules">
-
-              <div class="shell-module">
-                <p class="shell-module__label">Active Experiments</p>
-                <p class="shell-module__empty">No active experiments yet.</p>
-              </div>
-
-              <div class="shell-module">
-                <p class="shell-module__label">Emerging Doctrines</p>
-                <p class="shell-module__empty">No doctrines synthesized yet.</p>
-              </div>
-
-              <div class="shell-module">
-                <p class="shell-module__label">Core Tensions</p>
-                <p class="shell-module__empty">No tensions logged yet.</p>
-              </div>
-
-              <div class="shell-module">
-                <p class="shell-module__label">Truth Claims</p>
-                <p class="shell-module__empty">No claims distilled yet.</p>
-              </div>
-
-              <div class="shell-module shell-module--wide">
-                <p class="shell-module__label">Recent Revisions</p>
-                <p class="shell-module__line">The shell is being assembled. Return when the four instruments are ready.</p>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- =============================================
-         CLOSING PHILOSOPHY
-    ============================================= -->
-    <section class="section closing-section" id="philosophy" aria-label="Philosophy">
-      <div class="container container--narrow">
-
-        <div class="closing__rule" aria-hidden="true"></div>
-
-        <blockquote class="closing__quote fade-up">
-          "A personal constitution is not found. It is constructed — question by question, experiment by experiment, revision by revision."
-        </blockquote>
-
-        <div class="closing__divider" aria-hidden="true"></div>
-
-        <p class="closing__body fade-up fade-up--d1">
-          Axiom OS is not a productivity system. It does not optimize your morning routine or aggregate your goals. It is a framework for building conviction from tested experience — for knowing, with some rigor, what you actually believe and why.
-        </p>
-
-        <p class="closing__body fade-up fade-up--d2">
-          The examined life requires infrastructure. This is that infrastructure.
-        </p>
-
-        <a href="#tools" class="closing__cta fade-up fade-up--d3">
-          Begin the inquiry
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
-          </svg>
-        </a>
-
-      </div>
-    </section>
-
-  </main>
-
-
-  <!-- =============================================
-       FOOTER
-  ============================================= -->
-  <footer class="footer">
-    <div class="container footer__inner">
-      <span class="footer__brand">Axiom OS</span>
-      <span class="footer__tagline">A system for the examined life.</span>
+      <p class="loop-return__txt">
+        The truths distilled by <span class="loop-return__em">Axiom</span> become the assumptions
+        interrogated by <span class="loop-return__em">Liminal</span> in the next cycle.
+        The loop does not close — it deepens.
+      </p>
     </div>
-  </footer>
+
+  </div>
+</section>
 
 
-  <!-- =============================================
-       SCRIPTS
-  ============================================= -->
-  <script>
-    /* --- Theme toggle --- */
-    (function () {
-      const toggle = document.querySelector('[data-theme-toggle]');
-      const root   = document.documentElement;
+<!-- ╔══════════════════════════════════════════
+     SHELL
+═══════════════════════════════════════════╗ -->
+<section class="section shell-band" id="shell" aria-label="Shell preview">
+  <div class="wrap">
 
-      // Axiom OS defaults to dark — this is a dark-first philosophical interface.
-      // The toggle lets users switch to light if preferred.
-      let theme = 'dark';
-      root.setAttribute('data-theme', theme);
+    <div class="section__head">
+      <span class="section__eye">The Shell</span>
+      <h2 class="section__title">A unified interface<br>for all four instruments.</h2>
+      <p class="section__desc">The Lumen shell will serve as the parent environment — a single surface through which the four tools share state, communicate findings, and compound their outputs into a living personal constitution.</p>
+    </div>
 
-      function syncIcon () {
-        if (!toggle) return;
-        toggle.setAttribute('aria-label', 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' mode');
-        toggle.innerHTML = theme === 'dark'
-          ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-               <circle cx="12" cy="12" r="5"/>
-               <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-             </svg>`
-          : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-             </svg>`;
-      }
+    <div class="shell-frame up" role="img" aria-label="Lumen shell interface — currently in development">
 
-      syncIcon();
+      <div class="shell-bar">
+        <div class="shell-bar__dots" aria-hidden="true">
+          <span class="shell-bar__dot"></span>
+          <span class="shell-bar__dot"></span>
+          <span class="shell-bar__dot"></span>
+        </div>
+        <span class="shell-bar__label">Lumen — Shell&nbsp; v0.1 &nbsp;·&nbsp; Preview</span>
+        <div class="shell-bar__state">
+          <span class="shell-pulse" aria-hidden="true"></span>
+          Assembling
+        </div>
+      </div>
 
-      if (toggle) {
-        toggle.addEventListener('click', () => {
-          theme = theme === 'dark' ? 'light' : 'dark';
-          root.setAttribute('data-theme', theme);
-          syncIcon();
-        });
-      }
-    })();
+      <div class="shell-body">
+
+        <nav class="shell-nav" aria-label="Shell navigation">
+          <span class="shell-nav__lbl">Overview</span>
+          <div class="shell-item shell-item--on"><span class="shell-dot"></span>Dashboard</div>
+          <div class="shell-item"><span class="shell-dot"></span>Liminal</div>
+          <div class="shell-item"><span class="shell-dot"></span>Parallax</div>
+          <div class="shell-item"><span class="shell-dot"></span>Praxis</div>
+          <div class="shell-item"><span class="shell-dot"></span>Axiom</div>
+        </nav>
+
+        <div class="shell-grid" aria-label="Dashboard modules">
+
+          <div class="shell-mod">
+            <p class="shell-mod__lbl">Active Experiments</p>
+            <p class="shell-mod__empty">No active experiments yet.</p>
+          </div>
+
+          <div class="shell-mod">
+            <p class="shell-mod__lbl">Emerging Doctrines</p>
+            <p class="shell-mod__empty">No doctrines synthesized yet.</p>
+          </div>
+
+          <div class="shell-mod">
+            <p class="shell-mod__lbl">Core Tensions</p>
+            <p class="shell-mod__empty">No tensions logged yet.</p>
+          </div>
+
+          <div class="shell-mod">
+            <p class="shell-mod__lbl">Truth Claims</p>
+            <p class="shell-mod__empty">No claims distilled yet.</p>
+          </div>
+
+          <div class="shell-mod shell-mod--wide">
+            <p class="shell-mod__lbl">Recent Revisions</p>
+            <p class="shell-mod__line">The shell is assembling. Return when the four instruments are ready.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
 
 
-    /* --- Nav scroll awareness --- */
-    (function () {
-      const nav = document.getElementById('main-nav');
-      if (!nav) return;
+<!-- ╔══════════════════════════════════════════
+     CLOSING
+═══════════════════════════════════════════╗ -->
+<section class="section close-band" id="close" aria-label="Philosophy">
+  <div class="wrap wrap--tight">
 
-      const onScroll = () => {
-        if (window.scrollY > 60) {
-          nav.classList.add('is-scrolled');
-        } else {
-          nav.classList.remove('is-scrolled');
-        }
-      };
+    <div class="close-rule" aria-hidden="true"></div>
 
-      window.addEventListener('scroll', onScroll, { passive: true });
-      onScroll();
-    })();
+    <blockquote class="close-quote up">
+      "A personal constitution is not found.
+      It is constructed — question by question,
+      experiment by experiment, revision by revision."
+    </blockquote>
+
+    <div class="close-divider" aria-hidden="true"></div>
+
+    <p class="close-body up d1">
+      Lumen is not a productivity system. It does not optimize your morning or aggregate your goals. It is a framework for building conviction from tested experience — for knowing, with some rigor, what you actually believe and why.
+    </p>
+
+    <p class="close-body up d2">
+      The examined life requires infrastructure. This is that infrastructure.
+    </p>
+
+    <a href="#tools" class="close-cta up d3">
+      Begin the inquiry
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+
+  </div>
+</section>
+
+</main>
 
 
-    /* --- Scroll-reveal (IntersectionObserver) --- */
-    (function () {
-      if (!('IntersectionObserver' in window)) {
-        // Fallback: make everything visible immediately
-        document.querySelectorAll('.fade-up').forEach(el => el.classList.add('is-visible'));
-        return;
-      }
+<!-- ╔══════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════╗ -->
+<footer class="footer">
+  <div class="wrap footer__row">
+    <span class="footer__brand">Lumen</span>
+    <span class="footer__tag">An operating system for the examined life.</span>
+  </div>
+</footer>
 
-      const observer = new IntersectionObserver(
-        entries => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('is-visible');
-              observer.unobserve(entry.target);
-            }
-          });
-        },
-        { threshold: 0.08, rootMargin: '0px 0px -32px 0px' }
-      );
 
-      document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+<script>
+/* ── Theme toggle ── */
+(function () {
+  const btn  = document.querySelector('[data-theme-toggle]');
+  const root = document.documentElement;
+  let   t    = 'dark'; // Lumen defaults dark — light is a toggle option
+  root.setAttribute('data-theme', t);
 
-      // Hero elements: trigger immediately after paint
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          document.querySelectorAll('.hero .fade-up').forEach(el => el.classList.add('is-visible'));
-        }, 80);
-      });
-    })();
-  </script>
+  function icon () {
+    if (!btn) return;
+    btn.setAttribute('aria-label', 'Switch to ' + (t === 'dark' ? 'light' : 'dark') + ' mode');
+    btn.innerHTML = t === 'dark'
+      ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`
+      : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+  }
+  icon();
+  if (btn) btn.addEventListener('click', () => { t = t === 'dark' ? 'light' : 'dark'; root.setAttribute('data-theme', t); icon(); });
+})();
+
+/* ── Nav scroll awareness ── */
+(function () {
+  const nav = document.getElementById('nav');
+  if (!nav) return;
+  const tick = () => nav.classList.toggle('scrolled', window.scrollY > 60);
+  window.addEventListener('scroll', tick, { passive: true });
+  tick();
+})();
+
+/* ── Scroll reveal ── */
+(function () {
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.up').forEach(el => el.classList.add('in'));
+    return;
+  }
+  const obs = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } }),
+    { threshold: .08, rootMargin: '0px 0px -28px 0px' }
+  );
+  document.querySelectorAll('.up').forEach(el => obs.observe(el));
+
+  // Hero fires on first paint
+  requestAnimationFrame(() =>
+    setTimeout(() => document.querySelectorAll('.hero .up').forEach(el => el.classList.add('in')), 80)
+  );
+})();
+</script>
 
 </body>
 </html>
