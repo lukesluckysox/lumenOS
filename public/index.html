@@ -1316,7 +1316,7 @@
       <p class="card__desc">The threshold instrument. Liminal surfaces assumptions you did not know you held — the inherited frameworks, silent priors, and borrowed certainties that quietly shape every judgment. Where inquiry begins and nothing is taken as given.</p>
       <div class="card__foot">
         <span class="card__status card__status--live">Live</span>
-        <a href="https://liminal-app.up.railway.app/" target="_blank" rel="noopener noreferrer" class="card__cta card__cta--live" aria-label="Enter Liminal">
+        <a href="https://liminal-app.up.railway.app/" target="_blank" rel="noopener noreferrer" class="card__cta card__cta--live" data-has-sso="true" aria-label="Enter Liminal">
           Enter
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
@@ -1333,7 +1333,7 @@
       <p class="card__desc">The pattern instrument. Parallax reads across time — your writing, responses, and choices — to surface recurring structures in thought, emotion, and behavior. What persists beneath the noise is what matters. What repeats is what you are.</p>
       <div class="card__foot">
         <span class="card__status card__status--live">Live</span>
-        <a href="https://parallaxapp.up.railway.app/#/" target="_blank" rel="noopener noreferrer" class="card__cta card__cta--live" aria-label="Enter Parallax">
+        <a href="https://parallaxapp.up.railway.app/" target="_blank" rel="noopener noreferrer" class="card__cta card__cta--live" data-has-sso="true" aria-label="Enter Parallax">
           Enter
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
@@ -1564,6 +1564,35 @@
 
 
 <script>
+/* ── SSO — intercept card "Enter" clicks and inject a short-lived token ── */
+(function () {
+  // For apps with auth (data-has-sso="true"), redirect through the app's own
+  // /api/auth/sso?token=<value> endpoint which sets the session cookie then
+  // bounces the user to "/". Apps without auth open directly.
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.card__cta--live').forEach(function (link) {
+      link.addEventListener('click', async function (e) {
+        e.preventDefault();
+        var dest = link.getAttribute('href');
+        var hasSso = link.getAttribute('data-has-sso') === 'true';
+
+        if (hasSso) {
+          try {
+            var res = await fetch('/api/auth/sso-token', { credentials: 'same-origin' });
+            if (res.ok) {
+              var data = await res.json();
+              var origin = new URL(dest).origin;
+              dest = origin + '/api/auth/sso?token=' + encodeURIComponent(data.token);
+            }
+          } catch { /* fallback: open original URL without SSO */ }
+        }
+
+        window.open(dest, '_blank', 'noopener,noreferrer');
+      });
+    });
+  });
+})();
+
 /* ── Auth gate ── */
 (function () {
   var gate   = document.getElementById('lumen-gate');

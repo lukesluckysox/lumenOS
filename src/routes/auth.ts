@@ -112,6 +112,28 @@ router.post('/logout', (req: Request, res: Response) => {
   return res.json({ ok: true });
 });
 
+// ─── GET /api/auth/sso-token ────────────────────────────────────────────────────
+// Issues a short-lived (2 min) cross-app SSO token from an active Lumen session.
+// Sub-apps call GET /api/auth/sso?token=<value> to exchange it for their own session.
+
+router.get('/sso-token', (req: Request, res: Response) => {
+  const token = (req.cookies as Record<string, string>)?.[COOKIE_NAME];
+  if (!token) return res.status(401).json({ error: 'Not authenticated.' });
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as { userId: number; username: string };
+    const ssoToken = jwt.sign(
+      { userId: payload.userId, username: payload.username, sso: true },
+      JWT_SECRET,
+      { expiresIn: '2m' }
+    );
+    return res.json({ token: ssoToken });
+  } catch {
+    res.clearCookie(COOKIE_NAME);
+    return res.status(401).json({ error: 'Session expired.' });
+  }
+});
+
 // ─── GET /api/auth/me ─────────────────────────────────────────────────────────
 
 router.get('/me', (req: Request, res: Response) => {
