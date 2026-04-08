@@ -4,6 +4,10 @@
 const PARALLAX_URL = process.env.PARALLAX_URL;
 const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN;
 
+// Startup diagnostics — surfaces in Railway logs so missing env vars are obvious
+if (!PARALLAX_URL)          console.warn('[parallaxEmitter] PARALLAX_URL not set — Liminal→Parallax feed is DISABLED');
+if (!LUMEN_INTERNAL_TOKEN)  console.warn('[parallaxEmitter] LUMEN_INTERNAL_TOKEN not set — cross-app auth is DISABLED');
+
 export async function emitToParallax(event: {
   lumenUserId: string;
   sessionId: string;
@@ -39,6 +43,7 @@ export async function emitToParallax(event: {
 
 // Also push to Axiom when we detect strong belief/truth signals
 const AXIOM_URL = process.env.AXIOM_TOOL_URL;
+if (!AXIOM_URL) console.warn('[parallaxEmitter] AXIOM_TOOL_URL not set — Liminal→Axiom feed is DISABLED');
 
 export async function emitToAxiom(event: {
   lumenUserId: string;
