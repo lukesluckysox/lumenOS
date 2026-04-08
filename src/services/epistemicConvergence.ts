@@ -1,5 +1,6 @@
 import { EpistemicCandidate } from '../schema/epistemic.js';
 import { distillText } from '../services/distillText.js';
+import { transformForAxiom } from '../services/voiceTransform.js';
 
 const THEMES: Record<string, string[]> = {
   visibility: ['visibility', 'visible', 'concealment', 'conceal', 'hide', 'hiding', 'exposure', 'expose', 'judgment', 'seen', 'recognition', 'show', 'public', 'private', 'reveal'],
@@ -86,13 +87,14 @@ export function buildConvergencePayload(
   const freqMatch = parallax.title.match(/[×xX]\s*(\d+)/) || parallax.summary.match(/frequency[:\s]+(\d+)/i) || parallax.summary.match(/(\d+)\s*times/i);
   if (freqMatch) parFreq = parseInt(freqMatch[1], 10);
 
+  // Both pieces arrive in first-person for the constitutional proposal
   return {
     userId,
     title: `${liminalClean} / ${parallaxClean}`,
-    signal: distillText(`Liminal surfaced: "${liminalClean}". Independently, Parallax identified: "${parallaxClean}" (frequency: ${parFreq}).`),
-    convergence: distillText(`Two independent instruments — belief-questioning (Liminal) and pattern recognition (Parallax) — arrived at structurally similar observations around [${sharedThemesList.join(', ')}]. Cross-tool agreement is stronger evidence than single-source repetition.`),
-    interpretation: distillText(`This theme [${sharedThemesList[0] || 'shared'}] manifests at multiple levels: as a held belief (Liminal) and as a behavioral tendency (Parallax). The convergence suggests this is not incidental — it is a consistent operating principle.`),
-    truthClaim: distillText(`"${liminalClean}" — confirmed by independent evidence from both sources: belief-questioning (Liminal) and behavioral pattern recognition (Parallax).`),
+    signal: `I believe "${liminalClean}" and independently I tend toward "${parallaxClean}" (observed across ${parFreq} sessions). These arrived from different methods of inquiry.`,
+    convergence: `I hold "${sharedThemesList.join(', ')}" at two distinct levels simultaneously — as a belief I return to in reflection, and as a pattern in how I actually behave. When two independent methods of inquiry reach the same ground, the evidence is stronger than either alone.`,
+    interpretation: `"${sharedThemesList[0] || 'this theme'}" is not incidental for me — it shows up in what I believe and in how I act. This is a consistent operating principle, not a passing preoccupation.`,
+    truthClaim: `I hold "${liminalClean}" as both a lived belief and a demonstrated behavioral tendency — confirmed through independent inquiry from two different angles.`,
     workingPrinciple: '',
     liminalCount: 1,
     parallaxCount: parFreq,

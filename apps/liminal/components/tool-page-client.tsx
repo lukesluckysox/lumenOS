@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useState, useEffect, type FormEvent, type ReactNode } from 'react';
 import { ToolIcon } from '@/components/tool-icon';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export interface ToolConfig {
@@ -56,8 +56,20 @@ const TRUST_NOTES: Record<string, { bestFor: string; notFor: string }> = {
 
 export function ToolPageClient({ config }: ToolPageClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [input, setInput] = useState('');
+  const [seedActive, setSeedActive] = useState(false);
   const [error, setError] = useState('');
+
+  // Pre-fill from ?seed= param (loop-routed inquiry seeds)
+  useEffect(() => {
+    const seed = searchParams.get('seed');
+    if (seed && !input) {
+      setInput(seed);
+      setSeedActive(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [loading, setLoading] = useState(false);
 
   const minLen = config.minLength ?? 10;
@@ -269,26 +281,49 @@ export function ToolPageClient({ config }: ToolPageClientProps) {
             {config.inputLabel}
           </label>
 
+          {seedActive && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '0.5rem',
+                fontSize: '0.6875rem',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: accentAlpha(0.45),
+              }}
+            >
+              <span style={{ opacity: 0.5 }}>↺</span>
+              <span>From the loop — edit freely</span>
+            </div>
+          )}
+
           {config.isTextarea !== false ? (
             <textarea
               id="tool-input"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => { setInput(e.target.value); setSeedActive(false); }}
               placeholder={config.inputPlaceholder}
               disabled={loading}
               rows={8}
               className="liminal-input"
-              style={{ resize: 'vertical', minHeight: '180px' }}
+              style={{
+                resize: 'vertical',
+                minHeight: '180px',
+                ...(seedActive ? { borderColor: accentAlpha(0.25) } : {}),
+              }}
             />
           ) : (
             <input
               id="tool-input"
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => { setInput(e.target.value); setSeedActive(false); }}
               placeholder={config.inputPlaceholder}
               disabled={loading}
               className="liminal-input"
+              style={seedActive ? { borderColor: accentAlpha(0.25) } : {}}
             />
           )}
 

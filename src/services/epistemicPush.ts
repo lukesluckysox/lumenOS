@@ -3,6 +3,10 @@ import { epistemicCandidates } from '../schema/epistemic';
 import { eq, and } from 'drizzle-orm';
 import { findConvergencePairs, buildConvergencePayload } from '../services/epistemicConvergence.js';
 import { distillText, distillPayload } from '../services/distillText.js';
+import { transformForAxiom, transformPayloadForAxiom, transformVoice } from '../services/voiceTransform.js';
+import { routeToLiminalTool, toolToPromptType } from '../services/liminalRouter.js';
+
+const LIMINAL_API_URL = process.env.LIMINAL_API_URL || 'https://liminal-app.up.railway.app';
 
 const AXIOM_API_URL = process.env.AXIOM_API_URL || 'https://axiomtool-production.up.railway.app';
 const PRAXIS_API_URL = process.env.PRAXIS_API_URL || 'https://praxis-production-da89.up.railway.app';
@@ -39,51 +43,51 @@ export async function pushCandidateToAxiomtool(candidate: typeof epistemicCandid
     const confScore = Math.round(candidate.confidence * 100);
     const confLabel = confidenceToText(candidate.confidence);
 
-    // ── Signal: specific observable fact ────────────────────────────────────
+    // ── Signal: specific observable fact — first-person for Axiom ────────────
     let signal: string;
     if (isParallax && frequency) {
-      signal = `Parallax pattern: "${cleanTitle}" orientation appeared across ${frequency} distinct check-in sessions. This is the primary recurring mode in available pattern data.`;
+      signal = `I orient toward "${cleanTitle}" — this pattern appeared across ${frequency} distinct observation sessions, making it a primary recurring mode rather than a situational response.`;
     } else if (isParallax) {
-      signal = `Parallax pattern analysis identified "${cleanTitle}" as a recurring orientation in check-in and writing data.`;
+      signal = `I demonstrate "${cleanTitle}" as a recurring orientation across check-in and writing data.`;
     } else if (isLiminal) {
-      signal = `Liminal belief-questioning sessions repeatedly returned to "${cleanTitle}" as a live belief or identity frame across independent sessions.`;
+      signal = `I return repeatedly to "${cleanTitle}" as a live belief or identity frame across independent reflection sessions.`;
     } else {
-      signal = candidate.summary;
+      signal = transformForAxiom(candidate.summary);
     }
 
-    // ── Convergence: structural alignment, not just repetition ──────────────
+    // ── Convergence: structural alignment — first-person ────────────────────
     let convergence: string;
     if (isParallax && frequency && frequency >= 10) {
-      convergence = `High-frequency occurrence (${frequency} sessions) establishes this as structurally durable rather than situational. Patterns at this frequency across Parallax — where each session is an independent observation — indicate a stable perceptual or behavioral orientation, not a contextual response.`;
+      convergence = `I have expressed this orientation across ${frequency} independent sessions — a frequency that makes it structurally durable rather than situational. This is not how I respond sometimes; it is how I tend to process experience.`;
     } else if (isParallax && frequency) {
-      convergence = `Repeated occurrence across ${frequency} distinct Parallax sessions suggests emerging consistency. Below the threshold for structural certainty, but above noise — treat as working pattern pending further confirmation.`;
+      convergence = `I have demonstrated this pattern across ${frequency} distinct sessions. Emerging consistency — not yet structurally certain, but above noise. I should treat this as a working orientation pending further confirmation.`;
     } else if (isLiminal) {
-      convergence = `Recurrence across separate Liminal sessions — each an independent belief-questioning exercise — indicates this is not a passing thought but a persistent self-concept or identity anchor. Independent recurrence is stronger evidence than single-session depth.`;
+      convergence = `I have returned to this independently across separate reflection sessions — each one a fresh inquiry. This is not a passing thought; it recurs because it is load-bearing in how I understand myself.`;
     } else {
-      convergence = `Pattern identified with ${confScore}% confidence across available data. Convergence is ${confScore >= 70 ? 'sufficient to treat as working doctrine' : 'emergent — interpret provisionally'}.`;
+      convergence = `I hold this pattern at ${confScore}% confidence across available evidence. ${confScore >= 70 ? 'I can treat this as a working doctrine.' : 'I should interpret this provisionally — the evidence is emergent.'}`;
     }
 
-    // ── Interpretation: what it MEANS, one level above the evidence ─────────
+    // ── Interpretation: one level above the evidence — first-person ─────────
     const strengthWord = confScore >= 80 ? 'primary' : confScore >= 60 ? 'significant' : 'notable';
     let interpretation: string;
     if (isParallax) {
-      interpretation = `The consistent presence of "${cleanTitle}" as a ${strengthWord} mode suggests this orientation functions as a default cognitive or perceptual frame — the way experience is processed before it is interpreted. ${confScore < 60 ? 'Evidence is moderate; treat as working hypothesis rather than settled truth.' : 'Confidence is sufficient to treat this as a structurally present tendency, not a surface preference.'}`;
+      interpretation = `"${cleanTitle}" functions as a default cognitive frame for me — this is how I process experience before I interpret it. ${confScore < 60 ? 'The evidence is moderate; I should treat this as a working hypothesis rather than settled truth.' : 'The confidence is sufficient to treat this as a structurally present tendency in how I operate.'}`;
     } else if (isLiminal) {
-      interpretation = `The persistence of "${cleanTitle}" across independent belief-questioning sessions suggests it functions as an anchor concept — a reference frame from which other beliefs are evaluated. ${confScore < 60 ? 'Evidence is provisional; this belief may be more situational than structural.' : 'Its recurrence indicates it is load-bearing in the current self-model.'}`;
+      interpretation = `"${cleanTitle}" functions as an anchor concept for me — a reference frame from which I evaluate other beliefs. ${confScore < 60 ? 'The evidence is provisional; this may be more situational than structural.' : 'Its recurrence indicates it is load-bearing in my current self-model.'}`;
     } else {
-      interpretation = `This pattern at ${confScore}% confidence suggests a ${strengthWord} and durable tendency. ${confScore < 60 ? 'Interpret provisionally — evidence threshold is moderate.' : 'Treat as working doctrine pending contradictory evidence.'}`;
+      interpretation = `I hold this as a ${strengthWord} and durable tendency at ${confScore}% confidence. ${confScore < 60 ? 'I should interpret this provisionally.' : 'I can treat this as working doctrine pending contradictory evidence.'}`;
     }
 
-    // ── Truth Claim: distilled epistemic claim ───────────────────────────────
+    // ── Truth Claim: distilled first-person epistemic claim ──────────────────
     let truthClaim: string;
     if (isParallax && frequency) {
-      truthClaim = `${cleanTitle} functions as a primary cognitive orientation — consistent enough across ${frequency} independent observations to be treated as structural rather than incidental. This is how experience tends to be processed, not just how it appears in a given moment.`;
+      truthClaim = `I tend toward "${cleanTitle}" — consistent enough across ${frequency} independent observations to be structural rather than incidental. This is how I process experience, not just how it appears in a given moment.`;
     } else if (isParallax) {
-      truthClaim = `${cleanTitle} represents a recurring operational mode in available Parallax data. Treat as a working doctrine pending revision.`;
+      truthClaim = `I demonstrate "${cleanTitle}" as a recurring operational mode. I treat this as a working doctrine, open to revision.`;
     } else if (isLiminal) {
-      truthClaim = `${cleanTitle} is a persistent identity frame or belief that recurs independently across reflective sessions — making it load-bearing in the current self-model rather than merely reactive.`;
+      truthClaim = `"${cleanTitle}" is a persistent identity frame or belief I return to independently across reflection — making it load-bearing in my self-model rather than merely reactive.`;
     } else {
-      truthClaim = `${cleanTitle}: an active pattern at ${confScore}% confidence. ${confScore < 60 ? 'Provisional — requires further evidence before treating as constitutionally reliable.' : 'Sufficient to treat as working doctrine.'}`;
+      truthClaim = `I hold "${cleanTitle}" as an active pattern at ${confScore}% confidence. ${confScore < 60 ? 'Provisional — I need further evidence before treating this as constitutionally reliable.' : 'I can treat this as working doctrine.'}`;
     }
 
     const body = distillPayload({

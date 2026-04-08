@@ -4,6 +4,52 @@
 const LUMEN_API_URL = process.env.LUMEN_API_URL;
 const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET;
 
+// ─── Client-side routing: map seed text to Liminal tool ─────────────────────
+// Mirrors the server-side liminalRouter logic, kept minimal here since Axiom
+// already knows the event type which is a strong routing signal.
+
+type LiminalTool = 'small-council' | 'fool' | 'genealogist' | 'interlocutor' | 'interpreter' | 'stoics-ledger';
+
+function routeSeedToTool(
+  seedText: string,
+  eventType: string,
+  extra?: { poleA?: string; poleB?: string }
+): { tool: LiminalTool; reason: string } {
+  // Event-type-based routing (strong signal)
+  if (eventType === 'tension_surfaced') {
+    return { tool: 'small-council', reason: 'Tension between poles → deliberation' };
+  }
+  if (eventType === 'truth_revision') {
+    return { tool: 'fool', reason: 'Revised truth → challenge the replacement belief' };
+  }
+
+  // Text-pattern routing for constitutional_promotion
+  const lower = seedText.toLowerCase();
+
+  // Absolute/certain language → Fool
+  if (/\b(always|never|certainly|absolutely|of course|without doubt)\b/.test(lower)) {
+    return { tool: 'fool', reason: 'Certain language in claim → reckoning' };
+  }
+
+  // Identity / origin framing → Genealogist
+  if (/\b(kind of person|who i am|identity|core|always been|inherited|grew up)\b/.test(lower)) {
+    return { tool: 'genealogist', reason: 'Identity claim → trace origin' };
+  }
+
+  // Argument / thesis framing → Interlocutor
+  if (/\b(i believe|i think|i argue|i hold|principle|therefore|because)\b/.test(lower)) {
+    return { tool: 'interlocutor', reason: 'Thesis/principle → examination' };
+  }
+
+  // Symbol / recurring pattern → Interpreter
+  if (/\b(symbol|recurring|keep seeing|dream|pattern|lens)\b/.test(lower)) {
+    return { tool: 'interpreter', reason: 'Symbolic content → multi-lens reading' };
+  }
+
+  // Default for constitutional promotion: Genealogist (trace the origin of this truth)
+  return { tool: 'genealogist', reason: 'Constitutional truth → examine where it came from' };
+}
+
 export interface AxiomFeedbackEvent {
   lumenUserId: string;
   axiomId: number;
@@ -108,8 +154,14 @@ async function emitAxiomEvent(event: AxiomFeedbackEvent): Promise<void> {
       body: JSON.stringify({ ...event, sourceApp: "axiom" }),
     });
 
-    // Also send the liminalSeed directly to Liminal's seed queue
+    // Also send the liminalSeed directly to Liminal's seed queue, with tool routing
     if (event.payload.liminalSeed) {
+      const seedText = event.payload.liminalSeed as string;
+      const routing = routeSeedToTool(seedText, event.eventType, {
+        poleA: event.payload.poleA as string | undefined,
+        poleB: event.payload.poleB as string | undefined,
+      });
+
       await fetch(`${LUMEN_API_URL}/api/internal/inquiry-seeds`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-lumen-internal-token": LUMEN_INTERNAL_TOKEN },
@@ -118,7 +170,9 @@ async function emitAxiomEvent(event: AxiomFeedbackEvent): Promise<void> {
           sourceApp: "axiom",
           sourceEventType: event.eventType,
           sourceId: String(event.axiomId),
-          seedText: event.payload.liminalSeed,
+          seedText,
+          suggestedTool: routing.tool,
+          routingReason: routing.reason,
           createdAt: event.createdAt,
         }),
       });

@@ -7,6 +7,8 @@ interface Seed {
   source_app: string;
   source_event_type: string;
   seed_text: string;
+  suggested_tool: string | null;
+  routing_reason: string | null;
   created_at: string;
 }
 
@@ -54,7 +56,17 @@ function distillSeedText(text: string): string {
   return result.replace(/\s{2,}/g, ' ').trim();
 }
 
-export function InquirySeeds({ onSelectSeed }: { onSelectSeed?: (text: string) => void }) {
+// Tool display names for the seed label
+const TOOL_LABELS: Record<string, string> = {
+  'small-council':  'Small Council',
+  'fool':           'The Fool',
+  'genealogist':    'The Genealogist',
+  'interlocutor':   'The Interlocutor',
+  'interpreter':    'The Interpreter',
+  'stoics-ledger':  "The Stoic's Ledger",
+};
+
+export function InquirySeeds({ onSelectSeed }: { onSelectSeed?: (seed: Seed) => void }) {
   const [seeds, setSeeds] = useState<Seed[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,26 +89,36 @@ export function InquirySeeds({ onSelectSeed }: { onSelectSeed?: (text: string) =
         New questions have surfaced from the loop.
       </p>
       <div className="space-y-3">
-        {seeds.map((seed) => (
-          <button
-            key={seed.id}
-            onClick={() => onSelectSeed?.(seed.seed_text)}
-            className="w-full text-left p-4 rounded-lg border border-[#2B2D42]/40 bg-[#2B2D42]/20 hover:bg-[#2B2D42]/40 hover:border-[#FFD166]/30 transition-all duration-200 group"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] uppercase tracking-widest text-[#FFD166]/70">
-                {SOURCE_LABELS[seed.source_app] || seed.source_app}
-              </span>
-              <span className="text-[10px] text-[#8D99AE]/40">·</span>
-              <span className="text-[10px] text-[#8D99AE]/40">
-                {EVENT_LABELS[seed.source_event_type] || seed.source_event_type}
-              </span>
-            </div>
-            <p className="text-sm text-[#EDF2F4] leading-relaxed group-hover:text-white transition-colors">
-              {distillSeedText(seed.seed_text)}
-            </p>
-          </button>
-        ))}
+        {seeds.map((seed) => {
+          const toolLabel = seed.suggested_tool ? TOOL_LABELS[seed.suggested_tool] : null;
+          return (
+            <button
+              key={seed.id}
+              onClick={() => onSelectSeed?.(seed)}
+              className="w-full text-left p-4 rounded-lg border border-[#2B2D42]/40 bg-[#2B2D42]/20 hover:bg-[#2B2D42]/40 hover:border-[#FFD166]/30 transition-all duration-200 group"
+            >
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-widest text-[#FFD166]/70">
+                    {SOURCE_LABELS[seed.source_app] || seed.source_app}
+                  </span>
+                  <span className="text-[10px] text-[#8D99AE]/40">·</span>
+                  <span className="text-[10px] text-[#8D99AE]/40">
+                    {EVENT_LABELS[seed.source_event_type] || seed.source_event_type}
+                  </span>
+                </div>
+                {toolLabel && (
+                  <span className="text-[10px] uppercase tracking-widest text-[#8D99AE]/50 shrink-0">
+                    → {toolLabel}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-[#EDF2F4] leading-relaxed group-hover:text-white transition-colors">
+                {distillSeedText(seed.seed_text)}
+              </p>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -3742,6 +3742,33 @@ Return ONLY valid JSON:
 
       const timestamp = createdAt || new Date().toISOString();
 
+      // ---- Rewrite cross-talk to first-person voice ----
+      // Liminal tool output is in "you" voice (addressing the user).
+      // When stored in Parallax, we normalize to first-person "I" so the
+      // data is consistent with how the user would express their own state.
+      function toFirstPerson(text: string): string {
+        if (!text) return text;
+        return text
+          .replace(/\bYou are\b/g, 'I am').replace(/\byou are\b/g, 'I am')
+          .replace(/\bYou were\b/g, 'I was').replace(/\byou were\b/g, 'I was')
+          .replace(/\bYou have\b/g, 'I have').replace(/\byou have\b/g, 'I have')
+          .replace(/\bYou feel\b/g, 'I feel').replace(/\byou feel\b/g, 'I feel')
+          .replace(/\bYou tend\b/g, 'I tend').replace(/\byou tend\b/g, 'I tend')
+          .replace(/\bYou seem\b/g, 'I seem').replace(/\byou seem\b/g, 'I seem')
+          .replace(/\bYou believe\b/g, 'I believe').replace(/\byou believe\b/g, 'I believe')
+          .replace(/\bYou think\b/g, 'I think').replace(/\byou think\b/g, 'I think')
+          .replace(/\bYou might\b/g, 'I might').replace(/\byou might\b/g, 'I might')
+          .replace(/\bYou often\b/g, 'I often').replace(/\byou often\b/g, 'I often')
+          .replace(/\bYou always\b/g, 'I always').replace(/\byou always\b/g, 'I always')
+          .replace(/\bYou never\b/g, 'I never').replace(/\byou never\b/g, 'I never')
+          .replace(/\byourself\b/gi, 'myself')
+          .replace(/\bYour\b/g, 'My').replace(/\byour\b/g, 'my')
+          .replace(/\s{2,}/g, ' ').trim();
+      }
+
+      const storedSummary = summary ? toFirstPerson(summary) : null;
+      const storedInput   = inputText ? toFirstPerson(inputText) : "";
+
       // ---- Create the synthetic check-in ----
       const checkin = storage.createCheckin({
         user_id: userId,
@@ -3750,10 +3777,10 @@ Return ONLY valid JSON:
         data_vec: JSON.stringify(dataVec),
         self_archetype: selfArchetype,
         data_archetype: dataArchetype,
-        feeling_text: summary ? `[reflection: ${toolSlug}] ${summary}` : `[reflective session: ${toolSlug}]`,
+        feeling_text: storedSummary ? `[reflection: ${toolSlug}] ${storedSummary}` : `[reflective session: ${toolSlug}]`,
         spotify_summary: null,
         fitness_summary: `liminal:${toolSlug}`,
-        llm_narrative: summary || null,
+        llm_narrative: storedSummary || null,
       });
 
       // ---- Create the writing record ----
@@ -3761,7 +3788,7 @@ Return ONLY valid JSON:
         user_id: userId,
         timestamp,
         title: `Reflective session — ${toolSlug} (${sessionId})`,
-        content: inputText || "",
+        content: storedInput,
         date_written: timestamp.substring(0, 10),
         analysis: structuredOutput ? JSON.stringify(structuredOutput) : null,
         nudges: JSON.stringify(scaledNudges),
@@ -3773,9 +3800,9 @@ Return ONLY valid JSON:
         user_id: userId,
         liminal_session_id: sessionId,
         tool_slug: toolSlug,
-        input_text: inputText || null,
+        input_text: storedInput || null,
         structured_output: structuredOutput ? JSON.stringify(structuredOutput) : null,
-        summary: summary || null,
+        summary: storedSummary || null,
         dimension_nudges: JSON.stringify(scaledNudges),
         checkin_id: checkin.id,
         writing_id: writing.id,
@@ -3792,7 +3819,7 @@ Return ONLY valid JSON:
       });
       emitForRecord(userId, writing.id, {
         title: `Reflective session: ${toolSlug}`,
-        content: inputText || "",
+        content: storedInput,
         timestamp,
       });
 

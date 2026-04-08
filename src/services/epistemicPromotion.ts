@@ -11,6 +11,8 @@ import {
   promptQueue,
 } from '../db';
 import { distillText } from '../services/distillText.js';
+import { transformVoice, transformForAxiom } from '../services/voiceTransform.js';
+import { routeToLiminalTool, toolToPromptType } from '../services/liminalRouter.js';
 
 type EpistemicEvent = typeof epistemicEvents.$inferSelect;
 type AxiomStatement = typeof axiomStatements.$inferSelect;
@@ -197,15 +199,33 @@ async function processParallaxEvent(event: EpistemicEvent): Promise<void> {
       break;
     }
     case 'identity_discrepancy': {
-      // Always create prompt_queue item for Liminal
+      // Raw text from Parallax is in "you" voice — convert to first-person for Liminal
+      const rawSummary = (payload.summary as string) || 'A gap was detected between stated values and observed behavior.';
+      const rawBody    = (payload.text as string)    || rawSummary;
+
+      // Transform to first-person "I" voice for the user-facing seed
+      const seedText = transformVoice(distillText(rawBody), {
+        sourceApp: 'parallax',
+        destinationApp: 'liminal',
+        layer: 'user_facing',
+      });
+
+      // Route to the best Liminal tool based on content
+      const routing = routeToLiminalTool({
+        text: seedText,
+        sourceApp: 'parallax',
+        sourceEventType: 'identity_discrepancy',
+        candidateType: 'identity_discrepancy',
+      });
+
       db.insert(promptQueue)
         .values({
           id: uid(),
           userId: event.userId,
           destinationApp: 'liminal',
-          promptType: 'discrepancy_prompt',
-          title: distillText((payload.summary as string) || 'Identity discrepancy detected'),
-          body: distillText((payload.text as string) || 'A gap was detected between your stated values and observed behavior. Reflect on this in your next session.'),
+          promptType: toolToPromptType(routing.tool),
+          title: distillText(rawSummary).slice(0, 120),
+          body: seedText,
           relatedCandidateId: null,
           priority: 80,
           status: 'open',
@@ -361,14 +381,29 @@ async function createCandidate(params: CreateCandidateParams): Promise<void> {
 // ─── Auto-queuing helpers ────────────────────────────────────────────────────
 
 function createAxiomQueueItem(candidate: typeof epistemicCandidates.$inferSelect): void {
+  // Convert candidate summary to first-person "I" voice for Liminal
+  const rawBody = candidate.summary || candidate.title;
+  const seedText = transformVoice(distillText(rawBody), {
+    sourceApp: candidate.candidateType?.includes('liminal') ? 'liminal' : 'parallax',
+    destinationApp: 'liminal',
+    layer: 'user_facing',
+  });
+
+  // Route to the most appropriate Liminal tool
+  const routing = routeToLiminalTool({
+    text: seedText,
+    sourceApp: 'axiom',
+    candidateType: candidate.candidateType,
+  });
+
   db.insert(promptQueue)
     .values({
       id: uid(),
       userId: candidate.userId,
       destinationApp: 'liminal',
-      promptType: 'followup_question',
-      title: distillText(`Review candidate: ${candidate.title}`),
-      body: distillText(`A new ${candidate.candidateType} has been queued for review: "${candidate.summary}". Consider accepting, rejecting, or testing this candidate.`),
+      promptType: toolToPromptType(routing.tool),
+      title: distillText(candidate.title).slice(0, 120),
+      body: seedText,
       relatedCandidateId: candidate.id,
       priority: 60,
       status: 'open',
@@ -433,14 +468,31 @@ export function createWatchRules(axiom: AxiomStatement): void {
 }
 
 export function createLiminalRevisionPrompts(axiom: AxiomStatement): void {
+  // Axiom statements are already first-person ("I …") — just distill tool names
+  const rawStatement = axiom.statement;
+  const seedText = transformVoice(distillText(
+    `A truth has taken shape: "${rawStatement}". Consider how this shows up in lived experience.`
+  ), {
+    sourceApp: 'axiom',
+    destinationApp: 'liminal',
+    layer: 'user_facing',
+  });
+
+  // Route based on the axiom content
+  const routing = routeToLiminalTool({
+    text: rawStatement,
+    sourceApp: 'axiom',
+    sourceEventType: 'constitutional_promotion',
+  });
+
   db.insert(promptQueue)
     .values({
       id: uid(),
       userId: axiom.userId,
       destinationApp: 'liminal',
-      promptType: 'revision_prompt',
-      title: `Reflect on new truth: ${axiom.statement.slice(0, 50)}`,
-      body: distillText(`A new truth has been accepted: "${axiom.statement}". In your next reflection, consider how this truth shows up in your lived experience.`),
+      promptType: toolToPromptType(routing.tool),
+      title: distillText(rawStatement).slice(0, 80),
+      body: seedText,
       relatedAxiomId: axiom.id,
       priority: 40,
       status: 'open',

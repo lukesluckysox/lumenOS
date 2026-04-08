@@ -154,10 +154,22 @@ function RoundHeader({ label }: { label: string }) {
 
 export function SmallCouncilClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Form state
   const [input, setInput] = useState('');
+  const [seedActive, setSeedActive] = useState(false);
   const [formError, setFormError] = useState('');
+
+  // Pre-fill from ?seed= param (loop-routed inquiry seeds)
+  useEffect(() => {
+    const seed = searchParams.get('seed');
+    if (seed && !input) {
+      setInput(seed);
+      setSeedActive(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Streaming state
   const [phase, setPhase] = useState<Phase>('idle');
@@ -373,14 +385,36 @@ export function SmallCouncilClient() {
               The question before the council
             </label>
 
+            {seedActive && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '0.5rem',
+                  fontSize: '0.6875rem',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: `rgb(${ACCENT} / 0.45)`,
+                }}
+              >
+                <span style={{ opacity: 0.5 }}>↺</span>
+                <span>From the loop — edit freely</span>
+              </div>
+            )}
+
             <textarea
               id="tool-input"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => { setInput(e.target.value); setSeedActive(false); }}
               placeholder="Describe the dilemma, decision, or situation you want the council to deliberate on. Be specific — the more context you give, the more useful the counsel."
               rows={8}
               className="liminal-input"
-              style={{ resize: 'vertical', minHeight: '180px' }}
+              style={{
+                resize: 'vertical',
+                minHeight: '180px',
+                ...(seedActive ? { borderColor: `rgb(${ACCENT} / 0.25)` } : {}),
+              }}
             />
 
             <div
