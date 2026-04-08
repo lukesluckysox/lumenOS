@@ -500,6 +500,27 @@
       .nav__links, .btn-ghost { display: none; }
     }
 
+    /* ─── Mobile touch & contrast fixes ──────────────────── */
+    @media (max-width: 640px) {
+      /* Ensure all interactive elements meet 44px minimum */
+      a, button, [role="button"], input, select, textarea {
+        min-height: 44px;
+      }
+
+      /* Ensure form inputs are comfortable on mobile */
+      input[type="email"],
+      input[type="password"],
+      input[type="text"] {
+        font-size: 16px; /* prevents iOS zoom on focus */
+      }
+
+      /* Bump icon buttons to meet 44px touch target */
+      .icon-btn {
+        width: 44px;
+        height: 44px;
+      }
+    }
+
     /* ─────────────────────────────────────────────
        HERO
     ───────────────────────────────────────────── */
