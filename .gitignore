@@ -31,3 +31,5 @@ lumen.db
 
 # Environment
 .env
+lumen.db*
+dist/

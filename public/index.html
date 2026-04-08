@@ -106,6 +106,252 @@
     }
 
     /* ─────────────────────────────────────────────
+       PALETTES
+       Each palette overrides the base dark/light vars.
+       data-palette="lumen" (or absent) = default.
+    ───────────────────────────────────────────── */
+
+    /* ── Liminal (editorial/antiquarian — warm tarnished) ── */
+    [data-palette="liminal"][data-theme="dark"],
+    [data-palette="liminal"]:not([data-theme="light"]) {
+      --bg:        #140e0e;
+      --surface:   #1a1712;
+      --surface-2: #211e18;
+      --surface-3: #2b2620;
+
+      --border:    rgba(138,130,118,.09);
+      --border-md: rgba(138,130,118,.17);
+      --border-lg: rgba(138,130,118,.27);
+      --divider:   rgba(138,130,118,.055);
+
+      --text:      #dad4c8;
+      --muted:     #8a8276;
+      --faint:     rgba(138,130,118,.4);
+
+      --gold:      #9c8654;
+      --gold-dim:  rgba(156,134,84,.10);
+      --gold-glow: rgba(156,134,84,.04);
+
+      --sh-sm:  0 1px 4px  rgba(0,0,0,.40);
+      --sh-md:  0 4px 20px rgba(0,0,0,.50);
+      --sh-lg:  0 20px 60px rgba(0,0,0,.60);
+    }
+    [data-palette="liminal"][data-theme="light"] {
+      --bg:        #f2ede4;
+      --surface:   #faf7f2;
+      --surface-2: #f5f1ea;
+      --surface-3: #ebe5da;
+
+      --border:    rgba(43,37,24,.07);
+      --border-md: rgba(43,37,24,.13);
+      --border-lg: rgba(43,37,24,.21);
+      --divider:   rgba(43,37,24,.045);
+
+      --text:      #2b2518;
+      --muted:     #6a6050;
+      --faint:     rgba(106,96,80,.45);
+
+      --gold:      #8a7540;
+      --gold-dim:  rgba(138,117,64,.08);
+      --gold-glow: rgba(138,117,64,.03);
+
+      --sh-sm:  0 1px 4px  rgba(43,37,24,.07);
+      --sh-md:  0 4px 20px rgba(43,37,24,.10);
+      --sh-lg:  0 20px 60px rgba(43,37,24,.14);
+    }
+
+    /* ── Parallax (cool steel/teal — psychological observation) ── */
+    [data-palette="parallax"][data-theme="dark"],
+    [data-palette="parallax"]:not([data-theme="light"]) {
+      --bg:        #0d1117;
+      --surface:   #141a22;
+      --surface-2: #1a2230;
+      --surface-3: #202b3a;
+
+      --border:    rgba(107,122,141,.09);
+      --border-md: rgba(107,122,141,.17);
+      --border-lg: rgba(107,122,141,.27);
+      --divider:   rgba(107,122,141,.055);
+
+      --text:      #bfc8d4;
+      --muted:     #6b7a8d;
+      --faint:     rgba(107,122,141,.4);
+
+      --gold:      #4d8c9e;
+      --gold-dim:  rgba(77,140,158,.10);
+      --gold-glow: rgba(77,140,158,.04);
+
+      --sh-sm:  0 1px 4px  rgba(0,0,0,.40);
+      --sh-md:  0 4px 20px rgba(0,0,0,.50);
+      --sh-lg:  0 20px 60px rgba(0,0,0,.60);
+    }
+    [data-palette="parallax"][data-theme="light"] {
+      --bg:        #f3f5f8;
+      --surface:   #ffffff;
+      --surface-2: #f5f7fa;
+      --surface-3: #e8ecf2;
+
+      --border:    rgba(26,37,53,.07);
+      --border-md: rgba(26,37,53,.13);
+      --border-lg: rgba(26,37,53,.21);
+      --divider:   rgba(26,37,53,.045);
+
+      --text:      #1a2535;
+      --muted:     #5a6a7d;
+      --faint:     rgba(90,106,125,.45);
+
+      --gold:      #2f6b7d;
+      --gold-dim:  rgba(47,107,125,.08);
+      --gold-glow: rgba(47,107,125,.03);
+
+      --sh-sm:  0 1px 4px  rgba(26,37,53,.07);
+      --sh-md:  0 4px 20px rgba(26,37,53,.10);
+      --sh-lg:  0 20px 60px rgba(26,37,53,.14);
+    }
+
+    /* ── Praxis (warm amber/earth — laboratory of the self) ── */
+    [data-palette="praxis"][data-theme="dark"],
+    [data-palette="praxis"]:not([data-theme="light"]) {
+      --bg:        #120f0a;
+      --surface:   #1a1510;
+      --surface-2: #221c14;
+      --surface-3: #2b2418;
+
+      --border:    rgba(138,125,109,.09);
+      --border-md: rgba(138,125,109,.17);
+      --border-lg: rgba(138,125,109,.27);
+      --divider:   rgba(138,125,109,.055);
+
+      --text:      #d8d0c4;
+      --muted:     #8a7d6d;
+      --faint:     rgba(138,125,109,.4);
+
+      --gold:      #c4943e;
+      --gold-dim:  rgba(196,148,62,.10);
+      --gold-glow: rgba(196,148,62,.04);
+
+      --sh-sm:  0 1px 4px  rgba(0,0,0,.40);
+      --sh-md:  0 4px 20px rgba(0,0,0,.50);
+      --sh-lg:  0 20px 60px rgba(0,0,0,.60);
+    }
+    [data-palette="praxis"][data-theme="light"] {
+      --bg:        #f5f0e6;
+      --surface:   #fcf9f4;
+      --surface-2: #f7f3eb;
+      --surface-3: #ede6d8;
+
+      --border:    rgba(34,28,18,.07);
+      --border-md: rgba(34,28,18,.13);
+      --border-lg: rgba(34,28,18,.21);
+      --divider:   rgba(34,28,18,.045);
+
+      --text:      #221c12;
+      --muted:     #6d6050;
+      --faint:     rgba(109,96,80,.45);
+
+      --gold:      #9a7530;
+      --gold-dim:  rgba(154,117,48,.08);
+      --gold-glow: rgba(154,117,48,.03);
+
+      --sh-sm:  0 1px 4px  rgba(34,28,18,.07);
+      --sh-md:  0 4px 20px rgba(34,28,18,.10);
+      --sh-lg:  0 20px 60px rgba(34,28,18,.14);
+    }
+
+    /* ── Axiom (deep constitutional blue — truth and structure) ── */
+    [data-palette="axiom"][data-theme="dark"],
+    [data-palette="axiom"]:not([data-theme="light"]) {
+      --bg:        #0b0f18;
+      --surface:   #111723;
+      --surface-2: #161e2e;
+      --surface-3: #1c2638;
+
+      --border:    rgba(96,112,136,.09);
+      --border-md: rgba(96,112,136,.17);
+      --border-lg: rgba(96,112,136,.27);
+      --divider:   rgba(96,112,136,.055);
+
+      --text:      #c4cdd8;
+      --muted:     #607088;
+      --faint:     rgba(96,112,136,.4);
+
+      --gold:      #3d7bba;
+      --gold-dim:  rgba(61,123,186,.10);
+      --gold-glow: rgba(61,123,186,.04);
+
+      --sh-sm:  0 1px 4px  rgba(0,0,0,.40);
+      --sh-md:  0 4px 20px rgba(0,0,0,.50);
+      --sh-lg:  0 20px 60px rgba(0,0,0,.60);
+    }
+    [data-palette="axiom"][data-theme="light"] {
+      --bg:        #f0f2f6;
+      --surface:   #ffffff;
+      --surface-2: #f4f6fa;
+      --surface-3: #e4e8f0;
+
+      --border:    rgba(20,28,43,.07);
+      --border-md: rgba(20,28,43,.13);
+      --border-lg: rgba(20,28,43,.21);
+      --divider:   rgba(20,28,43,.045);
+
+      --text:      #141c2b;
+      --muted:     #4a5a72;
+      --faint:     rgba(74,90,114,.45);
+
+      --gold:      #2d609a;
+      --gold-dim:  rgba(45,96,154,.08);
+      --gold-glow: rgba(45,96,154,.03);
+
+      --sh-sm:  0 1px 4px  rgba(20,28,43,.07);
+      --sh-md:  0 4px 20px rgba(20,28,43,.10);
+      --sh-lg:  0 20px 60px rgba(20,28,43,.14);
+    }
+
+    /* ── Palette selector dots ── */
+    .palette-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .palette-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform .15s var(--ease), box-shadow .15s var(--ease), border-color .15s var(--ease);
+      position: relative;
+    }
+    .palette-dot:hover { transform: scale(1.2); }
+    .palette-dot.active {
+      border-color: var(--text);
+      box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--text);
+    }
+    /* Tooltip */
+    .palette-dot::after {
+      content: attr(data-name);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface-3);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 10px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      padding: 3px 7px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border-md);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .15s var(--ease);
+      z-index: 200;
+    }
+    .palette-dot:hover::after { opacity: 1; }
+
+    /* ─────────────────────────────────────────────
        RESET
     ───────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1221,6 +1467,13 @@
       </ul>
 
       <div class="nav__right">
+        <div class="palette-dots" role="group" aria-label="Color palette">
+          <button class="palette-dot" data-palette="lumen"    data-name="Lumen"    style="background:#FFD166" aria-label="Lumen palette"></button>
+          <button class="palette-dot" data-palette="liminal"  data-name="Liminal"  style="background:#9c8654" aria-label="Liminal palette"></button>
+          <button class="palette-dot" data-palette="parallax" data-name="Parallax" style="background:#4d8c9e" aria-label="Parallax palette"></button>
+          <button class="palette-dot" data-palette="praxis"   data-name="Praxis"   style="background:#c4943e" aria-label="Praxis palette"></button>
+          <button class="palette-dot" data-palette="axiom"    data-name="Axiom"    style="background:#3d7bba" aria-label="Axiom palette"></button>
+        </div>
         <button class="icon-btn" data-theme-toggle aria-label="Switch to light mode">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -1791,22 +2044,78 @@
   }
 })();
 
-/* ── Theme toggle ── */
+/* ── Theme + Palette system ── */
 (function () {
   const btn  = document.querySelector('[data-theme-toggle]');
   const root = document.documentElement;
-  let   t    = 'dark'; // Lumen defaults dark — light is a toggle option
-  root.setAttribute('data-theme', t);
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
 
-  function icon () {
+  // Palette bg colors for meta theme-color (dark variants)
+  const paletteBg = {
+    lumen:    { dark: '#191b2a', light: '#F1F2F6' },
+    liminal:  { dark: '#140e0e', light: '#f2ede4' },
+    parallax: { dark: '#0d1117', light: '#f3f5f8' },
+    praxis:   { dark: '#120f0a', light: '#f5f0e6' },
+    axiom:    { dark: '#0b0f18', light: '#f0f2f6' },
+  };
+
+  // Restore from localStorage or default
+  let t = localStorage.getItem('lumen-theme') || 'dark';
+  let p = localStorage.getItem('lumen-palette') || 'lumen';
+
+  function applyTheme() {
+    root.setAttribute('data-theme', t);
+    // Only set data-palette for non-lumen palettes (lumen is default)
+    if (p && p !== 'lumen') {
+      root.setAttribute('data-palette', p);
+    } else {
+      root.removeAttribute('data-palette');
+    }
+    // Update meta theme-color
+    if (metaThemeColor) {
+      const colors = paletteBg[p] || paletteBg.lumen;
+      metaThemeColor.setAttribute('content', colors[t] || colors.dark);
+    }
+  }
+
+  function updateThemeIcon() {
     if (!btn) return;
     btn.setAttribute('aria-label', 'Switch to ' + (t === 'dark' ? 'light' : 'dark') + ' mode');
     btn.innerHTML = t === 'dark'
       ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`
       : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
   }
-  icon();
-  if (btn) btn.addEventListener('click', () => { t = t === 'dark' ? 'light' : 'dark'; root.setAttribute('data-theme', t); icon(); });
+
+  function updatePaletteDots() {
+    document.querySelectorAll('.palette-dot').forEach(function (dot) {
+      dot.classList.toggle('active', dot.getAttribute('data-palette') === p);
+    });
+  }
+
+  // Apply on load
+  applyTheme();
+  updateThemeIcon();
+  updatePaletteDots();
+
+  // Dark/light toggle
+  if (btn) {
+    btn.addEventListener('click', function () {
+      t = t === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('lumen-theme', t);
+      applyTheme();
+      updateThemeIcon();
+    });
+  }
+
+  // Palette dot clicks
+  document.querySelectorAll('.palette-dot').forEach(function (dot) {
+    dot.addEventListener('click', function () {
+      p = dot.getAttribute('data-palette') || 'lumen';
+      localStorage.setItem('lumen-palette', p);
+      applyTheme();
+      updatePaletteDots();
+    });
+  });
 })();
 
 /* ── Sensitivity Control ────────────────────────────────────────────────────────── */
