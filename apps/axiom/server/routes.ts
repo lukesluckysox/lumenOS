@@ -137,7 +137,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       // Persist session before redirect
       req.session.save((err: unknown) => {
         if (err) console.error('[axiom/sso] session save error:', err);
-        res.redirect('/#/');
+        const dest = typeof req.query.redirect === 'string' && req.query.redirect.startsWith('/') ? req.query.redirect : '/#/';
+        res.redirect(dest);
       });
     } catch (err) {
       console.error('[axiom/sso] token error:', err);

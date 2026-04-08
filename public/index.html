@@ -2138,25 +2138,25 @@
         <h2 class="state-title">Where the system stands.</h2>
       </div>
       <div class="state-grid" role="list" id="state-grid">
-        <a class="state-card state-card--gold" role="listitem" href="https://axiomtool-production.up.railway.app/#/" target="_blank" rel="noopener noreferrer" data-app="axiom" data-has-sso="true" aria-label="View Constitutional Principles in Axiom">
+        <a class="state-card state-card--gold" role="listitem" href="https://axiomtool-production.up.railway.app/#/constitution" target="_blank" rel="noopener noreferrer" data-app="axiom" data-has-sso="true" aria-label="View Constitutional Principles in Axiom">
           <svg class="state-card__arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
           <span class="state-card__label">Constitutional Principles</span>
           <span class="state-card__count" id="state-axiom">—</span>
           <span class="state-card__sub">Truths distilled by Axiom</span>
         </a>
-        <a class="state-card state-card--red" role="listitem" href="https://axiomtool-production.up.railway.app/#/" target="_blank" rel="noopener noreferrer" data-app="axiom" data-has-sso="true" aria-label="View Active Tensions in Axiom">
+        <a class="state-card state-card--red" role="listitem" href="https://axiomtool-production.up.railway.app/#/tensions" target="_blank" rel="noopener noreferrer" data-app="axiom" data-has-sso="true" aria-label="View Active Tensions in Axiom">
           <svg class="state-card__arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
           <span class="state-card__label">Active Tensions</span>
           <span class="state-card__count" id="state-tension">—</span>
           <span class="state-card__sub">Unresolved contradictions</span>
         </a>
-        <a class="state-card state-card--amber" role="listitem" href="https://praxis-production-da89.up.railway.app/" target="_blank" rel="noopener noreferrer" data-app="praxis" data-has-sso="true" aria-label="View Live Experiments in Praxis">
+        <a class="state-card state-card--amber" role="listitem" href="https://praxis-production-da89.up.railway.app/#/experiments" target="_blank" rel="noopener noreferrer" data-app="praxis" data-has-sso="true" aria-label="View Live Experiments in Praxis">
           <svg class="state-card__arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
           <span class="state-card__label">Live Experiments</span>
           <span class="state-card__count" id="state-experiment">—</span>
           <span class="state-card__sub">Hypotheses under test</span>
         </a>
-        <a class="state-card state-card--brass" role="listitem" href="https://liminal-app.up.railway.app/" target="_blank" rel="noopener noreferrer" data-app="liminal" data-has-sso="true" aria-label="View Pending Inquiries in Liminal">
+        <a class="state-card state-card--brass" role="listitem" href="https://liminal-app.up.railway.app/archive" target="_blank" rel="noopener noreferrer" data-app="liminal" data-has-sso="true" aria-label="View Pending Inquiries in Liminal">
           <svg class="state-card__arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
           <span class="state-card__label">Pending Inquiries</span>
           <span class="state-card__count" id="state-pending">—</span>
@@ -2440,8 +2440,11 @@
           var finalDest = dest;
           if (res.ok) {
             var data = await res.json();
-            var origin = new URL(dest).origin;
-            finalDest = origin + '/api/auth/sso?token=' + encodeURIComponent(data.token);
+            var parsed = new URL(dest);
+            var origin = parsed.origin;
+            // preserve deep-link path+hash as redirect param so SSO lands on the right view
+            var deepLink = parsed.pathname + parsed.search + parsed.hash;
+            finalDest = origin + '/api/auth/sso?token=' + encodeURIComponent(data.token) + '&redirect=' + encodeURIComponent(deepLink);
           }
           if (newWin) { newWin.location.href = finalDest; }
           else { window.open(finalDest, '_blank'); }

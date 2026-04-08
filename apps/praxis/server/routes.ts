@@ -19,7 +19,8 @@ export function registerRoutes(httpServer: Server, app: Express) {
       req.session.username = payload.username;
       req.session.save((err: unknown) => {
         if (err) console.error('[praxis/sso] session save error:', err);
-        res.redirect('/#/');
+        const dest = typeof req.query.redirect === 'string' && req.query.redirect.startsWith('/') ? req.query.redirect : '/#/';
+        res.redirect(dest);
       });
     } catch (err) {
       console.error('[praxis/sso] token error:', err);
