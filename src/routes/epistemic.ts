@@ -619,33 +619,45 @@ router.post('/push/:userId', async (req: Request, res: Response) => {
 
 // ─── POST /reprocess/:userId ─────────────────────────────────────────────────────────
 // Re-evaluates all existing events against current sensitivity thresholds.
-// Clears open/queued candidates first, then re-runs processEvent on all events.
+// createCandidate is idempotent (upserts by title+type+user), so we no longer
+// delete candidates before reprocessing. Accepted candidates that need re-pushing
+// (e.g. after Axiomtool DB loss) are re-queued via ?force=true.
 
 router.post('/reprocess/:userId', async (req: Request, res: Response) => {
   const auth = requireAuth(req, res);
   if (!auth) return;
 
   const { userId } = req.params;
+  const force = req.query.force === 'true'; // re-queue accepted candidates for re-push
 
   try {
-    // Clear non-seeded open/queued candidates
-    const candidatesToDelete = db
-      .select()
-      .from(epistemicCandidates)
-      .where(
-        and(
-          eq(epistemicCandidates.userId, userId),
-          inArray(epistemicCandidates.status, ['open', 'queued_for_axiom', 'queued_for_praxis'])
+    // If force=true, reset accepted (non-seeded) candidates back to queued
+    // so they get re-pushed to Axiomtool/Praxis on flush
+    let requeued = 0;
+    if (force) {
+      const accepted = db
+        .select()
+        .from(epistemicCandidates)
+        .where(
+          and(
+            eq(epistemicCandidates.userId, userId),
+            eq(epistemicCandidates.status, 'accepted')
+          )
         )
-      )
-      .all()
-      .filter(c => !c.seeded);
+        .all()
+        .filter(c => !c.seeded);
 
-    for (const c of candidatesToDelete) {
-      db.delete(epistemicCandidates).where(eq(epistemicCandidates.id, c.id)).run();
+      for (const c of accepted) {
+        const newStatus = c.targetApp === 'praxis' ? 'queued_for_praxis' : 'queued_for_axiom';
+        db.update(epistemicCandidates)
+          .set({ status: newStatus, updatedAt: now() })
+          .where(eq(epistemicCandidates.id, c.id))
+          .run();
+        requeued++;
+      }
     }
 
-    // Clear non-seeded open prompts
+    // Clear non-seeded open prompts (these are just notification queue items, safe to clear)
     const promptsToDelete = db
       .select()
       .from(promptQueue)
@@ -657,7 +669,8 @@ router.post('/reprocess/:userId', async (req: Request, res: Response) => {
       db.delete(promptQueue).where(eq(promptQueue.id, p.id)).run();
     }
 
-    // Re-run processEvent on all events for this user
+    // Re-run processEvent on all events — createCandidate is idempotent,
+    // so duplicates won't be created. New events get new candidates.
     const events = db
       .select()
       .from(epistemicEvents)
@@ -670,8 +683,8 @@ router.post('/reprocess/:userId', async (req: Request, res: Response) => {
       promoted++;
     }
 
-    // Count new candidates
-    const newCandidates = db
+    // Count queued candidates
+    const queuedCandidates = db
       .select()
       .from(epistemicCandidates)
       .where(
@@ -688,10 +701,10 @@ router.post('/reprocess/:userId', async (req: Request, res: Response) => {
     });
 
     return res.json({
-      clearedCandidates: candidatesToDelete.length,
+      requeued,
       clearedPrompts: promptsToDelete.length,
       eventsReprocessed: promoted,
-      newCandidates: newCandidates.length,
+      queuedCandidates: queuedCandidates.length,
     });
   } catch (err) {
     console.error('[epistemic/reprocess]', err);

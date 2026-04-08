@@ -291,6 +291,43 @@ interface CreateCandidateParams {
 }
 
 async function createCandidate(params: CreateCandidateParams): Promise<void> {
+  // ── Idempotency: if a candidate with the same title+type+user already exists,
+  //    update it instead of creating a duplicate. This makes reprocess safe.
+  const existing = db
+    .select()
+    .from(epistemicCandidates)
+    .where(
+      and(
+        eq(epistemicCandidates.userId, params.userId),
+        eq(epistemicCandidates.candidateType, params.candidateType),
+        eq(epistemicCandidates.title, params.title)
+      )
+    )
+    .get();
+
+  if (existing) {
+    // If already accepted/pushed, don't regress status — just update confidence & events
+    const newStatus = existing.status === 'accepted' ? 'accepted' : params.status;
+    db.update(epistemicCandidates)
+      .set({
+        summary: params.summary,
+        confidence: params.confidence,
+        recurrenceScore: params.recurrenceScore ?? existing.recurrenceScore,
+        sourceEventIds: JSON.stringify(params.sourceEventIds),
+        status: newStatus,
+        updatedAt: now(),
+      })
+      .where(eq(epistemicCandidates.id, existing.id))
+      .run();
+
+    // Re-queue only if status was re-opened (not if already accepted)
+    if (newStatus !== 'accepted') {
+      if (newStatus === 'queued_for_axiom') createAxiomQueueItem(existing);
+      else if (newStatus === 'queued_for_praxis') createPraxisQueueItem(existing, 'Re-queued from reprocess');
+    }
+    return;
+  }
+
   const candidate = db
     .insert(epistemicCandidates)
     .values({
