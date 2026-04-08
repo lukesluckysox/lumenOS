@@ -4,9 +4,11 @@
  * InquirySeedsSection — client wrapper for the home page.
  *
  * Renders pending inquiry seeds from the Lumen recursive loop.
- * When a seed is selected, it copies the seed text to the clipboard
- * and navigates the user to the Small Council — the general-purpose
- * entry point for questions surfaced by other Lumen tools.
+ * When a seed is selected, it copies the distilled seed text to the
+ * clipboard and navigates the user to the Small Council.
+ *
+ * Note: seed text is distilled at display time by InquirySeeds, and
+ * again here before clipboard write, to ensure no tool names leak.
  */
 
 import { useRouter } from 'next/navigation';

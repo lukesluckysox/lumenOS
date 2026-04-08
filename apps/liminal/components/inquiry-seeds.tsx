@@ -24,6 +24,31 @@ const EVENT_LABELS: Record<string, string> = {
   experiment_completed: 'An experiment concluded',
 };
 
+// ─── Client-side distillation safety net ──────────────────────────────────────
+// Ensures no tool names leak even from legacy seeds or future pipeline gaps.
+const DISTILL_RULES: [RegExp, string][] = [
+  [/Parallax\s+calls\s+you/gi, 'I am called'],
+  [/Parallax\s+detected\s+a\s+gap/gi, 'A gap was detected'],
+  [/Parallax\s+identified/gi, 'Pattern recognition identified'],
+  [/Parallax\s+pattern:?\s*/gi, 'Observed pattern: '],
+  [/Parallax\s+detected/gi, 'Pattern recognition detected'],
+  [/across\s+(?:distinct\s+)?Parallax\s+sessions/gi, 'across distinct observation sessions'],
+  [/Liminal\s+surfaced:?\s*/gi, 'Reflection surfaced: '],
+  [/(?:in|during)\s+your\s+next\s+Liminal\s+session/gi, 'in your next reflection'],
+  [/Liminal\s+sessions/gi, 'reflective sessions'],
+  [/\bParallax\b/g, 'observation'],
+  [/\bLiminal\b/g, 'reflection'],
+  [/\bPraxis\b/g, 'experimentation'],
+];
+
+function distillSeedText(text: string): string {
+  let result = text;
+  for (const [pattern, replacement] of DISTILL_RULES) {
+    result = result.replace(pattern, replacement);
+  }
+  return result.replace(/\s{2,}/g, ' ').trim();
+}
+
 export function InquirySeeds({ onSelectSeed }: { onSelectSeed?: (text: string) => void }) {
   const [seeds, setSeeds] = useState<Seed[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +88,7 @@ export function InquirySeeds({ onSelectSeed }: { onSelectSeed?: (text: string) =
               </span>
             </div>
             <p className="text-sm text-[#EDF2F4] leading-relaxed group-hover:text-white transition-colors">
-              {seed.seed_text}
+              {distillSeedText(seed.seed_text)}
             </p>
           </button>
         ))}

@@ -1,4 +1,5 @@
 import { EpistemicCandidate } from '../schema/epistemic.js';
+import { distillText } from '../services/distillText.js';
 
 const THEMES: Record<string, string[]> = {
   visibility: ['visibility', 'visible', 'concealment', 'conceal', 'hide', 'hiding', 'exposure', 'expose', 'judgment', 'seen', 'recognition', 'show', 'public', 'private', 'reveal'],
@@ -88,17 +89,17 @@ export function buildConvergencePayload(
   return {
     userId,
     title: `${liminalClean} / ${parallaxClean}`,
-    signal: `Liminal surfaced: "${liminalClean}". Independently, Parallax identified: "${parallaxClean}" (frequency: ${parFreq}).`,
-    convergence: `Two independent instruments — belief-questioning (Liminal) and pattern recognition (Parallax) — arrived at structurally similar observations around [${sharedThemesList.join(', ')}]. Cross-tool agreement is stronger evidence than single-source repetition.`,
-    interpretation: `This theme [${sharedThemesList[0] || 'shared'}] manifests at multiple levels: as a held belief (Liminal) and as a behavioral tendency (Parallax). The convergence suggests this is not incidental — it is a consistent operating principle.`,
-    truthClaim: `"${liminalClean}" — confirmed by independent evidence from both sources: belief-questioning (Liminal) and behavioral pattern recognition (Parallax).`,
+    signal: distillText(`Liminal surfaced: "${liminalClean}". Independently, Parallax identified: "${parallaxClean}" (frequency: ${parFreq}).`),
+    convergence: distillText(`Two independent instruments — belief-questioning (Liminal) and pattern recognition (Parallax) — arrived at structurally similar observations around [${sharedThemesList.join(', ')}]. Cross-tool agreement is stronger evidence than single-source repetition.`),
+    interpretation: distillText(`This theme [${sharedThemesList[0] || 'shared'}] manifests at multiple levels: as a held belief (Liminal) and as a behavioral tendency (Parallax). The convergence suggests this is not incidental — it is a consistent operating principle.`),
+    truthClaim: distillText(`"${liminalClean}" — confirmed by independent evidence from both sources: belief-questioning (Liminal) and behavioral pattern recognition (Parallax).`),
     workingPrinciple: '',
     liminalCount: 1,
     parallaxCount: parFreq,
     praxisCount: 0,
     inputDescriptions: [
-      `Liminal: ${liminalClean}`,
-      `Parallax: ${parallaxClean} (×${parFreq})`,
+      `Reflection: ${liminalClean}`,
+      `Observation: ${parallaxClean} (×${parFreq})`,
     ],
     source: 'lumen_push',
   };

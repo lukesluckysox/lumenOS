@@ -2,6 +2,7 @@ import { db, sqlite } from '../db';
 import { epistemicCandidates } from '../schema/epistemic';
 import { eq, and } from 'drizzle-orm';
 import { findConvergencePairs, buildConvergencePayload } from '../services/epistemicConvergence.js';
+import { distillText, distillPayload } from '../services/distillText.js';
 
 const AXIOM_API_URL = process.env.AXIOM_API_URL || 'https://axiomtool-production.up.railway.app';
 const PRAXIS_API_URL = process.env.PRAXIS_API_URL || 'https://praxis-production-da89.up.railway.app';
@@ -85,7 +86,7 @@ export async function pushCandidateToAxiomtool(candidate: typeof epistemicCandid
       truthClaim = `${cleanTitle}: an active pattern at ${confScore}% confidence. ${confScore < 60 ? 'Provisional — requires further evidence before treating as constitutionally reliable.' : 'Sufficient to treat as working doctrine.'}`;
     }
 
-    const body = {
+    const body = distillPayload({
       title: cleanTitle.slice(0, 200),
       truthClaim: truthClaim.slice(0, 500),
       signal,
@@ -103,7 +104,7 @@ export async function pushCandidateToAxiomtool(candidate: typeof epistemicCandid
       inputDescriptions: JSON.stringify([candidate.summary]),
       source: 'lumen_push',
       userId: candidate.userId,
-    };
+    });
 
     const res = await fetch(`${AXIOM_API_URL}/api/internal/from-lumen`, {
       method: 'POST',
@@ -126,7 +127,7 @@ export async function pushCandidateToAxiomtool(candidate: typeof epistemicCandid
 
 export async function pushCandidateToPraxis(candidate: typeof epistemicCandidates.$inferSelect): Promise<boolean> {
   try {
-    const body = {
+    const body = distillPayload({
       title: candidate.title.slice(0, 200),
       hypothesis: candidate.summary,
       design: 'Auto-generated from epistemic queue. Review and refine to structure your experiment.',
@@ -137,7 +138,7 @@ export async function pushCandidateToPraxis(candidate: typeof epistemicCandidate
       meaningExtraction: '',
       tags: '[]',
       userId: candidate.userId,
-    };
+    });
     const res = await fetch(`${PRAXIS_API_URL}/api/internal/from-lumen`, {
       method: 'POST',
       headers: {

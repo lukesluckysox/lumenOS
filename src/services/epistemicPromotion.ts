@@ -10,6 +10,7 @@ import {
   watchRules,
   promptQueue,
 } from '../db';
+import { distillText } from '../services/distillText.js';
 
 type EpistemicEvent = typeof epistemicEvents.$inferSelect;
 type AxiomStatement = typeof axiomStatements.$inferSelect;
@@ -203,8 +204,8 @@ async function processParallaxEvent(event: EpistemicEvent): Promise<void> {
           userId: event.userId,
           destinationApp: 'liminal',
           promptType: 'discrepancy_prompt',
-          title: (payload.summary as string) || 'Identity discrepancy detected',
-          body: (payload.text as string) || 'Parallax detected a gap between your stated values and observed behavior. Reflect on this in your next Liminal session.',
+          title: distillText((payload.summary as string) || 'Identity discrepancy detected'),
+          body: distillText((payload.text as string) || 'A gap was detected between your stated values and observed behavior. Reflect on this in your next session.'),
           relatedCandidateId: null,
           priority: 80,
           status: 'open',
@@ -366,8 +367,8 @@ function createAxiomQueueItem(candidate: typeof epistemicCandidates.$inferSelect
       userId: candidate.userId,
       destinationApp: 'liminal',
       promptType: 'followup_question',
-      title: `Review candidate: ${candidate.title}`,
-      body: `A new ${candidate.candidateType} has been queued for Axiom review: "${candidate.summary}". Consider accepting, rejecting, or testing this candidate.`,
+      title: distillText(`Review candidate: ${candidate.title}`),
+      body: distillText(`A new ${candidate.candidateType} has been queued for review: "${candidate.summary}". Consider accepting, rejecting, or testing this candidate.`),
       relatedCandidateId: candidate.id,
       priority: 60,
       status: 'open',
@@ -439,7 +440,7 @@ export function createLiminalRevisionPrompts(axiom: AxiomStatement): void {
       destinationApp: 'liminal',
       promptType: 'revision_prompt',
       title: `Reflect on new truth: ${axiom.statement.slice(0, 50)}`,
-      body: `A new axiom has been accepted: "${axiom.statement}". In your next Liminal session, reflect on how this truth shows up in your lived experience.`,
+      body: distillText(`A new truth has been accepted: "${axiom.statement}". In your next reflection, consider how this truth shows up in your lived experience.`),
       relatedAxiomId: axiom.id,
       priority: 40,
       status: 'open',
