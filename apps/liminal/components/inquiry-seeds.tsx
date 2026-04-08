@@ -70,21 +70,61 @@ export function InquirySeeds({ onSelectSeed }: { onSelectSeed?: (seed: Seed) => 
   const [seeds, setSeeds] = useState<Seed[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  function fetchSeeds() {
+    setLoading(true);
     fetch('/api/internal/inquiry-seeds')
       .then(r => r.ok ? r.json() : [])
       .then(setSeeds)
       .catch(() => [])
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { fetchSeeds(); }, []);
+
+  function dismissSeed(id: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    setSeeds(prev => prev.filter(s => s.id !== id));
+    fetch('/api/internal/inquiry-seeds', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    }).catch(() => {});
+  }
+
+  function dismissAll() {
+    setSeeds([]);
+    fetch('/api/internal/inquiry-seeds', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ all: true }),
+    }).catch(() => {});
+  }
 
   if (loading || seeds.length === 0) return null;
 
   return (
     <div className="mb-8">
-      <h3 className="text-sm font-medium text-[#8D99AE] uppercase tracking-wider mb-3">
-        The Loop Returns
-      </h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-medium text-[#8D99AE] uppercase tracking-wider">
+          The Loop Returns
+        </h3>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={fetchSeeds}
+            className="text-[10px] uppercase tracking-widest text-[#8D99AE]/50 hover:text-[#FFD166]/70 transition-colors"
+            title="Refresh"
+          >
+            ↻ Refresh
+          </button>
+          <button
+            onClick={dismissAll}
+            className="text-[10px] uppercase tracking-widest text-[#8D99AE]/50 hover:text-[#c96a5a]/80 transition-colors"
+            title="Clear all"
+          >
+            ✕ Clear all
+          </button>
+        </div>
+      </div>
       <p className="text-xs text-[#8D99AE]/60 mb-4">
         New questions have surfaced from the loop.
       </p>
@@ -107,11 +147,20 @@ export function InquirySeeds({ onSelectSeed }: { onSelectSeed?: (seed: Seed) => 
                     {EVENT_LABELS[seed.source_event_type] || seed.source_event_type}
                   </span>
                 </div>
-                {toolLabel && (
-                  <span className="text-[10px] uppercase tracking-widest text-[#8D99AE]/50 shrink-0">
-                    → {toolLabel}
-                  </span>
-                )}
+                <div className="flex items-center gap-2 shrink-0">
+                  {toolLabel && (
+                    <span className="text-[10px] uppercase tracking-widest text-[#8D99AE]/50">
+                      → {toolLabel}
+                    </span>
+                  )}
+                  <button
+                    onClick={(e) => dismissSeed(seed.id, e)}
+                    className="text-[#8D99AE]/30 hover:text-[#c96a5a]/80 transition-colors text-xs leading-none px-1"
+                    title="Dismiss"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
               <p className="text-sm text-[#EDF2F4] leading-relaxed group-hover:text-white transition-colors">
                 {distillSeedText(seed.seed_text)}

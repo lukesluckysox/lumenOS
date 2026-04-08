@@ -153,52 +153,47 @@ router.get('/pulse', (req: Request, res: Response) => {
 });
 
 // ─── GET /api/loop/state ──────────────────────────────────────────────────────
+// Fetches live counts from sub-apps so the dashboard accurately reflects
+// the real state of Axiom, Praxis, and Liminal — not local queue tallies.
 
-router.get('/state', (req: Request, res: Response) => {
+const AXIOM_API_URL   = process.env.AXIOM_API_URL   || 'https://axiomtool-production.up.railway.app';
+const PRAXIS_API_URL  = process.env.PRAXIS_API_URL  || 'https://praxis-production-da89.up.railway.app';
+const LIMINAL_API_URL = process.env.LIMINAL_API_URL || 'https://liminal-app.up.railway.app';
+const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN || '';
+
+async function fetchAppStats(url: string): Promise<Record<string, number>> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(url, {
+      headers: { 'x-lumen-internal-token': LUMEN_INTERNAL_TOKEN },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return {};
+    return await res.json() as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
+router.get('/state', async (req: Request, res: Response) => {
   const user = authenticate(req, res);
   if (!user) return;
 
-  const userId = String(user.userId);
-
   try {
-    // Constitutional principles — axiom_statements that are stable/provisional and kind=truth_claim
-    const axiomCount = (sqlite
-      .prepare(
-        `SELECT COUNT(*) as cnt FROM axiom_statements
-         WHERE user_id = ? AND status NOT IN ('retired') AND kind = 'truth_claim'`
-      )
-      .get(userId) as { cnt: number } | undefined)?.cnt ?? 0;
-
-    // Active tensions — axiom_statements with kind=tension and status not retired
-    const tensionCount = (sqlite
-      .prepare(
-        `SELECT COUNT(*) as cnt FROM axiom_statements
-         WHERE user_id = ? AND kind = 'tension' AND status NOT IN ('retired')`
-      )
-      .get(userId) as { cnt: number } | undefined)?.cnt ?? 0;
-
-    // Live experiments — epistemic_candidates with candidate_type=hypothesis_candidate, status=testing
-    // Also check for experiment_candidate events as a fallback
-    const experimentCount = (sqlite
-      .prepare(
-        `SELECT COUNT(*) as cnt FROM epistemic_candidates
-         WHERE user_id = ? AND candidate_type = 'hypothesis_candidate' AND status = 'testing'`
-      )
-      .get(userId) as { cnt: number } | undefined)?.cnt ?? 0;
-
-    // Pending inquiries — prompt_queue items that are 'open'
-    const pendingCount = (sqlite
-      .prepare(
-        `SELECT COUNT(*) as cnt FROM prompt_queue
-         WHERE user_id = ? AND status = 'open'`
-      )
-      .get(userId) as { cnt: number } | undefined)?.cnt ?? 0;
+    // Fetch live counts from all three apps in parallel
+    const [axiomStats, praxisStats, liminalStats] = await Promise.all([
+      fetchAppStats(`${AXIOM_API_URL}/api/internal/stats`),
+      fetchAppStats(`${PRAXIS_API_URL}/api/internal/stats`),
+      fetchAppStats(`${LIMINAL_API_URL}/api/internal/stats`),
+    ]);
 
     return res.json({
-      axiomCount,
-      tensionCount,
-      experimentCount,
-      pendingCount,
+      axiomCount:      axiomStats.axiomCount ?? 0,
+      tensionCount:    axiomStats.tensionCount ?? 0,
+      experimentCount: praxisStats.experimentCount ?? 0,
+      pendingCount:    liminalStats.pendingSeeds ?? 0,
     });
   } catch (err) {
     console.error('[loop/state]', err);

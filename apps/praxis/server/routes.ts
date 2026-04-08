@@ -164,6 +164,25 @@ export function registerRoutes(httpServer: Server, app: Express) {
 
   // ── Experiments ────────────────────────────────────────────────────────
 
+  // ─── Internal stats for Lumen OS dashboard ──────────────────────────────────
+  app.get('/api/internal/stats', (req: any, res: any) => {
+    const token = req.headers['x-lumen-internal-token'];
+    const expected = process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    if (!token || token !== expected) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    try {
+      const experiments = storage.getExperiments();
+      const experimentCount = experiments.filter((e: any) => e.status === 'active' || e.status === 'observing').length;
+      const doctrineCount = storage.getDoctrines().length;
+      const tensionCount = storage.getTensions().length;
+      return res.json({ experimentCount, doctrineCount, tensionCount });
+    } catch (err) {
+      console.error('[praxis/internal/stats]', err);
+      return res.status(500).json({ error: 'Failed to compute stats' });
+    }
+  });
+
   app.get("/api/experiments", (req: any, res: any) => {
     res.json(storage.getExperiments(getUserId(req)));
   });

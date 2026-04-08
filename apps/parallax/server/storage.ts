@@ -707,6 +707,40 @@ export class DatabaseStorage implements IStorage {
       .run(checkinId, writingId, id);
   }
 
+  deleteLiminalSession(id: number, userId: number): boolean {
+    // Fetch the session first so we can clean up associated records
+    const session = db.select().from(liminalSessions)
+      .where(and(eq(liminalSessions.id, id), eq(liminalSessions.user_id, userId)))
+      .get();
+    if (!session) return false;
+    // Delete associated checkin and writing if they exist
+    if (session.checkin_id) {
+      db.delete(checkins).where(eq(checkins.id, session.checkin_id)).run();
+    }
+    if (session.writing_id) {
+      db.delete(writings).where(eq(writings.id, session.writing_id)).run();
+    }
+    db.delete(liminalSessions).where(eq(liminalSessions.id, id)).run();
+    return true;
+  }
+
+  deleteAllLiminalSessions(userId: number): number {
+    // Get all sessions for this user
+    const sessions = this.getLiminalSessions(userId, 1000);
+    for (const s of sessions) {
+      if (s.checkin_id) {
+        db.delete(checkins).where(eq(checkins.id, s.checkin_id)).run();
+      }
+      if (s.writing_id) {
+        db.delete(writings).where(eq(writings.id, s.writing_id)).run();
+      }
+    }
+    const result = db.delete(liminalSessions)
+      .where(eq(liminalSessions.user_id, userId))
+      .run();
+    return result.changes;
+  }
+
   // ---- Account Deletion ----
   deleteUserAndData(userId: number): void {
     sqlite.exec(`DELETE FROM checkins WHERE user_id = ${userId}`);

@@ -103,3 +103,74 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+// DELETE — dismiss a single seed or all pending seeds
+// Body: { id: string } to dismiss one, or { all: true } to dismiss all
+export async function DELETE(request: NextRequest) {
+  // Accept either user session cookie OR internal token
+  const internalToken = request.headers.get('x-lumen-internal-token');
+  const cookieHeader = request.headers.get('cookie') || '';
+  const tokenMatch = cookieHeader.match(/liminal_session=([^;]+)/);
+
+  let userId: string | null = null;
+
+  if (LUMEN_INTERNAL_TOKEN && internalToken === LUMEN_INTERNAL_TOKEN) {
+    // Internal call — userId must be in body
+    const body = await request.json();
+    userId = body.userId || null;
+    if (!userId) {
+      return NextResponse.json({ error: 'userId required for internal calls' }, { status: 400 });
+    }
+    try {
+      if (body.all) {
+        await execute(
+          `UPDATE inquiry_seeds SET status = 'dismissed' WHERE user_id = $1 AND status = 'pending'`,
+          [userId]
+        );
+      } else if (body.id) {
+        await execute(
+          `UPDATE inquiry_seeds SET status = 'dismissed' WHERE id = $1 AND user_id = $2`,
+          [body.id, userId]
+        );
+      }
+      return NextResponse.json({ success: true });
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message }, { status: 500 });
+    }
+  }
+
+  if (!tokenMatch) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const sessions = await query<{ user_id: string }>(
+      'SELECT user_id FROM auth_sessions WHERE token = $1 AND expires_at > NOW()',
+      [tokenMatch[1]]
+    );
+    if (!sessions[0]) {
+      return NextResponse.json({ error: 'Session expired' }, { status: 401 });
+    }
+    userId = sessions[0].user_id;
+
+    const body = await request.json();
+
+    if (body.all) {
+      await execute(
+        `UPDATE inquiry_seeds SET status = 'dismissed' WHERE user_id = $1 AND status = 'pending'`,
+        [userId]
+      );
+    } else if (body.id) {
+      await execute(
+        `UPDATE inquiry_seeds SET status = 'dismissed' WHERE id = $1 AND user_id = $2`,
+        [body.id, userId]
+      );
+    } else {
+      return NextResponse.json({ error: 'Provide id or all:true' }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

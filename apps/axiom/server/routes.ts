@@ -366,6 +366,24 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // ─── Internal: constitution summary for Lumen feedback loop ──────────────────
   // Returns a structured snapshot of the user's constitution for Lumen/Liminal
   // to generate deeper, more targeted epistemic questions.
+  // ─── Internal stats for Lumen OS dashboard ──────────────────────────────────
+  app.get('/api/internal/stats', (req: any, res: any) => {
+    const token = req.headers['x-lumen-internal-token'];
+    const expected = process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    if (!token || token !== expected) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    try {
+      const axiomCount = storage.getAxioms().length;
+      const tensionCount = storage.getTensions().length;
+      const revisionCount = storage.getRevisions().length;
+      return res.json({ axiomCount, tensionCount, revisionCount });
+    } catch (err) {
+      console.error('[axiom/internal/stats]', err);
+      return res.status(500).json({ error: 'Failed to compute stats' });
+    }
+  });
+
   app.get('/api/internal/constitution-summary', (req: any, res: any) => {
     const token = req.headers['x-lumen-internal-token'];
     const expected = process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';

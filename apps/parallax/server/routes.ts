@@ -3836,6 +3836,43 @@ Return ONLY valid JSON:
     }
   });
 
+  // ─── Loop feed management — view/dismiss cross-talk entries from Liminal ────
+
+  app.get("/api/loop-feed", async (req, res) => {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const sessions = storage.getLiminalSessions(userId, 50);
+      return res.json(sessions);
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete("/api/loop-feed/:id", async (req, res) => {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = storage.deleteLiminalSession(id, userId);
+      if (!deleted) return res.status(404).json({ error: "Not found" });
+      return res.json({ success: true });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete("/api/loop-feed", async (req, res) => {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const count = storage.deleteAllLiminalSessions(userId);
+      return res.json({ success: true, deleted: count });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
   // GET /api/internal/patterns-for-lumen — export detected patterns for Praxis/Axiom
   app.get("/api/internal/patterns-for-lumen", async (req, res) => {
     if (!requireInternalToken(req, res)) return;
