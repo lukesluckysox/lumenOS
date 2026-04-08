@@ -9,6 +9,7 @@ import {
   type IdentityMode, type InsertIdentityMode, identityModes,
   type IdentityEcho, type InsertIdentityEcho, identityEchoes,
   type SpotifyWhitelist, type InsertSpotifyWhitelist, spotifyWhitelistQueue,
+  type LiminalSession, type InsertLiminalSession, liminalSessions,
 } from "@shared/schema";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
@@ -200,6 +201,19 @@ export class DatabaseStorage implements IStorage {
         started_at TEXT NOT NULL,
         ended_at TEXT
       );
+      CREATE TABLE IF NOT EXISTS liminal_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        liminal_session_id TEXT NOT NULL,
+        tool_slug TEXT NOT NULL,
+        input_text TEXT,
+        structured_output TEXT,
+        summary TEXT,
+        dimension_nudges TEXT,
+        checkin_id INTEGER,
+        writing_id INTEGER,
+        created_at TEXT NOT NULL
+      );
     `);
 
     // Migrate dimension names: discipline→agency, health→vitality, ambition→drive
@@ -254,6 +268,7 @@ export class DatabaseStorage implements IStorage {
       sqlite.exec("UPDATE users SET calibrated = 1 WHERE calibrated = 0 AND id IN (SELECT DISTINCT user_id FROM checkins)");
     } catch { /* already exists */ }
     try { sqlite.exec("ALTER TABLE users ADD COLUMN pro INTEGER DEFAULT 0"); } catch { /* already exists */ }
+    try { sqlite.exec("ALTER TABLE users ADD COLUMN lumen_user_id TEXT"); } catch { /* already exists */ }
   }
 
   // ---- User methods ----
@@ -273,6 +288,26 @@ export class DatabaseStorage implements IStorage {
 
   createUser(data: InsertUser): User {
     return db.insert(users).values(data).returning().get();
+  }
+
+  setLumenUserId(userId: number, lumenUserId: string): void {
+    sqlite.prepare("UPDATE users SET lumen_user_id = ? WHERE id = ?").run(lumenUserId, userId);
+  }
+
+  getAllUsers(): any[] {
+    return sqlite.prepare("SELECT * FROM users").all() as any[];
+  }
+
+  getAllCheckins(): any[] {
+    return sqlite.prepare("SELECT * FROM checkins ORDER BY id").all() as any[];
+  }
+
+  getAllDecisions(): any[] {
+    return sqlite.prepare("SELECT * FROM decisions ORDER BY id").all() as any[];
+  }
+
+  getAllWritings(): any[] {
+    return sqlite.prepare("SELECT * FROM writings ORDER BY id").all() as any[];
   }
 
   // ---- Checkins ----
@@ -654,6 +689,24 @@ export class DatabaseStorage implements IStorage {
     ).get(userId) as any | null;
   }
 
+  // ---- Liminal Sessions ----
+  createLiminalSession(data: InsertLiminalSession): LiminalSession {
+    return db.insert(liminalSessions).values(data).returning().get();
+  }
+
+  getLiminalSessions(userId: number, limit: number = 50): LiminalSession[] {
+    return db.select().from(liminalSessions)
+      .where(eq(liminalSessions.user_id, userId))
+      .orderBy(desc(liminalSessions.created_at))
+      .limit(limit)
+      .all();
+  }
+
+  updateLiminalSessionIds(id: number, checkinId: number, writingId: number): void {
+    sqlite.prepare("UPDATE liminal_sessions SET checkin_id = ?, writing_id = ? WHERE id = ?")
+      .run(checkinId, writingId, id);
+  }
+
   // ---- Account Deletion ----
   deleteUserAndData(userId: number): void {
     sqlite.exec(`DELETE FROM checkins WHERE user_id = ${userId}`);
@@ -665,6 +718,7 @@ export class DatabaseStorage implements IStorage {
     sqlite.exec(`DELETE FROM identity_modes WHERE user_id = ${userId}`);
     sqlite.exec(`DELETE FROM identity_echoes WHERE user_id = ${userId}`);
     sqlite.exec(`DELETE FROM variant_history WHERE user_id = ${userId}`);
+    sqlite.exec(`DELETE FROM liminal_sessions WHERE user_id = ${userId}`);
     sqlite.exec(`DELETE FROM users WHERE id = ${userId}`);
   }
 }

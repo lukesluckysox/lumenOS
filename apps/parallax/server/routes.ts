@@ -7,8 +7,11 @@ import { DIMENSIONS, ARCHETYPE_MAP } from "@shared/archetypes";
 import bcrypt from "bcryptjs";
 import { getAuthUrl, exchangeCode, refreshAccessToken, spotifyApi } from "./spotify-auth";
 import jwt from "jsonwebtoken";
+import { randomUUID } from "crypto";
 import type { InsertIdentityMode } from "@shared/schema";
+import { emitLumenEvent, classifyParallaxRecord } from "./lumenEmitter";
 import { decisions as decisionsTable, checkins as checkinsTable, users as usersTable } from "@shared/schema";
+import { computeMixture, topArchetype } from "@shared/archetype-math";
 import { eq, and } from "drizzle-orm";
 
 const JWT_SECRET = process.env.JWT_SECRET || "parallax-dev-secret-change-in-production";
@@ -59,6 +62,30 @@ function getUserId(req: Request): number | null {
   }
   // No fallback — JWT only
   return null;
+}
+
+// Fire-and-forget: classify a record and emit Lumen events
+function emitForRecord(userId: number, recordId: number, record: any) {
+  try {
+    const user = storage.getUserById(userId) as any;
+    const lumenUserId = user?.lumen_user_id;
+    if (!lumenUserId) return;
+    const signals = classifyParallaxRecord(record);
+    for (const signal of signals) {
+      emitLumenEvent({
+        userId: lumenUserId,
+        sourceRecordId: String(recordId),
+        eventType: signal.eventType,
+        confidence: signal.confidence,
+        salience: signal.salience,
+        payload: { ...signal.payload, createdAt: record.timestamp || new Date().toISOString(), historical: false },
+        ingestionMode: "live",
+        createdAt: new Date().toISOString(),
+      }).catch(() => {}); // swallow
+    }
+  } catch {
+    // Never throw from emitter
+  }
 }
 
 function getUserTimezone(req: Request): string {
@@ -326,6 +353,59 @@ export async function registerRoutes(
   app.post("/api/auth/logout", (req, res) => {
     res.cookie("parallax_token", "", { httpOnly: true, maxAge: 0, path: "/" });
     return res.json({ ok: true });
+  });
+
+  // GET /api/auth/sso — Lumen SSO token exchange
+  // Verifies the short-lived Lumen SSO token, finds/creates the user,
+  // sets a parallax_token cookie, then redirects to the app root.
+  app.get("/api/auth/sso", async (req, res) => {
+    const token = req.query.token as string;
+    if (!token) return res.status(400).send("Missing SSO token");
+
+    try {
+      const payload = jwt.verify(token, JWT_SECRET) as {
+        userId: number;
+        username: string;
+        sso: boolean;
+      };
+
+      if (!payload.sso || !payload.username) {
+        return res.status(400).send("Invalid SSO token");
+      }
+
+      // Find or create Parallax user matching the Lumen username
+      let user = storage.getUserByUsername(payload.username);
+      if (!user) {
+        // Create a shadow account — no real password needed for SSO users
+        const randomHash = await bcrypt.hash(randomUUID(), 10);
+        user = storage.createUser({
+          username: payload.username,
+          password_hash: randomHash,
+          display_name: payload.username,
+          created_at: new Date().toISOString(),
+        });
+      }
+
+      // Store the Lumen userId for epistemic event emission
+      if (payload.userId) {
+        storage.setLumenUserId(user.id, String(payload.userId));
+      }
+
+      // Issue a 30-day parallax_token cookie
+      const sessionToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "30d" });
+      res.cookie("parallax_token", sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        path: "/",
+      });
+
+      return res.redirect("/");
+    } catch (err) {
+      console.error("[sso] token verification failed:", err);
+      return res.status(401).send("SSO token expired or invalid. Please return to Lumen and try again.");
+    }
   });
 
   // ===================== SPOTIFY OAUTH ROUTES =====================
@@ -955,6 +1035,9 @@ Return ONLY valid JSON:
         status: "pending",
       });
 
+      // Lumen epistemic emission (fire-and-forget)
+      if (userId) emitForRecord(userId, writing.id, { title, content, timestamp: writing.timestamp });
+
       // Return immediately
       res.json({ id: writing.id, status: "pending" });
 
@@ -1285,6 +1368,9 @@ Return ONLY valid JSON:
         console.error("Echo detection error:", echoErr);
       }
 
+      // Lumen epistemic emission (fire-and-forget)
+      if (userId) emitForRecord(userId, checkin.id, { ...body, timestamp: checkin.timestamp });
+
       return res.json(checkin);
     } catch (err: any) {
       return res.status(500).json({ error: err.message });
@@ -1307,6 +1393,10 @@ Return ONLY valid JSON:
     try {
       const userId = getUserId(req);
       const decision = storage.createDecision({ ...req.body, user_id: userId });
+
+      // Lumen epistemic emission (fire-and-forget)
+      if (userId) emitForRecord(userId, decision.id, { ...req.body, timestamp: decision.timestamp });
+
       return res.json(decision);
     } catch (err: any) {
       return res.status(500).json({ error: err.message });
@@ -3355,6 +3445,593 @@ Return ONLY valid JSON:
 
     storage.deleteWhitelistRequest(id);
     return res.json({ success: true });
+  });
+
+  // ===================== LUMEN INTERNAL ENDPOINTS =====================
+
+  const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN;
+
+  function requireInternalToken(req: any, res: any): boolean {
+    const token = req.headers["x-lumen-internal-token"];
+    if (!LUMEN_INTERNAL_TOKEN || token !== LUMEN_INTERNAL_TOKEN) {
+      res.status(401).json({ error: "Unauthorized" });
+      return false;
+    }
+    return true;
+  }
+
+  // GET /api/internal/export-records — Lumen pulls all records
+  app.get("/api/internal/export-records", async (req, res) => {
+    if (!requireInternalToken(req, res)) return;
+
+    try {
+      const users = storage.getAllUsers();
+      const userMap = new Map<number, any>();
+      for (const u of users) userMap.set(u.id, u);
+
+      const checkins = storage.getAllCheckins();
+      const decisions = storage.getAllDecisions();
+      const writings = storage.getAllWritings();
+
+      const records: any[] = [];
+
+      for (const c of checkins) {
+        const u = c.user_id ? userMap.get(c.user_id) : null;
+        records.push({
+          id: c.id,
+          type: "checkin",
+          userId: c.user_id,
+          lumenUserId: u?.lumen_user_id || null,
+          selfArchetype: c.self_archetype,
+          selfVec: c.self_vec,
+          dataVec: c.data_vec,
+          feelingText: c.feeling_text,
+          createdAt: c.timestamp,
+        });
+      }
+
+      for (const d of decisions) {
+        const u = d.user_id ? userMap.get(d.user_id) : null;
+        records.push({
+          id: d.id,
+          type: "decision",
+          userId: d.user_id,
+          lumenUserId: u?.lumen_user_id || null,
+          decisionText: d.decision_text,
+          verdict: d.verdict,
+          impactVec: d.impact_vec,
+          createdAt: d.timestamp,
+        });
+      }
+
+      for (const w of writings) {
+        const u = w.user_id ? userMap.get(w.user_id) : null;
+        records.push({
+          id: w.id,
+          type: "writing",
+          userId: w.user_id,
+          lumenUserId: u?.lumen_user_id || null,
+          title: w.title,
+          content: w.content,
+          analysis: w.analysis,
+          createdAt: w.timestamp,
+        });
+      }
+
+      return res.json(records);
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  // POST /api/internal/backfill-to-lumen — trigger backfill from within the app
+  app.post("/api/internal/backfill-to-lumen", async (req, res) => {
+    if (!requireInternalToken(req, res)) return;
+
+    const LUMEN_API_URL = process.env.LUMEN_API_URL;
+    if (!LUMEN_API_URL) {
+      return res.status(500).json({ error: "LUMEN_API_URL not configured" });
+    }
+
+    try {
+      const users = storage.getAllUsers();
+      const userMap = new Map<number, string>();
+      for (const u of users) {
+        if (u.lumen_user_id) userMap.set(u.id, u.lumen_user_id);
+      }
+
+      if (userMap.size === 0) {
+        return res.json({ message: "No users with lumen_user_id", sent: 0 });
+      }
+
+      const checkins = storage.getAllCheckins();
+      const decisions = storage.getAllDecisions();
+      const writings = storage.getAllWritings();
+
+      const byUser = new Map<string, any[]>();
+
+      // ── Aggregate checkins by self_archetype ───────────────────────────────
+      // Individual checkins have no recurrence signal on their own.
+      // Group by archetype so Lumen sees frequency >= 2 and can promote patterns.
+      const checkinsByUser = new Map<string, typeof checkins>();
+      for (const c of checkins) {
+        const luid = c.user_id ? userMap.get(c.user_id) : null;
+        if (!luid) continue;
+        if (!checkinsByUser.has(luid)) checkinsByUser.set(luid, []);
+        checkinsByUser.get(luid)!.push(c);
+      }
+
+      for (const luid of Array.from(checkinsByUser.keys())) {
+        const userCheckins = checkinsByUser.get(luid)!;
+        if (!byUser.has(luid)) byUser.set(luid, []);
+
+        // Group by self_archetype
+        const archetypeGroups = new Map<string, typeof checkins>();
+        for (const c of userCheckins) {
+          const arch = c.self_archetype || "unknown";
+          if (!archetypeGroups.has(arch)) archetypeGroups.set(arch, []);
+          archetypeGroups.get(arch)!.push(c);
+        }
+
+        for (const arch of Array.from(archetypeGroups.keys())) {
+          const group = archetypeGroups.get(arch)!;
+
+          // Parse selfVec averages
+          const vecs = group.map(c => {
+            try { return JSON.parse((c as any).self_vec || "{}" ); } catch { return {}; }
+          }).filter((v: any) => Object.keys(v).length > 0);
+
+          const avgVec: Record<string, number> = {};
+          if (vecs.length > 0) {
+            for (const key of Object.keys(vecs[0] as object)) {
+              avgVec[key] = (vecs as any[]).reduce((s: number, v: any) => s + (v[key] || 0), 0) / vecs.length;
+            }
+          }
+
+          const highDims = Object.entries(avgVec).filter(([, v]) => v >= 65).map(([k]) => k);
+          const lowDims  = Object.entries(avgVec).filter(([, v]) => v <= 45).map(([k]) => k);
+
+          // Detect self vs data discrepancy
+          let discrepancy: string | null = null;
+          const dataVecs = group.map(c => {
+            try { return (c as any).data_vec ? JSON.parse((c as any).data_vec) : null; } catch { return null; }
+          }).filter(Boolean);
+          if (dataVecs.length > 0 && Object.keys(avgVec).length > 0) {
+            const avgData: Record<string, number> = {};
+            for (const key of Object.keys(dataVecs[0] as object)) {
+              avgData[key] = (dataVecs as any[]).reduce((s: number, v: any) => s + (v[key] || 0), 0) / dataVecs.length;
+            }
+            const gapDims = Object.keys(avgVec).filter(k => avgData[k] !== undefined && Math.abs((avgVec[k] || 0) - (avgData[k] || 0)) > 15);
+            if (gapDims.length > 0) {
+              discrepancy = gapDims.map(d => `self rates ${d} at ${avgVec[d]?.toFixed(0)}, data shows ${avgData[d]?.toFixed(0)}`).join("; ");
+            }
+          }
+
+          const uniqueDays = new Set(group.map(c => (c.timestamp || "").slice(0, 10))).size;
+          byUser.get(luid)!.push({
+            id: `archetype-pattern-${arch}-${luid}`,
+            type: "checkin-pattern",
+            label: `Identifies as "${arch}"`,
+            description: `Consistent self-archetype "${arch}" across ${group.length} check-ins over ${uniqueDays} days.` +
+              (highDims.length ? ` Consistently high: ${highDims.join(", ")}.` : "") +
+              (lowDims.length  ? ` Consistently low: ${lowDims.join(", ")}.`  : ""),
+            frequency: group.length,
+            contextCount: uniqueDays,
+            discrepancy,
+            selfArchetype: arch,
+            avgVec,
+            createdAt: group[0].timestamp || new Date().toISOString(),
+          });
+        }
+      }
+
+      // ── Decisions and writings — send individually (text-based) ───────────
+      for (const d of decisions) {
+        const luid = d.user_id ? userMap.get(d.user_id) : null;
+        if (!luid) continue;
+        if (!byUser.has(luid)) byUser.set(luid, []);
+        byUser.get(luid)!.push({
+          id: String(d.id), type: "decision", label: d.decision_text || "decision",
+          description: d.decision_text || "", frequency: 1, contextCount: 1, createdAt: d.timestamp,
+        });
+      }
+
+      for (const w of writings) {
+        const luid = w.user_id ? userMap.get(w.user_id) : null;
+        if (!luid) continue;
+        if (!byUser.has(luid)) byUser.set(luid, []);
+        byUser.get(luid)!.push({
+          id: String(w.id), type: "writing", label: w.title || "writing",
+          description: (w.content || "").slice(0, 500), frequency: 1, contextCount: 1, createdAt: w.timestamp,
+        });
+      }
+
+      let totalSent = 0;
+      const userEntries = Array.from(byUser.entries());
+      for (const [lumenUserId, records] of userEntries) {
+        // Send in batches of 50
+        for (let i = 0; i < records.length; i += 50) {
+          const batch = records.slice(i, i + 50);
+          try {
+            await fetch(`${LUMEN_API_URL}/api/epistemic/backfill/parallax`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-lumen-internal-token": LUMEN_INTERNAL_TOKEN!,
+              },
+              body: JSON.stringify({ userId: lumenUserId, records: batch }),
+            });
+            totalSent += batch.length;
+          } catch (err) {
+            console.error(`[backfill] User ${lumenUserId} batch failed:`, err);
+          }
+        }
+      }
+
+      return res.json({ message: "Backfill complete", sent: totalSent, users: userEntries.length });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  // POST /api/internal/from-liminal — ingest a completed Liminal session as a synthetic Parallax check-in
+  app.post("/api/internal/from-liminal", async (req, res) => {
+    if (!requireInternalToken(req, res)) return;
+
+    try {
+      const { lumenUserId, sessionId, toolSlug, inputText, structuredOutput, summary, createdAt } = req.body;
+
+      if (!lumenUserId || !sessionId || !toolSlug) {
+        return res.status(400).json({ error: "lumenUserId, sessionId, and toolSlug are required" });
+      }
+
+      // Find local Parallax user by lumen_user_id
+      const allUsers = storage.getAllUsers();
+      const user = allUsers.find((u: any) => u.lumen_user_id === lumenUserId);
+      if (!user) {
+        return res.status(404).json({ error: `No Parallax user found for lumenUserId: ${lumenUserId}` });
+      }
+      const userId: number = user.id;
+
+      // ---- Compute dimension nudges ----
+      // Scale factor: longer + richer text = stronger signal, capped at 1.0
+      const textLength = (inputText || "").length;
+      // Richness: count non-empty keys in structuredOutput
+      const outputKeys = structuredOutput ? Object.keys(structuredOutput).length : 0;
+      // Scale: 500 chars = 0.5, 2000+ chars = 1.0; outputKeys boosts up to 0.2
+      const lengthScale = Math.min(1.0, textLength / 2000);
+      const richnessBoost = Math.min(0.2, outputKeys * 0.03);
+      const scale = Math.min(1.0, lengthScale + richnessBoost);
+
+      // Base nudge values per tool (before scaling), max ±30
+      // All base values are at ±20 so they can scale up to ±20 (well within ±30 cap)
+      type NudgeMap = { focus?: number; calm?: number; agency?: number; vitality?: number; social?: number; creativity?: number; exploration?: number; drive?: number };
+      const TOOL_BASE_NUDGES: Record<string, NudgeMap> = {
+        "genealogist":     { agency: 20, exploration: 18, calm: -15 },
+        "small-council":   { social: 20, focus: 16, calm: 18 },
+        "interlocutor":    { focus: 20, drive: 18, calm: -16 },
+        "fool":            { creativity: 20, exploration: 16, agency: -14 },
+        "stoics-ledger":   { calm: 20, agency: 18, creativity: -14 },
+        "interpreter":     { creativity: 20, exploration: 16, calm: 16 },
+      };
+
+      const baseNudges: NudgeMap = TOOL_BASE_NUDGES[toolSlug] || { exploration: 10 };
+
+      // Apply scale and cap at ±30
+      const scaledNudges: NudgeMap = {};
+      for (const [dim, val] of Object.entries(baseNudges) as [keyof NudgeMap, number][]) {
+        const scaled = val * scale;
+        scaledNudges[dim] = Math.max(-30, Math.min(30, Math.round(scaled)));
+      }
+
+      // Build a full 8-dim data_vec starting from neutral (50) and applying nudges
+      const baseVec = { focus: 50, calm: 50, agency: 50, vitality: 50, social: 50, creativity: 50, exploration: 50, drive: 50 };
+      const dataVec = { ...baseVec };
+      for (const [dim, nudge] of Object.entries(scaledNudges) as [keyof typeof baseVec, number][]) {
+        dataVec[dim] = Math.max(0, Math.min(100, baseVec[dim] + nudge));
+      }
+
+      // Compute data_archetype from the data_vec using archetype math
+      const mixture = computeMixture(dataVec);
+      const dominantEntry = Object.entries(mixture).sort((a, b) => b[1] - a[1])[0];
+      const dataArchetype = dominantEntry ? dominantEntry[0] : "seeker";
+
+      // The self_vec is also neutral (this is a synthetic/external-signal check-in, no self-report)
+      const selfVec = { ...baseVec };
+      const selfArchetype = dataArchetype; // fallback — same as data
+
+      const timestamp = createdAt || new Date().toISOString();
+
+      // ---- Create the synthetic check-in ----
+      const checkin = storage.createCheckin({
+        user_id: userId,
+        timestamp,
+        self_vec: JSON.stringify(selfVec),
+        data_vec: JSON.stringify(dataVec),
+        self_archetype: selfArchetype,
+        data_archetype: dataArchetype,
+        feeling_text: summary ? `[Liminal: ${toolSlug}] ${summary}` : `[Liminal session: ${toolSlug}]`,
+        spotify_summary: null,
+        fitness_summary: `liminal:${toolSlug}`,
+        llm_narrative: summary || null,
+      });
+
+      // ---- Create the writing record ----
+      const writing = storage.createWriting({
+        user_id: userId,
+        timestamp,
+        title: `Liminal Session — ${toolSlug} (${sessionId})`,
+        content: inputText || "",
+        date_written: timestamp.substring(0, 10),
+        analysis: structuredOutput ? JSON.stringify(structuredOutput) : null,
+        nudges: JSON.stringify(scaledNudges),
+        status: "complete",
+      });
+
+      // ---- Store the liminal session record ----
+      const liminalRecord = storage.createLiminalSession({
+        user_id: userId,
+        liminal_session_id: sessionId,
+        tool_slug: toolSlug,
+        input_text: inputText || null,
+        structured_output: structuredOutput ? JSON.stringify(structuredOutput) : null,
+        summary: summary || null,
+        dimension_nudges: JSON.stringify(scaledNudges),
+        checkin_id: checkin.id,
+        writing_id: writing.id,
+        created_at: timestamp,
+      });
+
+      // ---- Emit Lumen events (fire-and-forget) ----
+      emitForRecord(userId, checkin.id, {
+        label: `liminal-${toolSlug}`,
+        timestamp,
+        frequency: 2, // Liminal sessions always represent deliberate engagement (2+ implies recurrence signal)
+        contextCount: outputKeys,
+        ...(scaledNudges as any),
+      });
+      emitForRecord(userId, writing.id, {
+        title: `Liminal: ${toolSlug}`,
+        content: inputText || "",
+        timestamp,
+      });
+
+      // Clear relevant caches for this user
+      storage.clearUserCache(userId, "discover");
+      storage.clearUserCache(userId, "profile");
+      storage.clearUserCache(userId, "mythology");
+      storage.clearUserCache(userId, "forecast");
+
+      return res.json({ success: true, checkinId: checkin.id, writingId: writing.id, liminalSessionId: liminalRecord.id });
+    } catch (err: any) {
+      console.error("[from-liminal] Error:", err);
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  // GET /api/internal/patterns-for-lumen — export detected patterns for Praxis/Axiom
+  app.get("/api/internal/patterns-for-lumen", async (req, res) => {
+    if (!requireInternalToken(req, res)) return;
+
+    try {
+      const lumenUserId = req.query.lumenUserId as string;
+      if (!lumenUserId) {
+        return res.status(400).json({ error: "lumenUserId query param required" });
+      }
+
+      // Find local user
+      const allUsers = storage.getAllUsers();
+      const user = allUsers.find((u: any) => u.lumen_user_id === lumenUserId);
+      if (!user) {
+        return res.status(404).json({ error: `No Parallax user found for lumenUserId: ${lumenUserId}` });
+      }
+      const userId: number = user.id;
+
+      // ---- Current vector: latest self_vec ----
+      const recentCheckins = storage.getCheckins(userId);
+      const latestCheckin = recentCheckins[0]; // already ordered desc
+      let currentVector: Record<string, number> | null = null;
+      if (latestCheckin?.self_vec) {
+        try { currentVector = JSON.parse(latestCheckin.self_vec); } catch {}
+      }
+
+      // ---- Dominant archetype ----
+      let dominantArchetype = "unknown";
+      if (currentVector) {
+        const arch = topArchetype(currentVector as any);
+        if (arch.length > 0) dominantArchetype = arch[0].key;
+      }
+
+      // ---- Identity modes ----
+      const identityModes = storage.getIdentityModes(userId);
+
+      // ---- Recent insights (last 10 cached) ----
+      let recentInsights: any[] = [];
+      const discoverCache = storage.getCachedResponse(userId, "discover", 60 * 24); // last 24h
+      if (discoverCache) {
+        try {
+          const parsed = JSON.parse(discoverCache);
+          recentInsights = (parsed.insights || []).slice(0, 10);
+        } catch {}
+      }
+
+      // ---- Archetype trajectory: last 30 days of archetype shifts ----
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const allCheckins = recentCheckins.filter((c: any) => c.timestamp >= thirtyDaysAgo);
+      const archetypeTrajectory = allCheckins.map((c: any) => ({
+        timestamp: c.timestamp,
+        archetype: c.self_archetype,
+        data_archetype: c.data_archetype || null,
+      })).reverse(); // chronological order
+
+      // ---- Pattern signals: analyze check-in history ----
+      const patternSignals: Array<{
+        type: string;
+        description: string;
+        confidence: number;
+        firstSeen: string;
+        lastSeen: string;
+      }> = [];
+
+      if (allCheckins.length >= 3) {
+        // 1. Dimension trend signals: 3+ consecutive same-direction shifts
+        const dims = ["focus", "calm", "agency", "vitality", "social", "creativity", "exploration", "drive"] as const;
+        // Parse vectors in chronological order
+        const chronCheckins = [...allCheckins].reverse();
+        const parsedVecs: Array<{ ts: string; vec: Record<string, number> }> = [];
+        for (const c of chronCheckins) {
+          try {
+            const v = JSON.parse(c.self_vec);
+            parsedVecs.push({ ts: c.timestamp, vec: v });
+          } catch {}
+        }
+
+        for (const dim of dims) {
+          let streakDir = 0; // +1 or -1
+          let streakLen = 0;
+          let streakStart = 0;
+          let maxStreak = 0;
+          let maxStreakStart = 0;
+          let maxStreakEnd = 0;
+
+          for (let i = 1; i < parsedVecs.length; i++) {
+            const prev = parsedVecs[i - 1].vec[dim] ?? 50;
+            const curr = parsedVecs[i].vec[dim] ?? 50;
+            const diff = curr - prev;
+            const dir = diff > 1 ? 1 : diff < -1 ? -1 : 0;
+
+            if (dir !== 0 && dir === streakDir) {
+              streakLen++;
+            } else if (dir !== 0) {
+              streakDir = dir;
+              streakLen = 1;
+              streakStart = i;
+            } else {
+              streakLen = 0;
+            }
+
+            if (streakLen >= maxStreak) {
+              maxStreak = streakLen;
+              maxStreakStart = streakStart;
+              maxStreakEnd = i;
+            }
+          }
+
+          if (maxStreak >= 2) { // 3 consecutive data points = 2 consecutive shifts
+            const direction = parsedVecs[maxStreakStart]?.vec[dim] > (parsedVecs[maxStreakStart > 0 ? maxStreakStart - 1 : 0]?.vec[dim] ?? 50) ? "rising" : "declining";
+            const confidence = Math.min(0.9, 0.4 + maxStreak * 0.1);
+            patternSignals.push({
+              type: "dimension_trend",
+              description: `${dim} consistently ${direction} over ${maxStreak + 1} check-ins`,
+              confidence,
+              firstSeen: parsedVecs[maxStreakStart > 0 ? maxStreakStart - 1 : 0]?.ts || allCheckins[0].timestamp,
+              lastSeen: parsedVecs[maxStreakEnd]?.ts || allCheckins[allCheckins.length - 1].timestamp,
+            });
+          }
+        }
+
+        // 2. Archetype oscillation: switching between 2+ archetypes
+        const archetypeSeq = chronCheckins.map((c: any) => c.self_archetype).filter(Boolean);
+        if (archetypeSeq.length >= 4) {
+          const uniqueArchs = new Set(archetypeSeq);
+          if (uniqueArchs.size >= 2) {
+            // Count transitions
+            let transitions = 0;
+            for (let i = 1; i < archetypeSeq.length; i++) {
+              if (archetypeSeq[i] !== archetypeSeq[i - 1]) transitions++;
+            }
+            const transitionRate = transitions / (archetypeSeq.length - 1);
+            if (transitionRate >= 0.4) {
+              const archList = Array.from(uniqueArchs).join(", ");
+              patternSignals.push({
+                type: "archetype_oscillation",
+                description: `Oscillating between ${uniqueArchs.size} archetypes (${archList}) — transition rate ${Math.round(transitionRate * 100)}%`,
+                confidence: Math.min(0.85, 0.3 + transitionRate * 0.7),
+                firstSeen: chronCheckins[0].timestamp,
+                lastSeen: chronCheckins[chronCheckins.length - 1].timestamp,
+              });
+            }
+          }
+        }
+
+        // 3. Time-of-day correlations: group by morning/afternoon/evening/night
+        const timeGroups: Record<string, { vecs: Record<string, number>[]; archetypes: string[] }> = {
+          morning:   { vecs: [], archetypes: [] }, // 05-11
+          afternoon: { vecs: [], archetypes: [] }, // 11-17
+          evening:   { vecs: [], archetypes: [] }, // 17-22
+          night:     { vecs: [], archetypes: [] }, // 22-05
+        };
+        for (const { ts, vec } of parsedVecs) {
+          const hour = new Date(ts).getUTCHours();
+          const slot = hour >= 5 && hour < 11 ? "morning"
+            : hour >= 11 && hour < 17 ? "afternoon"
+            : hour >= 17 && hour < 22 ? "evening"
+            : "night";
+          timeGroups[slot].vecs.push(vec);
+          const matchC = chronCheckins.find((c: any) => c.timestamp === ts);
+          if (matchC?.self_archetype) timeGroups[slot].archetypes.push(matchC.self_archetype);
+        }
+
+        for (const [slot, { vecs, archetypes }] of Object.entries(timeGroups)) {
+          if (vecs.length < 2) continue;
+          // Find dominant dim in this slot vs overall
+          const slotAvg: Record<string, number> = {};
+          for (const dim of dims) {
+            slotAvg[dim] = vecs.reduce((s, v) => s + (v[dim] ?? 50), 0) / vecs.length;
+          }
+          // Find the dim with the highest deviation from 50
+          const [topDim, topVal] = Object.entries(slotAvg).sort((a, b) => Math.abs(b[1] - 50) - Math.abs(a[1] - 50))[0];
+          const deviation = topVal - 50;
+          if (Math.abs(deviation) >= 8) {
+            const dir = deviation > 0 ? "elevated" : "suppressed";
+            // Find dominant archetype for this slot
+            const archCounts: Record<string, number> = {};
+            for (const a of archetypes) archCounts[a] = (archCounts[a] || 0) + 1;
+            const dominantSlotArch = Object.entries(archCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+            patternSignals.push({
+              type: "time_of_day_correlation",
+              description: `${slot} check-ins show ${dir} ${topDim} (avg ${Math.round(topVal)})${dominantSlotArch ? `, often as ${dominantSlotArch}` : ""}`,
+              confidence: Math.min(0.8, 0.3 + vecs.length * 0.08),
+              firstSeen: chronCheckins.find((c: any) => {
+                const h = new Date(c.timestamp).getUTCHours();
+                return slot === "morning" ? (h >= 5 && h < 11)
+                  : slot === "afternoon" ? (h >= 11 && h < 17)
+                  : slot === "evening" ? (h >= 17 && h < 22)
+                  : (h >= 22 || h < 5);
+              })?.timestamp || chronCheckins[0].timestamp,
+              lastSeen: [...chronCheckins].reverse().find((c: any) => {
+                const h = new Date(c.timestamp).getUTCHours();
+                return slot === "morning" ? (h >= 5 && h < 11)
+                  : slot === "afternoon" ? (h >= 11 && h < 17)
+                  : slot === "evening" ? (h >= 17 && h < 22)
+                  : (h >= 22 || h < 5);
+              })?.timestamp || chronCheckins[chronCheckins.length - 1].timestamp,
+            });
+          }
+        }
+      }
+
+      return res.json({
+        currentVector,
+        dominantArchetype,
+        identityModes: identityModes.map((m: any) => ({
+          id: m.id,
+          mode_name: m.mode_name,
+          dominant_archetype: m.dominant_archetype,
+          centroid_vec: m.centroid_vec ? JSON.parse(m.centroid_vec) : null,
+          archetype_distribution: m.archetype_distribution ? JSON.parse(m.archetype_distribution) : null,
+          occurrence_count: m.occurrence_count,
+          first_seen: m.first_seen,
+          last_seen: m.last_seen,
+        })),
+        recentInsights,
+        patternSignals,
+        archetypeTrajectory,
+      });
+    } catch (err: any) {
+      console.error("[patterns-for-lumen] Error:", err);
+      return res.status(500).json({ error: err.message });
+    }
   });
 
   return httpServer;
