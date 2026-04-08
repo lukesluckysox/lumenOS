@@ -366,6 +366,7 @@ export async function registerRoutes(
       const payload = jwt.verify(token, JWT_SECRET) as {
         userId: number;
         username: string;
+        email?: string;
         sso: boolean;
       };
 
@@ -373,8 +374,12 @@ export async function registerRoutes(
         return res.status(400).send("Invalid SSO token");
       }
 
-      // Find or create Parallax user matching the Lumen username
-      let user = storage.getUserByUsername(payload.username);
+      // Find existing Parallax user: email match first (merges existing accounts),
+      // then username fallback, then create shadow only if no match at all.
+      let user = payload.email ? storage.getUserByEmail(payload.email) : undefined;
+      if (!user) {
+        user = storage.getUserByUsername(payload.username);
+      }
       if (!user) {
         // Create a shadow account — no real password needed for SSO users
         const randomHash = await bcrypt.hash(randomUUID(), 10);
@@ -382,6 +387,7 @@ export async function registerRoutes(
           username: payload.username,
           password_hash: randomHash,
           display_name: payload.username,
+          email: payload.email || '',
           created_at: new Date().toISOString(),
         });
       }
@@ -401,7 +407,8 @@ export async function registerRoutes(
         path: "/",
       });
 
-      return res.redirect("/");
+      const dest = typeof req.query.redirect === 'string' && req.query.redirect.startsWith('/') ? req.query.redirect : '/';
+      return res.redirect(dest);
     } catch (err) {
       console.error("[sso] token verification failed:", err);
       return res.status(401).send("SSO token expired or invalid. Please return to Lumen and try again.");

@@ -280,6 +280,12 @@ export class DatabaseStorage implements IStorage {
     return { ...row, pro: !!row.pro, calibrated: !!row.calibrated } as User;
   }
 
+  getUserByEmail(email: string): User | undefined {
+    const row = sqlite.prepare("SELECT * FROM users WHERE email = ?").get(email) as any;
+    if (!row) return undefined;
+    return { ...row, pro: !!row.pro, calibrated: !!row.calibrated } as User;
+  }
+
   getUserById(id: number): User | undefined {
     const row = sqlite.prepare("SELECT * FROM users WHERE id = ?").get(id) as any;
     if (!row) return undefined;
