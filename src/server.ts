@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import { authRouter } from './routes/auth';
 import { epistemicRouter } from './routes/epistemic';
+import { loopRouter } from './routes/loop';
 
 // Initialise DB (creates tables on first run)
 import './db';
@@ -20,6 +21,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 // ─── API ─────────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRouter);
 app.use('/api/epistemic', epistemicRouter);
+app.use('/api/loop', loopRouter);
 
 app.get('/api/health', (_, res) => res.json({ ok: true, service: 'lumen' }));
 

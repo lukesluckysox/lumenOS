@@ -1317,6 +1317,386 @@
       transition: color .2s var(--ease), border-color .2s var(--ease);
     }
     .nav__signout:hover { color: var(--text); border-color: rgba(141,153,174,.4); }
+
+    /* ─────────────────────────────────────────────
+       COCKPIT — shared wrapper
+    ───────────────────────────────────────────── */
+    .cockpit {
+      display: none; /* hidden until authenticated */
+    }
+    .cockpit--visible {
+      display: block;
+    }
+
+    /* ─────────────────────────────────────────────
+       COCKPIT — SYSTEM STATE
+    ───────────────────────────────────────────── */
+    .state-band {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding-block: clamp(var(--sp-8), 4vw, var(--sp-12));
+    }
+
+    .state-header {
+      margin-bottom: var(--sp-8);
+    }
+    .state-eye {
+      display: block;
+      font-size: var(--text-xs);
+      font-weight: 500;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: .82;
+      margin-bottom: var(--sp-3);
+    }
+    .state-title {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 400;
+      font-style: italic;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .state-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border-md);
+      border: 1px solid var(--border-md);
+    }
+    @media (max-width: 640px) {
+      .state-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 340px) {
+      .state-grid { grid-template-columns: 1fr; }
+    }
+
+    .state-card {
+      background: var(--surface);
+      padding: var(--sp-6) var(--sp-8);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+      position: relative;
+      overflow: hidden;
+      transition: background var(--t);
+    }
+    .state-card::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--sc-accent, var(--gold));
+      opacity: .22;
+      transition: opacity var(--t);
+    }
+    .state-card:hover {
+      background: var(--surface-2);
+    }
+    .state-card:hover::before {
+      opacity: .55;
+    }
+
+    .state-card--gold    { --sc-accent: #FFD166; }
+    .state-card--red     { --sc-accent: #c96a5a; }
+    .state-card--amber   { --sc-accent: #c4943e; }
+    .state-card--brass   { --sc-accent: #9c8654; }
+
+    .state-card__label {
+      font-size: var(--text-xs);
+      font-weight: 500;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .state-card__count {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      font-weight: 300;
+      color: var(--sc-accent, var(--gold));
+      line-height: 1;
+    }
+    .state-card__sub {
+      font-size: var(--text-xs);
+      color: var(--faint);
+      letter-spacing: .04em;
+    }
+
+    /* ─────────────────────────────────────────────
+       COCKPIT — ACTIVITY FEED
+    ───────────────────────────────────────────── */
+    .feed-band {
+      background: var(--bg);
+      padding-block: clamp(var(--sp-10), 5vw, var(--sp-16));
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .feed-band::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 0%,
+        rgba(255,209,102,.018) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .feed-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--sp-4);
+      margin-bottom: var(--sp-8);
+      flex-wrap: wrap;
+    }
+    .feed-header__title {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--text);
+      line-height: 1.15;
+    }
+    .feed-header__eye {
+      display: block;
+      font-size: var(--text-xs);
+      font-weight: 500;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: .82;
+      margin-bottom: var(--sp-2);
+    }
+    .feed-header__link {
+      font-size: var(--text-xs);
+      font-weight: 500;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      flex-shrink: 0;
+      align-self: flex-end;
+      padding-bottom: 2px;
+      border-bottom: 1px solid transparent;
+      transition: color var(--t), border-color var(--t);
+    }
+    .feed-header__link:hover {
+      color: var(--gold);
+      border-color: rgba(255,209,102,.4);
+    }
+
+    .feed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .feed-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--sp-4);
+      padding: var(--sp-4) 0;
+      border-bottom: 1px solid var(--divider);
+      transition: opacity var(--t);
+    }
+    .feed-item:last-child {
+      border-bottom: none;
+    }
+
+    .feed-item__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: .45rem; /* align with first line of text */
+    }
+    .feed-item__dot--liminal  { background: #9c8654; }
+    .feed-item__dot--parallax { background: #4d8c9e; }
+    .feed-item__dot--praxis   { background: #c4943e; }
+    .feed-item__dot--axiom    { background: #3d7bba; }
+
+    .feed-item__body {
+      flex: 1;
+      min-width: 0;
+    }
+    .feed-item__meta {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-1);
+      flex-wrap: wrap;
+    }
+    .feed-item__app {
+      font-size: var(--text-xs);
+      font-weight: 500;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--faint);
+    }
+    .feed-item__verb {
+      font-size: var(--text-xs);
+      color: var(--muted);
+      letter-spacing: .02em;
+    }
+    .feed-item__sep {
+      font-size: var(--text-xs);
+      color: var(--faint);
+      opacity: .5;
+    }
+    .feed-item__time {
+      font-size: var(--text-xs);
+      color: var(--faint);
+      letter-spacing: .04em;
+    }
+    .feed-item__summary {
+      font-size: var(--text-sm);
+      color: var(--text);
+      line-height: 1.55;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .feed-empty {
+      padding: var(--sp-10) 0;
+      text-align: center;
+    }
+    .feed-empty__text {
+      font-family: var(--font-display);
+      font-size: var(--text-base);
+      font-style: italic;
+      font-weight: 300;
+      color: var(--faint);
+      letter-spacing: .02em;
+    }
+
+    /* ─────────────────────────────────────────────
+       COCKPIT — LOOP PULSE
+    ───────────────────────────────────────────── */
+    .pulse-band {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding-block: clamp(var(--sp-8), 4vw, var(--sp-10));
+    }
+
+    .pulse-inner {
+      display: flex;
+      align-items: flex-start;
+      gap: clamp(var(--sp-8), 5vw, var(--sp-16));
+      flex-wrap: wrap;
+    }
+
+    .pulse-meta {
+      flex: 0 0 auto;
+    }
+    .pulse-eye {
+      display: block;
+      font-size: var(--text-xs);
+      font-weight: 500;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: .82;
+      margin-bottom: var(--sp-2);
+    }
+    .pulse-title {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--text);
+      margin-bottom: var(--sp-4);
+    }
+    .pulse-total {
+      font-size: var(--text-xs);
+      color: var(--muted);
+      letter-spacing: .08em;
+      margin-bottom: var(--sp-4);
+    }
+    .pulse-total strong {
+      font-size: var(--text-base);
+      font-weight: 500;
+      color: var(--gold);
+      font-family: var(--font-display);
+    }
+
+    .pulse-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-2);
+    }
+    .pulse-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: var(--text-xs);
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: var(--sp-1) var(--sp-3);
+      border: 1px solid var(--border-md);
+      border-radius: var(--r-sm);
+    }
+    .pulse-badge__dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .pulse-badge__dot--liminal  { background: #9c8654; }
+    .pulse-badge__dot--parallax { background: #4d8c9e; }
+    .pulse-badge__dot--praxis   { background: #c4943e; }
+    .pulse-badge__dot--axiom    { background: #3d7bba; }
+
+    .pulse-chart {
+      flex: 1;
+      min-width: 200px;
+    }
+    .pulse-dots {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--sp-3);
+      height: 48px;
+    }
+    .pulse-day {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--sp-1);
+    }
+    .pulse-day__dot {
+      background: var(--gold);
+      border-radius: 50%;
+      transition: transform var(--t), opacity var(--t);
+      opacity: .55;
+    }
+    .pulse-day__dot:hover {
+      opacity: 1;
+      transform: scale(1.25);
+    }
+    .pulse-day__dot--zero {
+      opacity: .12;
+      background: var(--muted);
+    }
+    .pulse-day__label {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--faint);
+      white-space: nowrap;
+    }
+
+    .pulse-empty {
+      font-family: var(--font-display);
+      font-size: var(--text-sm);
+      font-style: italic;
+      font-weight: 300;
+      color: var(--faint);
+    }
+
   </style>
 </head>
 <body>
@@ -1571,6 +1951,85 @@
   </div>
 
 </section>
+
+
+<!-- ╔══════════════════════════════════════════
+     COCKPIT — authenticated user modules
+     Hidden by default; JS reveals after auth.
+═══════════════════════════════════════════╗ -->
+<div id="cockpit" class="cockpit" aria-label="Personal epistemic cockpit">
+
+  <!-- A. System State -->
+  <section class="state-band" id="cockpit-state" aria-label="Current system state">
+    <div class="wrap">
+      <div class="state-header">
+        <span class="state-eye">Current State</span>
+        <h2 class="state-title">Where the system stands.</h2>
+      </div>
+      <div class="state-grid" role="list" id="state-grid">
+        <div class="state-card state-card--gold" role="listitem">
+          <span class="state-card__label">Constitutional Principles</span>
+          <span class="state-card__count" id="state-axiom">—</span>
+          <span class="state-card__sub">Truths distilled by Axiom</span>
+        </div>
+        <div class="state-card state-card--red" role="listitem">
+          <span class="state-card__label">Active Tensions</span>
+          <span class="state-card__count" id="state-tension">—</span>
+          <span class="state-card__sub">Unresolved contradictions</span>
+        </div>
+        <div class="state-card state-card--amber" role="listitem">
+          <span class="state-card__label">Live Experiments</span>
+          <span class="state-card__count" id="state-experiment">—</span>
+          <span class="state-card__sub">Hypotheses under test</span>
+        </div>
+        <div class="state-card state-card--brass" role="listitem">
+          <span class="state-card__label">Pending Inquiries</span>
+          <span class="state-card__count" id="state-pending">—</span>
+          <span class="state-card__sub">Prompts awaiting response</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- B. Loop Activity Feed -->
+  <section class="feed-band" id="cockpit-feed" aria-label="Recent epistemic activity">
+    <div class="wrap wrap--mid">
+      <div class="feed-header">
+        <div>
+          <span class="feed-header__eye">The Examined Life</span>
+          <h2 class="feed-header__title">Recent Activity</h2>
+        </div>
+        <a href="#" class="feed-header__link" aria-label="View all epistemic events">View all</a>
+      </div>
+      <div id="feed-list" class="feed-list" role="feed" aria-label="Epistemic event feed">
+        <!-- populated by JS -->
+        <div class="feed-empty">
+          <p class="feed-empty__text">The system is listening. Use any tool to begin.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- C. Loop Pulse -->
+  <section class="pulse-band" id="cockpit-pulse" aria-label="Loop activity pulse">
+    <div class="wrap">
+      <div class="pulse-inner">
+        <div class="pulse-meta">
+          <span class="pulse-eye">Loop Pulse</span>
+          <h2 class="pulse-title">Last 7 Days</h2>
+          <p class="pulse-total" id="pulse-total">Loading&hellip;</p>
+          <div class="pulse-badges" id="pulse-badges"><!-- populated by JS --></div>
+        </div>
+        <div class="pulse-chart" aria-label="Activity by day">
+          <div class="pulse-dots" id="pulse-dots" role="img" aria-label="Seven-day activity sparkline">
+            <!-- populated by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /cockpit -->
 
 
 <!-- ╔══════════════════════════════════════════
@@ -1923,6 +2382,7 @@
     gate.classList.add('gate--exit');
     gate.addEventListener('animationend', function () { gate.remove(); }, { once: true });
     loadSensitivity();
+    loadCockpit();
   }
 
   function showForm() {
@@ -2151,6 +2611,191 @@ async function setSensitivity(val) {
     });
   } catch {}
 }
+
+/* ── Cockpit — Epistemic Loop Modules ──────────────────────────────────────── */
+(function () {
+
+  /* ── Helpers ─────────────────────────────────────────────── */
+
+  // Format an ISO timestamp to a relative phrase (e.g. "2 hours ago")
+  function relativeTime(isoStr) {
+    var now  = Date.now();
+    var then = new Date(isoStr).getTime();
+    var diff = Math.max(0, now - then);
+    var m = Math.floor(diff / 60000);
+    var h = Math.floor(diff / 3600000);
+    var d = Math.floor(diff / 86400000);
+    if (m  <  1) return 'just now';
+    if (m  < 60) return m  + (m  === 1 ? ' min ago'  : ' mins ago');
+    if (h  < 24) return h  + (h  === 1 ? ' hour ago' : ' hours ago');
+    if (d  <  7) return d  + (d  === 1 ? ' day ago'  : ' days ago');
+    return new Date(isoStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  // Human-readable description for each event type
+  var EVENT_VERBS = {
+    belief_candidate:        'surfaced a belief worth examining',
+    tension_candidate:       'revealed an unresolved tension',
+    pattern_candidate:       'detected a behavioral pattern',
+    hypothesis_candidate:    'proposed a hypothesis for testing',
+    constitutional_promotion:'promoted a truth to constitutional status',
+    truth_revision:          'revised a foundational belief',
+    experiment_completed:    'completed a lived experiment',
+    doctrine_crystallized:   'crystallized a working doctrine',
+  };
+
+  // Day abbreviations
+  var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  /* ── Main loader ──────────────────────────────────────────── */
+
+  async function loadCockpit() {
+    var cockpit = document.getElementById('cockpit');
+    if (!cockpit) return;
+    cockpit.classList.add('cockpit--visible');
+
+    // Fire all three in parallel
+    await Promise.allSettled([
+      loadState(),
+      loadFeed(),
+      loadPulse(),
+    ]);
+  }
+
+  /* ── System State ─────────────────────────────────────────── */
+
+  async function loadState() {
+    try {
+      var res = await fetch('/api/loop/state', { credentials: 'same-origin' });
+      if (!res.ok) return;
+      var data = await res.json();
+
+      var setCount = function (id, n) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = n;
+      };
+      setCount('state-axiom',      data.axiomCount);
+      setCount('state-tension',    data.tensionCount);
+      setCount('state-experiment', data.experimentCount);
+      setCount('state-pending',    data.pendingCount);
+    } catch {}
+  }
+
+  /* ── Activity Feed ────────────────────────────────────────── */
+
+  async function loadFeed() {
+    try {
+      var res = await fetch('/api/loop/feed', { credentials: 'same-origin' });
+      if (!res.ok) return;
+      var events = await res.json();
+
+      var container = document.getElementById('feed-list');
+      if (!container) return;
+
+      if (!events || events.length === 0) {
+        container.innerHTML = '<div class="feed-empty"><p class="feed-empty__text">The system is listening. Use any tool to begin.</p></div>';
+        return;
+      }
+
+      // Show max 10
+      var shown = events.slice(0, 10);
+      var html = shown.map(function (ev) {
+        var dotClass  = 'feed-item__dot feed-item__dot--' + (ev.sourceApp || '');
+        var verb      = EVENT_VERBS[ev.eventType] || 'recorded an epistemic event';
+        var appName   = (ev.sourceApp || '').charAt(0).toUpperCase() + (ev.sourceApp || '').slice(1);
+        var time      = relativeTime(ev.createdAt);
+        var summary   = ev.summary
+          ? ev.summary.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          : '';
+
+        return [
+          '<article class="feed-item">',
+          '  <div class="' + dotClass + '" aria-hidden="true"></div>',
+          '  <div class="feed-item__body">',
+          '    <div class="feed-item__meta">',
+          '      <span class="feed-item__app">' + appName + '</span>',
+          '      <span class="feed-item__sep">·</span>',
+          '      <span class="feed-item__verb">' + verb + '</span>',
+          '      <span class="feed-item__sep">·</span>',
+          '      <time class="feed-item__time" datetime="' + ev.createdAt + '">' + time + '</time>',
+          '    </div>',
+          summary ? '    <p class="feed-item__summary">' + summary + '</p>' : '',
+          '  </div>',
+          '</article>',
+        ].join('\n');
+      }).join('\n');
+
+      container.innerHTML = html;
+    } catch {}
+  }
+
+  /* ── Loop Pulse ───────────────────────────────────────────── */
+
+  async function loadPulse() {
+    try {
+      var res = await fetch('/api/loop/pulse', { credentials: 'same-origin' });
+      if (!res.ok) return;
+      var data = await res.json();
+
+      // Total label
+      var totalEl = document.getElementById('pulse-total');
+      if (totalEl) {
+        if (data.totalEvents === 0) {
+          totalEl.innerHTML = '<span class="pulse-empty">The loop is quiet. Begin with any tool.</span>';
+        } else {
+          totalEl.innerHTML = '<strong>' + data.totalEvents + '</strong> event' + (data.totalEvents === 1 ? '' : 's') + ' in 7 days';
+        }
+      }
+
+      // Per-app badges
+      var badgesEl = document.getElementById('pulse-badges');
+      if (badgesEl && data.byApp) {
+        var apps = [
+          { key: 'liminal',  label: 'Liminal'  },
+          { key: 'parallax', label: 'Parallax' },
+          { key: 'praxis',   label: 'Praxis'   },
+          { key: 'axiom',    label: 'Axiom'    },
+        ];
+        badgesEl.innerHTML = apps
+          .filter(function (a) { return (data.byApp[a.key] || 0) > 0; })
+          .map(function (a) {
+            return [
+              '<span class="pulse-badge">',
+              '  <span class="pulse-badge__dot pulse-badge__dot--' + a.key + '" aria-hidden="true"></span>',
+              '  ' + a.label + '\u00a0' + data.byApp[a.key],
+              '</span>',
+            ].join('');
+          }).join('');
+      }
+
+      // Sparkline dots
+      var dotsEl = document.getElementById('pulse-dots');
+      if (dotsEl && data.byDay && data.byDay.length > 0) {
+        var maxCount = Math.max.apply(null, data.byDay.map(function (d) { return d.count; }));
+        var MIN_PX = 6;
+        var MAX_PX = 28;
+
+        dotsEl.innerHTML = data.byDay.map(function (d) {
+          var isZero = d.count === 0;
+          var size   = isZero ? MIN_PX : Math.round(MIN_PX + (d.count / Math.max(maxCount, 1)) * (MAX_PX - MIN_PX));
+          var dayStr = DAYS[new Date(d.date + 'T00:00:00').getDay()];
+          var dotCls = 'pulse-day__dot' + (isZero ? ' pulse-day__dot--zero' : '');
+          var title  = d.count + ' event' + (d.count === 1 ? '' : 's') + ' on ' + d.date;
+          return [
+            '<div class="pulse-day">',
+            '  <div class="' + dotCls + '" style="width:' + size + 'px;height:' + size + 'px" title="' + title + '" aria-label="' + title + '"></div>',
+            '  <span class="pulse-day__label">' + dayStr + '</span>',
+            '</div>',
+          ].join('');
+        }).join('');
+      }
+    } catch {}
+  }
+
+  // Expose to global scope so the auth gate can call it
+  window.loadCockpit = loadCockpit;
+
+})();
 
 /* ── Nav scroll awareness ── */
 (function () {
