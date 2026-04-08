@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import path from 'path';
+import fs from 'fs';
 import {
   epistemicEvents,
   epistemicCandidates,
@@ -41,6 +42,9 @@ export {
 const dbPath = process.env.RAILWAY_VOLUME_MOUNT_PATH
   ? `${process.env.RAILWAY_VOLUME_MOUNT_PATH}/lumen.db`
   : path.resolve(process.cwd(), 'lumen.db');
+
+// Ensure the parent directory exists (Railway volumes may not be pre-created)
+fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
 export const sqlite = new Database(dbPath);
 sqlite.pragma('journal_mode = WAL');
