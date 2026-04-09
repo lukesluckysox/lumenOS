@@ -32,9 +32,9 @@ export default function SourceTags({ liminal, parallax, praxis, size = "sm" }: S
 export function SourceLegend() {
   return (
     <div className="flex items-center gap-4 text-[10px] font-mono text-muted-foreground/60 uppercase tracking-wider">
-      <span className="text-purple-500/70">L — Liminal</span>
-      <span className="text-blue-500/70">P — Parallax</span>
-      <span className="text-emerald-600/70">Pr — Praxis</span>
+      <span className="text-purple-500/70">L — Inquiry</span>
+      <span className="text-blue-500/70">P — Patterns</span>
+      <span className="text-emerald-600/70">Pr — Experiments</span>
     </div>
   );
 }

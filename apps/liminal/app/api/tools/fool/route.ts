@@ -74,20 +74,25 @@ export async function POST(request: NextRequest) {
     }
 
 
-    // Fire-and-forget: push session to Parallax for pattern tracking
+    // Collect downstream results for session summary
+    const downstream: { destination: string; description: string }[] = [];
     if (user.lumen_user_id && session) {
       const emitPayload = {
         lumenUserId: user.lumen_user_id,
         sessionId: session.id,
         toolSlug: 'fool',
-        inputText: parsed.data[Object.keys(parsed.data)[0]] || '',
+        inputText: String(Object.values(parsed.data)[0] ?? '') || '',
         structuredOutput: output,
         summary: typeof summary === 'string' ? summary : '',
       };
-      void emitToParallax(emitPayload);
-      void emitToAxiom(emitPayload);
+      const [parallaxResult, axiomResult] = await Promise.all([
+        emitToParallax(emitPayload),
+        emitToAxiom(emitPayload),
+      ]);
+      if (parallaxResult.sent) downstream.push({ destination: parallaxResult.destination, description: parallaxResult.description });
+      if (axiomResult.sent) downstream.push({ destination: axiomResult.destination, description: axiomResult.description });
     }
-    return NextResponse.json({ sessionId: session!.id, output });
+    return NextResponse.json({ sessionId: session!.id, output, downstream });
   } catch (err) {
     console.error('[fool]', err);
     return NextResponse.json(

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, type FormEvent, type ReactNode } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { ToolIcon } from '@/components/tool-icon';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { DownstreamSummary, type DownstreamItem } from '@/components/downstream-summary';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export interface ToolConfig {
@@ -18,6 +19,12 @@ export interface ToolConfig {
   processingLabel?: string;
   accentHue?: string;
   preamble?: ReactNode;
+  /** Extra CSS class applied to the submit button */
+  submitClassName?: string;
+  /** Extra CSS class applied to the card/form wrapper */
+  cardClassName?: string;
+  /** Inline border color override for the card */
+  cardBorderColor?: string;
 }
 
 interface ToolPageClientProps {
@@ -56,21 +63,10 @@ const TRUST_NOTES: Record<string, { bestFor: string; notFor: string }> = {
 
 export function ToolPageClient({ config }: ToolPageClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [input, setInput] = useState('');
-  const [seedActive, setSeedActive] = useState(false);
   const [error, setError] = useState('');
-
-  // Pre-fill from ?seed= param (loop-routed inquiry seeds)
-  useEffect(() => {
-    const seed = searchParams.get('seed');
-    if (seed && !input) {
-      setInput(seed);
-      setSeedActive(true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   const [loading, setLoading] = useState(false);
+  const [downstream, setDownstream] = useState<DownstreamItem[]>([]);
 
   const minLen = config.minLength ?? 10;
   const accent = config.accentHue ?? 'var(--color-gold)';
@@ -117,7 +113,22 @@ export function ToolPageClient({ config }: ToolPageClientProps) {
         return;
       }
 
-      router.push(`/session/${data.sessionId}`);
+      // Increment session counter for Loop onboarding
+      if (data.sessionId) {
+        const prev = parseInt(localStorage.getItem('liminal_sessions_completed') ?? '0', 10);
+        localStorage.setItem('liminal_sessions_completed', String(prev + 1));
+      }
+
+      // Store downstream data before navigating
+      if (Array.isArray(data.downstream) && data.downstream.length > 0) {
+        setDownstream(data.downstream);
+        // Show for a comfortable reading duration then navigate
+        setTimeout(() => {
+          router.push(`/session/${data.sessionId}`);
+        }, 4000);
+      } else {
+        router.push(`/session/${data.sessionId}`);
+      }
     } catch {
       setError('A network error occurred. Check your connection and try again.');
     } finally {
@@ -131,6 +142,9 @@ export function ToolPageClient({ config }: ToolPageClientProps) {
         maxWidth: '720px',
         margin: '0 auto',
         padding: 'clamp(2.5rem, 5vw, 5rem) 1.5rem',
+        ...(config.cardBorderColor
+          ? { borderLeft: `3px solid ${config.cardBorderColor}`, paddingLeft: 'calc(1.5rem - 3px)' }
+          : {}),
       }}
     >
       {/* Breadcrumb */}
@@ -207,6 +221,7 @@ export function ToolPageClient({ config }: ToolPageClientProps) {
       {/* Trust note */}
       {trustNote && (
         <div
+          className="trust-notes-grid"
           style={{
             marginBottom: '2rem',
             display: 'grid',
@@ -281,49 +296,26 @@ export function ToolPageClient({ config }: ToolPageClientProps) {
             {config.inputLabel}
           </label>
 
-          {seedActive && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                marginBottom: '0.5rem',
-                fontSize: '0.6875rem',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: accentAlpha(0.45),
-              }}
-            >
-              <span style={{ opacity: 0.5 }}>↺</span>
-              <span>From the loop — edit freely</span>
-            </div>
-          )}
-
           {config.isTextarea !== false ? (
             <textarea
               id="tool-input"
               value={input}
-              onChange={(e) => { setInput(e.target.value); setSeedActive(false); }}
+              onChange={(e) => setInput(e.target.value)}
               placeholder={config.inputPlaceholder}
               disabled={loading}
               rows={8}
               className="liminal-input"
-              style={{
-                resize: 'vertical',
-                minHeight: '180px',
-                ...(seedActive ? { borderColor: accentAlpha(0.25) } : {}),
-              }}
+              style={{ resize: 'vertical', minHeight: '180px' }}
             />
           ) : (
             <input
               id="tool-input"
               type="text"
               value={input}
-              onChange={(e) => { setInput(e.target.value); setSeedActive(false); }}
+              onChange={(e) => setInput(e.target.value)}
               placeholder={config.inputPlaceholder}
               disabled={loading}
               className="liminal-input"
-              style={seedActive ? { borderColor: accentAlpha(0.25) } : {}}
             />
           )}
 
@@ -409,7 +401,7 @@ export function ToolPageClient({ config }: ToolPageClientProps) {
 
         <button
           type="submit"
-          className="btn-primary"
+          className={`btn-primary${config.submitClassName ? ' ' + config.submitClassName : ''}`}
           disabled={loading || input.trim().length < minLen}
           style={{ padding: '0.7rem 2rem' }}
         >
@@ -423,6 +415,11 @@ export function ToolPageClient({ config }: ToolPageClientProps) {
           )}
         </button>
       </form>
+
+      {/* Downstream summary — shown briefly after session completes */}
+      {downstream.length > 0 && !loading && (
+        <DownstreamSummary downstream={downstream} />
+      )}
 
       {/* Processing overlay */}
       {loading && (
@@ -468,6 +465,23 @@ export function ToolPageClient({ config }: ToolPageClientProps) {
           >
             This may take 15–45 seconds.
           </p>
+          {config.slug === 'interlocutor' && (
+            <div
+              style={{
+                paddingLeft: '1.75rem',
+                marginTop: '0.5rem',
+                color: 'rgb(var(--color-text-faint))',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+              }}
+              aria-hidden="true"
+            >
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+            </div>
+          )}
         </div>
       )}
     </div>

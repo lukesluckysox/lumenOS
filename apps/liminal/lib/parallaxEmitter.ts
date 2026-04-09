@@ -4,9 +4,11 @@
 const PARALLAX_URL = process.env.PARALLAX_URL;
 const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN;
 
-// Startup diagnostics — surfaces in Railway logs so missing env vars are obvious
-if (!PARALLAX_URL)          console.warn('[parallaxEmitter] PARALLAX_URL not set — Liminal→Parallax feed is DISABLED');
-if (!LUMEN_INTERNAL_TOKEN)  console.warn('[parallaxEmitter] LUMEN_INTERNAL_TOKEN not set — cross-app auth is DISABLED');
+export interface EmitResult {
+  sent: boolean;
+  destination: string;
+  description: string;
+}
 
 export async function emitToParallax(event: {
   lumenUserId: string;
@@ -16,8 +18,10 @@ export async function emitToParallax(event: {
   structuredOutput: object;
   summary: string;
   createdAt?: string;
-}): Promise<void> {
-  if (!PARALLAX_URL || !LUMEN_INTERNAL_TOKEN) return;
+}): Promise<EmitResult> {
+  if (!PARALLAX_URL || !LUMEN_INTERNAL_TOKEN) {
+    return { sent: false, destination: 'parallax', description: 'Your patterns were recognized and mapped.' };
+  }
   try {
     await fetch(`${PARALLAX_URL}/api/internal/from-liminal`, {
       method: "POST",
@@ -35,15 +39,16 @@ export async function emitToParallax(event: {
         createdAt: event.createdAt || new Date().toISOString(),
       }),
     });
+    return { sent: true, destination: 'parallax', description: 'Your patterns were recognized and mapped.' };
   } catch (e) {
     console.error("[ParallaxEmitter] Failed to push session:", e);
     // Never throw — emission must not break the main app flow
+    return { sent: false, destination: 'parallax', description: 'Your patterns were recognized and mapped.' };
   }
 }
 
 // Also push to Axiom when we detect strong belief/truth signals
 const AXIOM_URL = process.env.AXIOM_TOOL_URL;
-if (!AXIOM_URL) console.warn('[parallaxEmitter] AXIOM_TOOL_URL not set — Liminal→Axiom feed is DISABLED');
 
 export async function emitToAxiom(event: {
   lumenUserId: string;
@@ -52,12 +57,16 @@ export async function emitToAxiom(event: {
   inputText: string;
   structuredOutput: object;
   summary: string;
-}): Promise<void> {
-  if (!AXIOM_URL || !LUMEN_INTERNAL_TOKEN) return;
+}): Promise<EmitResult> {
+  if (!AXIOM_URL || !LUMEN_INTERNAL_TOKEN) {
+    return { sent: false, destination: 'axiom', description: 'This insight is ready for deeper examination.' };
+  }
 
   // Only tools that produce truth-adjacent outputs should push to Axiom
   const axiomTools = ["genealogist", "interlocutor", "stoics-ledger"];
-  if (!axiomTools.includes(event.toolSlug)) return;
+  if (!axiomTools.includes(event.toolSlug)) {
+    return { sent: false, destination: 'axiom', description: 'This insight is ready for deeper examination.' };
+  }
 
   try {
     // Extract a potential truth claim from the structured output
@@ -80,7 +89,9 @@ export async function emitToAxiom(event: {
       suggestedClaim = output.maxim || "";
     }
 
-    if (!suggestedClaim) return;
+    if (!suggestedClaim) {
+      return { sent: false, destination: 'axiom', description: 'This insight is ready for deeper examination.' };
+    }
 
     await fetch(`${AXIOM_URL}/api/internal/from-lumen`, {
       method: "POST",
@@ -100,7 +111,9 @@ export async function emitToAxiom(event: {
         }],
       }),
     });
+    return { sent: true, destination: 'axiom', description: 'This insight is ready for deeper examination.' };
   } catch (e) {
     console.error("[AxiomEmitter] Failed to push from Liminal:", e);
+    return { sent: false, destination: 'axiom', description: 'This insight is ready for deeper examination.' };
   }
 }

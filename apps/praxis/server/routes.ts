@@ -19,8 +19,7 @@ export function registerRoutes(httpServer: Server, app: Express) {
       req.session.username = payload.username;
       req.session.save((err: unknown) => {
         if (err) console.error('[praxis/sso] session save error:', err);
-        const dest = typeof req.query.redirect === 'string' && req.query.redirect.startsWith('/') ? req.query.redirect : '/#/';
-        res.redirect(dest);
+        res.redirect('/#/');
       });
     } catch (err) {
       console.error('[praxis/sso] token error:', err);
@@ -83,11 +82,13 @@ export function registerRoutes(httpServer: Server, app: Express) {
 
       try {
         const trialNumber = storage.getNextTrialNumber(String(lumenUserId));
+        const dimensions = (pattern.dimensions || []).join(', ') || 'your data';
+        const sourceDescription = `A ${pattern.type.replace(/_/g, ' ')} pattern was detected in your ${dimensions} reflections.`;
         storage.createExperiment(
           {
             title: `Parallax: ${pattern.type.replace(/_/g, ' ')} — ${(pattern.dimensions || []).join(', ') || 'detected pattern'}`.slice(0, 200),
             trialNumber,
-            status: 'active',
+            status: 'proposed',
             source: 'parallax',
             hypothesis,
             design,
@@ -95,6 +96,7 @@ export function registerRoutes(httpServer: Server, app: Express) {
             observation: '',
             meaningExtraction: '',
             tags: '[]',
+            sourceDescription,
           },
           String(lumenUserId)
         );
@@ -118,9 +120,8 @@ export function registerRoutes(httpServer: Server, app: Express) {
     const {
       title,
       hypothesis,
-      design = 'Auto-generated from epistemic queue. Review and refine to structure your experiment.',
-      source = 'liminal',
-      status = 'active',
+      design = 'This experiment was suggested by patterns in your reflections. Shape it into something you can test.',
+      source = 'lumen_push',
       experimentConstraint = '',
       observation = '',
       meaningExtraction = '',
@@ -138,7 +139,7 @@ export function registerRoutes(httpServer: Server, app: Express) {
         {
           title: title || hypothesis.slice(0, 200),
           trialNumber,
-          status,
+          status: 'proposed',
           source,
           hypothesis,
           design,
@@ -146,6 +147,7 @@ export function registerRoutes(httpServer: Server, app: Express) {
           observation,
           meaningExtraction,
           tags,
+          sourceDescription: 'Suggested by your recent reflections.',
         },
         String(userId)
       );
@@ -163,25 +165,6 @@ export function registerRoutes(httpServer: Server, app: Express) {
   });
 
   // ── Experiments ────────────────────────────────────────────────────────
-
-  // ─── Internal stats for Lumen OS dashboard ──────────────────────────────────
-  app.get('/api/internal/stats', (req: any, res: any) => {
-    const token = req.headers['x-lumen-internal-token'];
-    const expected = process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
-    if (!token || token !== expected) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    try {
-      const experiments = storage.getExperiments();
-      const experimentCount = experiments.filter((e: any) => e.status === 'active' || e.status === 'observing').length;
-      const doctrineCount = storage.getDoctrines().length;
-      const tensionCount = storage.getTensions().length;
-      return res.json({ experimentCount, doctrineCount, tensionCount });
-    } catch (err) {
-      console.error('[praxis/internal/stats]', err);
-      return res.status(500).json({ error: 'Failed to compute stats' });
-    }
-  });
 
   app.get("/api/experiments", (req: any, res: any) => {
     res.json(storage.getExperiments(getUserId(req)));

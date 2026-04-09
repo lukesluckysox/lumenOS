@@ -448,6 +448,7 @@ function StoicsLedgerOutputView({ output }: { output: StoicsLedgerOutput }) {
       {/* 2-column ledger for duties */}
       {(output.duties_met.length > 0 || output.duties_neglected.length > 0) && (
         <div
+          className="stoic-ledger-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',

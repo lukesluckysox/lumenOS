@@ -86,14 +86,8 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_session_reset TIMESTAMPTZ DEF
 ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_changed_at TIMESTAMPTZ;
 
--- Lumen loop: link Liminal user to Lumen OS user for cross-app feeds
+-- Lumen SSO: store the Lumen-side userId for epistemic event emission
 ALTER TABLE users ADD COLUMN IF NOT EXISTS lumen_user_id TEXT;
-
--- One-time flush: all inquiry seeds created before voice-transform fix (2026-04-08)
--- are in the wrong grammatical person. Mark them dismissed so only new correctly-
--- voiced seeds show up. This is idempotent — dismissed seeds stay dismissed.
-UPDATE inquiry_seeds SET status = 'dismissed'
-  WHERE status = 'pending' AND created_at < '2026-04-09T00:00:00Z';
 
 -- Ensure oracle role for the designated admin email
 UPDATE users SET role = 'oracle', plan = 'cabinet' WHERE email = 'thebestpolicyis@gmail.com';

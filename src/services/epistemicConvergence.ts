@@ -79,8 +79,8 @@ export function buildConvergencePayload(
   sharedThemesList: string[],
   userId: string
 ): Record<string, unknown> {
-  const liminalClean = (liminal.title || liminal.summary || 'Liminal observation').slice(0, 120).trim();
-  const parallaxClean = (parallax.title || parallax.summary || 'Parallax archetype').slice(0, 120).trim();
+  const liminalClean = (liminal.title || liminal.summary || 'A reflective observation').slice(0, 120).trim();
+  const parallaxClean = (parallax.title || parallax.summary || 'An observed pattern').slice(0, 120).trim();
 
   // Extract parallax frequency from title if available (e.g. "×25", "x 10 times")
   let parFreq = 1;

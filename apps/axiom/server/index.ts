@@ -1,9 +1,12 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from 'express-session';
+import createMemoryStore from 'memorystore';
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
 const app = express();
+app.set('trust proxy', 1); // Railway terminates HTTPS at proxy layer
 const httpServer = createServer(app);
 
 declare module "http" {
@@ -21,6 +24,21 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+const MemoryStore = createMemoryStore(session);
+
+app.use(session({
+  secret: process.env.JWT_SECRET || 'axiom-dev-secret',
+  resave: false,
+  saveUninitialized: false,
+  store: new MemoryStore({ checkPeriod: 86400000 }),
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  },
+}));
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {

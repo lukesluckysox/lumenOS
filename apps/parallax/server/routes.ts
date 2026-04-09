@@ -366,7 +366,6 @@ export async function registerRoutes(
       const payload = jwt.verify(token, JWT_SECRET) as {
         userId: number;
         username: string;
-        email?: string;
         sso: boolean;
       };
 
@@ -374,12 +373,8 @@ export async function registerRoutes(
         return res.status(400).send("Invalid SSO token");
       }
 
-      // Find existing Parallax user: email match first (merges existing accounts),
-      // then username fallback, then create shadow only if no match at all.
-      let user = payload.email ? storage.getUserByEmail(payload.email) : undefined;
-      if (!user) {
-        user = storage.getUserByUsername(payload.username);
-      }
+      // Find or create Parallax user matching the Lumen username
+      let user = storage.getUserByUsername(payload.username);
       if (!user) {
         // Create a shadow account — no real password needed for SSO users
         const randomHash = await bcrypt.hash(randomUUID(), 10);
@@ -387,7 +382,6 @@ export async function registerRoutes(
           username: payload.username,
           password_hash: randomHash,
           display_name: payload.username,
-          email: payload.email || '',
           created_at: new Date().toISOString(),
         });
       }
@@ -407,8 +401,7 @@ export async function registerRoutes(
         path: "/",
       });
 
-      const dest = typeof req.query.redirect === 'string' && req.query.redirect.startsWith('/') ? req.query.redirect : '/';
-      return res.redirect(dest);
+      return res.redirect("/");
     } catch (err) {
       console.error("[sso] token verification failed:", err);
       return res.status(401).send("SSO token expired or invalid. Please return to Lumen and try again.");
@@ -833,7 +826,7 @@ Respond ONLY with valid JSON:
       const responseText = message.content[0].type === "text" ? message.content[0].text : "";
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        return res.status(500).json({ error: "Could not parse LLM response" });
+        return res.status(500).json({ error: "Could not process the response. Please try again." });
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
@@ -892,7 +885,7 @@ Respond ONLY with valid JSON:
       const responseText = message.content[0].type === "text" ? message.content[0].text : "";
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        return res.status(500).json({ error: "Could not parse LLM response" });
+        return res.status(500).json({ error: "Could not process the response. Please try again." });
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
@@ -964,7 +957,7 @@ Return ONLY valid JSON:
       const responseText = message.content[0].type === "text" ? message.content[0].text : "";
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        return res.status(500).json({ error: "Could not parse LLM response" });
+        return res.status(500).json({ error: "Could not process the response. Please try again." });
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
@@ -1025,7 +1018,7 @@ Return ONLY valid JSON:
       }
 
       if (!anthropic) {
-        return res.status(503).json({ error: "LLM service unavailable. Check ANTHROPIC_API_KEY." });
+        return res.status(503).json({ error: "Analysis is temporarily unavailable. Please try again later." });
       }
 
       const userId = getUserId(req);
@@ -1735,7 +1728,7 @@ Return ONLY a JSON array of 4 strings, each starting with "Should I...". Example
     const ctx = gatherUserContext(userId, tz);
     if (!ctx.hasData) return res.json({ variant: null, hasData: false });
 
-    if (!anthropic) return res.json({ variant: null, error: "LLM unavailable" });
+    if (!anthropic) return res.json({ variant: null, error: "Analysis is temporarily unavailable" });
 
     try {
       const message = await anthropic.messages.create({
@@ -2086,7 +2079,7 @@ Return ONLY valid JSON:
     const ctx = gatherUserContext(userId, tz);
     if (!ctx.hasData) return res.json({ insights: [], hasData: false });
 
-    if (!anthropic) return res.json({ insights: [], error: "LLM unavailable" });
+    if (!anthropic) return res.json({ insights: [], error: "Analysis is temporarily unavailable" });
 
     try {
       const message = await anthropic.messages.create({
@@ -2176,7 +2169,7 @@ Return ONLY valid JSON:
     const ctx = gatherUserContext(userId, tz);
     if (!ctx.hasData) return res.json({ forecast: null, hasData: false });
 
-    if (!anthropic) return res.json({ forecast: null, error: "LLM unavailable" });
+    if (!anthropic) return res.json({ forecast: null, error: "Analysis is temporarily unavailable" });
 
     try {
       const message = await anthropic.messages.create({
@@ -3071,7 +3064,7 @@ Return ONLY the single line, no quotes, no explanation.`
       return res.json({ reading: null, empty: true });
     }
 
-    if (!anthropic) return res.json({ reading: null, error: "LLM unavailable" });
+    if (!anthropic) return res.json({ reading: null, error: "Analysis is temporarily unavailable" });
 
     const checkinArchetypes = allCheckins.slice(0, 10).map(c => c.self_archetype).join(", ");
     const latestFeeling = allCheckins[0]?.feeling_text || "";
@@ -3749,33 +3742,6 @@ Return ONLY valid JSON:
 
       const timestamp = createdAt || new Date().toISOString();
 
-      // ---- Rewrite cross-talk to first-person voice ----
-      // Liminal tool output is in "you" voice (addressing the user).
-      // When stored in Parallax, we normalize to first-person "I" so the
-      // data is consistent with how the user would express their own state.
-      function toFirstPerson(text: string): string {
-        if (!text) return text;
-        return text
-          .replace(/\bYou are\b/g, 'I am').replace(/\byou are\b/g, 'I am')
-          .replace(/\bYou were\b/g, 'I was').replace(/\byou were\b/g, 'I was')
-          .replace(/\bYou have\b/g, 'I have').replace(/\byou have\b/g, 'I have')
-          .replace(/\bYou feel\b/g, 'I feel').replace(/\byou feel\b/g, 'I feel')
-          .replace(/\bYou tend\b/g, 'I tend').replace(/\byou tend\b/g, 'I tend')
-          .replace(/\bYou seem\b/g, 'I seem').replace(/\byou seem\b/g, 'I seem')
-          .replace(/\bYou believe\b/g, 'I believe').replace(/\byou believe\b/g, 'I believe')
-          .replace(/\bYou think\b/g, 'I think').replace(/\byou think\b/g, 'I think')
-          .replace(/\bYou might\b/g, 'I might').replace(/\byou might\b/g, 'I might')
-          .replace(/\bYou often\b/g, 'I often').replace(/\byou often\b/g, 'I often')
-          .replace(/\bYou always\b/g, 'I always').replace(/\byou always\b/g, 'I always')
-          .replace(/\bYou never\b/g, 'I never').replace(/\byou never\b/g, 'I never')
-          .replace(/\byourself\b/gi, 'myself')
-          .replace(/\bYour\b/g, 'My').replace(/\byour\b/g, 'my')
-          .replace(/\s{2,}/g, ' ').trim();
-      }
-
-      const storedSummary = summary ? toFirstPerson(summary) : null;
-      const storedInput   = inputText ? toFirstPerson(inputText) : "";
-
       // ---- Create the synthetic check-in ----
       const checkin = storage.createCheckin({
         user_id: userId,
@@ -3784,18 +3750,18 @@ Return ONLY valid JSON:
         data_vec: JSON.stringify(dataVec),
         self_archetype: selfArchetype,
         data_archetype: dataArchetype,
-        feeling_text: storedSummary ? `[reflection: ${toolSlug}] ${storedSummary}` : `[reflective session: ${toolSlug}]`,
+        feeling_text: summary ? `[Liminal: ${toolSlug}] ${summary}` : `[Liminal session: ${toolSlug}]`,
         spotify_summary: null,
         fitness_summary: `liminal:${toolSlug}`,
-        llm_narrative: storedSummary || null,
+        llm_narrative: summary || null,
       });
 
       // ---- Create the writing record ----
       const writing = storage.createWriting({
         user_id: userId,
         timestamp,
-        title: `Reflective session — ${toolSlug} (${sessionId})`,
-        content: storedInput,
+        title: `Liminal Session — ${toolSlug} (${sessionId})`,
+        content: inputText || "",
         date_written: timestamp.substring(0, 10),
         analysis: structuredOutput ? JSON.stringify(structuredOutput) : null,
         nudges: JSON.stringify(scaledNudges),
@@ -3807,9 +3773,9 @@ Return ONLY valid JSON:
         user_id: userId,
         liminal_session_id: sessionId,
         tool_slug: toolSlug,
-        input_text: storedInput || null,
+        input_text: inputText || null,
         structured_output: structuredOutput ? JSON.stringify(structuredOutput) : null,
-        summary: storedSummary || null,
+        summary: summary || null,
         dimension_nudges: JSON.stringify(scaledNudges),
         checkin_id: checkin.id,
         writing_id: writing.id,
@@ -3825,8 +3791,8 @@ Return ONLY valid JSON:
         ...(scaledNudges as any),
       });
       emitForRecord(userId, writing.id, {
-        title: `Reflective session: ${toolSlug}`,
-        content: storedInput,
+        title: `Liminal: ${toolSlug}`,
+        content: inputText || "",
         timestamp,
       });
 
@@ -3839,43 +3805,6 @@ Return ONLY valid JSON:
       return res.json({ success: true, checkinId: checkin.id, writingId: writing.id, liminalSessionId: liminalRecord.id });
     } catch (err: any) {
       console.error("[from-liminal] Error:", err);
-      return res.status(500).json({ error: err.message });
-    }
-  });
-
-  // ─── Loop feed management — view/dismiss cross-talk entries from Liminal ────
-
-  app.get("/api/loop-feed", async (req, res) => {
-    const userId = getUserId(req);
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    try {
-      const sessions = storage.getLiminalSessions(userId, 50);
-      return res.json(sessions);
-    } catch (err: any) {
-      return res.status(500).json({ error: err.message });
-    }
-  });
-
-  app.delete("/api/loop-feed/:id", async (req, res) => {
-    const userId = getUserId(req);
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    try {
-      const id = parseInt(req.params.id);
-      const deleted = storage.deleteLiminalSession(id, userId);
-      if (!deleted) return res.status(404).json({ error: "Not found" });
-      return res.json({ success: true });
-    } catch (err: any) {
-      return res.status(500).json({ error: err.message });
-    }
-  });
-
-  app.delete("/api/loop-feed", async (req, res) => {
-    const userId = getUserId(req);
-    if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    try {
-      const count = storage.deleteAllLiminalSessions(userId);
-      return res.json({ success: true, deleted: count });
-    } catch (err: any) {
       return res.status(500).json({ error: err.message });
     }
   });
@@ -4101,6 +4030,36 @@ Return ONLY valid JSON:
       });
     } catch (err: any) {
       console.error("[patterns-for-lumen] Error:", err);
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  // GET /api/loop-status — authenticated user: loop activity summary
+  app.get("/api/loop-status", async (req, res) => {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
+
+    try {
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const liminalSessions = storage.getLiminalSessions(userId, 50);
+      const liminalToday = liminalSessions.filter((s: any) => s.created_at >= oneDayAgo);
+
+      const lumenApiConfigured = !!(process.env.LUMEN_API_URL);
+      // "patternsExported" is true when LUMEN_API_URL is set and there are any liminal sessions ever
+      const patternsExported = lumenApiConfigured && liminalSessions.length > 0;
+      // Downstream tools — infer from env vars if set
+      const lastExportedTo: string[] = [];
+      if (patternsExported) {
+        if (process.env.PRAXIS_URL || lumenApiConfigured) lastExportedTo.push("praxis");
+        if (process.env.AXIOM_URL || lumenApiConfigured) lastExportedTo.push("axiom");
+      }
+
+      return res.json({
+        liminalSessionsToday: liminalToday.length,
+        patternsExported,
+        lastExportedTo,
+      });
+    } catch (err: any) {
       return res.status(500).json({ error: err.message });
     }
   });

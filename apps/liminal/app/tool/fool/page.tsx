@@ -25,12 +25,14 @@ export default async function FoolPage() {
             tagline: 'Hear the strongest case that you are wrong.',
             inputLabel: 'The position to challenge',
             inputPlaceholder:
-              'Describe a belief, plan, decision, or conviction you currently hold. The Fool will construct the most rigorous possible case against it — not to destroy, but because you need to hear what comfort will not tell you.',
+              'State your position. I\'ll find its weakest point.',
             inputFieldName: 'position',
             minLength: 20,
             submitLabel: 'Hear the Fool',
             processingLabel: 'The Fool is preparing the challenge…',
             accentHue: ACCENT,
+            submitClassName: 'btn-fool-submit',
+            cardBorderColor: '#a0524d',
             preamble: (
               <div
                 style={{

@@ -25,12 +25,13 @@ export default async function GenealogyPage() {
             tagline: 'Trace a belief to its buried origins.',
             inputLabel: 'The belief to examine',
             inputPlaceholder:
-              'State a belief, conviction, or habit-of-thought you hold. It might be about yourself, others, work, relationships, institutions, or the world. The more specific, the more useful the excavation.',
+              'Name the belief you want to trace.',
             inputFieldName: 'belief',
             minLength: 20,
             submitLabel: 'Begin the excavation',
             processingLabel: 'The Genealogist is excavating…',
             accentHue: ACCENT,
+            cardBorderColor: '#8a7a5a',
             preamble: (
               <div
                 style={{

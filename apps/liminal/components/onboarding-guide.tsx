@@ -106,7 +106,8 @@ export function OnboardingGuide({ compact = false }: OnboardingGuideProps) {
             style={{
               background: 'none',
               border: 'none',
-              padding: 0,
+              padding: '0.75rem 0',
+              minHeight: '44px',
               cursor: 'pointer',
               fontSize: 'clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem)',
               color: 'rgb(var(--color-text-faint))',
@@ -231,7 +232,8 @@ function ChoicePanel({
                   ? `rgb(${TOOL_ACCENTS[c.slug]} / 0.25)`
                   : 'rgb(var(--color-border) / 0.1)',
               borderRadius: '3px',
-              padding: '0.6rem 0.875rem',
+              padding: '0.75rem 0.875rem',
+              minHeight: '44px',
               cursor: 'pointer',
               fontFamily: 'inherit',
               fontSize: 'clamp(0.8125rem, 0.76rem + 0.2vw, 0.875rem)',
@@ -263,7 +265,8 @@ function ChoicePanel({
         style={{
           background: 'none',
           border: 'none',
-          padding: 0,
+          padding: '0.75rem 0',
+          minHeight: '44px',
           cursor: 'pointer',
           fontSize: '0.75rem',
           color: 'rgb(var(--color-text-faint))',

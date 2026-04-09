@@ -12,8 +12,6 @@ CREATE TABLE IF NOT EXISTS inquiry_seeds (
   source_event_type TEXT NOT NULL, -- 'constitutional_promotion', 'truth_revision', 'tension_surfaced', 'pattern_detected', 'experiment_completed'
   source_id TEXT, -- ID from the source app
   seed_text TEXT NOT NULL, -- The actual inquiry prompt
-  suggested_tool TEXT, -- 'fool', 'small-council', 'genealogist', 'interlocutor', 'interpreter', 'stoics-ledger'
-  routing_reason TEXT, -- Human-readable explanation of why this tool was chosen
   status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'used', 'dismissed'
   used_in_session_id UUID REFERENCES tool_sessions(id),
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -31,7 +29,7 @@ export async function POST(request: NextRequest) {
     await execute(SEED_TABLE_SQL);
 
     const body = await request.json();
-    const { lumenUserId, sourceApp, sourceEventType, sourceId, seedText, suggestedTool, routingReason, createdAt } = body;
+    const { lumenUserId, sourceApp, sourceEventType, sourceId, seedText, createdAt } = body;
 
     if (!lumenUserId || !sourceApp || !seedText) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -49,14 +47,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Migrate: add columns if they don't exist yet (additive, safe to run repeatedly)
-    await execute(`ALTER TABLE inquiry_seeds ADD COLUMN IF NOT EXISTS suggested_tool TEXT`).catch(() => {});
-    await execute(`ALTER TABLE inquiry_seeds ADD COLUMN IF NOT EXISTS routing_reason TEXT`).catch(() => {});
-
     await execute(
-      `INSERT INTO inquiry_seeds (user_id, source_app, source_event_type, source_id, seed_text, suggested_tool, routing_reason, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [userId, sourceApp, sourceEventType, sourceId || null, seedText, suggestedTool || null, routingReason || null, createdAt || new Date().toISOString()]
+      `INSERT INTO inquiry_seeds (user_id, source_app, source_event_type, source_id, seed_text, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [userId, sourceApp, sourceEventType, sourceId || null, seedText, createdAt || new Date().toISOString()]
     );
 
     return NextResponse.json({ success: true });
@@ -86,11 +80,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Session expired' }, { status: 401 });
     }
 
-    await execute(`ALTER TABLE inquiry_seeds ADD COLUMN IF NOT EXISTS suggested_tool TEXT`).catch(() => {});
-    await execute(`ALTER TABLE inquiry_seeds ADD COLUMN IF NOT EXISTS routing_reason TEXT`).catch(() => {});
-
     const seeds = await query(
-      `SELECT id, source_app, source_event_type, seed_text, suggested_tool, routing_reason, created_at 
+      `SELECT id, source_app, source_event_type, seed_text, created_at 
        FROM inquiry_seeds 
        WHERE user_id = $1 AND status = 'pending'
        ORDER BY created_at DESC
@@ -99,77 +90,6 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json(seeds);
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
-  }
-}
-
-// DELETE — dismiss a single seed or all pending seeds
-// Body: { id: string } to dismiss one, or { all: true } to dismiss all
-export async function DELETE(request: NextRequest) {
-  // Accept either user session cookie OR internal token
-  const internalToken = request.headers.get('x-lumen-internal-token');
-  const cookieHeader = request.headers.get('cookie') || '';
-  const tokenMatch = cookieHeader.match(/liminal_session=([^;]+)/);
-
-  let userId: string | null = null;
-
-  if (LUMEN_INTERNAL_TOKEN && internalToken === LUMEN_INTERNAL_TOKEN) {
-    // Internal call — userId must be in body
-    const body = await request.json();
-    userId = body.userId || null;
-    if (!userId) {
-      return NextResponse.json({ error: 'userId required for internal calls' }, { status: 400 });
-    }
-    try {
-      if (body.all) {
-        await execute(
-          `UPDATE inquiry_seeds SET status = 'dismissed' WHERE user_id = $1 AND status = 'pending'`,
-          [userId]
-        );
-      } else if (body.id) {
-        await execute(
-          `UPDATE inquiry_seeds SET status = 'dismissed' WHERE id = $1 AND user_id = $2`,
-          [body.id, userId]
-        );
-      }
-      return NextResponse.json({ success: true });
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message }, { status: 500 });
-    }
-  }
-
-  if (!tokenMatch) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  try {
-    const sessions = await query<{ user_id: string }>(
-      'SELECT user_id FROM auth_sessions WHERE token = $1 AND expires_at > NOW()',
-      [tokenMatch[1]]
-    );
-    if (!sessions[0]) {
-      return NextResponse.json({ error: 'Session expired' }, { status: 401 });
-    }
-    userId = sessions[0].user_id;
-
-    const body = await request.json();
-
-    if (body.all) {
-      await execute(
-        `UPDATE inquiry_seeds SET status = 'dismissed' WHERE user_id = $1 AND status = 'pending'`,
-        [userId]
-      );
-    } else if (body.id) {
-      await execute(
-        `UPDATE inquiry_seeds SET status = 'dismissed' WHERE id = $1 AND user_id = $2`,
-        [body.id, userId]
-      );
-    } else {
-      return NextResponse.json({ error: 'Provide id or all:true' }, { status: 400 });
-    }
-
-    return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

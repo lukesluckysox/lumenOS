@@ -249,6 +249,59 @@ export default async function SessionPage({ params }: PageProps) {
           <DeleteSessionButton sessionId={session.id} redirectTo="/archive" />
         </footer>
 
+        {/* Inter-app CTAs — where this session's reflections continue */}
+        <section
+          style={{
+            marginTop: 'clamp(2rem, 3vw, 2.5rem)',
+            paddingTop: '1.5rem',
+            borderTop: '1px solid rgb(var(--color-border) / 0.06)',
+          }}
+          aria-label="Continue your inquiry"
+        >
+          <p
+            style={{
+              fontSize: 'clamp(0.625rem, 0.58rem + 0.12vw, 0.6875rem)',
+              fontWeight: 600,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'rgb(var(--color-text-faint))',
+              marginBottom: '0.75rem',
+            }}
+          >
+            Continue the thread
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <a
+              href="https://parallaxapp.up.railway.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: 'clamp(0.8rem, 0.75rem + 0.15vw, 0.85rem)',
+                color: '#4d8c9e',
+                textDecoration: 'none',
+                letterSpacing: '0.03em',
+                transition: 'opacity 140ms ease',
+              }}
+            >
+              See what patterns emerged →
+            </a>
+            <a
+              href="https://axiomtool-production.up.railway.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: 'clamp(0.8rem, 0.75rem + 0.15vw, 0.85rem)',
+                color: '#3d7bba',
+                textDecoration: 'none',
+                letterSpacing: '0.03em',
+                transition: 'opacity 140ms ease',
+              }}
+            >
+              Review your evolving principles →
+            </a>
+          </div>
+        </section>
+
         {/* Other instruments */}
         <section
           style={{

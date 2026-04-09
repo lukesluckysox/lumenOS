@@ -8,10 +8,12 @@ export const experiments = sqliteTable("experiments", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   trialNumber: integer("trial_number").notNull(),
   title: text("title").notNull(),
-  // 'active' | 'observing' | 'completed' | 'archived'
+  // 'proposed' | 'active' | 'observing' | 'completed' | 'archived' | 'dismissed'
   status: text("status").notNull().default("active"),
-  // 'liminal' | 'parallax' | 'manual'
+  // 'liminal' | 'parallax' | 'lumen_push' | 'manual'
   source: text("source").notNull().default("manual"),
+  // Human-readable explanation of how/why this experiment was proposed (loop-generated experiments only)
+  sourceDescription: text("source_description"),
   hypothesis: text("hypothesis").notNull(),
   design: text("design").notNull(),
   experimentConstraint: text("experiment_constraint").notNull().default(""),
@@ -20,12 +22,14 @@ export const experiments = sqliteTable("experiments", {
   tags: text("tags").notNull().default("[]"), // JSON string[]
   createdAt: integer("created_at").notNull(),
   completedAt: integer("completed_at"),
+  userId: text("user_id").notNull().default("1"),
 });
 
 export const insertExperimentSchema = createInsertSchema(experiments).omit({
   id: true,
   createdAt: true,
   completedAt: true,
+  userId: true,
 });
 
 export type InsertExperiment = z.infer<typeof insertExperimentSchema>;
@@ -41,11 +45,13 @@ export const doctrines = sqliteTable("doctrines", {
   sourceExperimentIds: text("source_experiment_ids").notNull().default("[]"), // JSON number[]
   notes: text("notes").notNull().default(""),
   createdAt: integer("created_at").notNull(),
+  userId: text("user_id").notNull().default("1"),
 });
 
 export const insertDoctrineSchema = createInsertSchema(doctrines).omit({
   id: true,
   createdAt: true,
+  userId: true,
 });
 
 export type InsertDoctrine = z.infer<typeof insertDoctrineSchema>;
@@ -62,11 +68,13 @@ export const tensions = sqliteTable("tensions", {
   isPrimary: integer("is_primary", { mode: "boolean" }).notNull().default(false),
   strength: integer("strength").notNull().default(5), // 1–10
   createdAt: integer("created_at").notNull(),
+  userId: text("user_id").notNull().default("1"),
 });
 
 export const insertTensionSchema = createInsertSchema(tensions).omit({
   id: true,
   createdAt: true,
+  userId: true,
 });
 
 export type InsertTension = z.infer<typeof insertTensionSchema>;

@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import BottomNav from "./BottomNav";
 import { Link, useLocation } from "wouter";
 import { useTheme } from "@/components/ThemeProvider";
 import { cn } from "@/lib/utils";
@@ -41,6 +43,64 @@ function PraxisLogo() {
   );
 }
 
+type SensitivityLevel = 'low' | 'medium' | 'high';
+
+function SensitivityControl() {
+  const [sensitivity, setSensitivity] = useState<SensitivityLevel>('medium');
+
+  useEffect(() => {
+    fetch('/api/settings/sensitivity')
+      .then(r => r.json())
+      .then((d: { sensitivity?: string }) => {
+        if (d.sensitivity === 'low' || d.sensitivity === 'medium' || d.sensitivity === 'high') {
+          setSensitivity(d.sensitivity);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const update = async (val: SensitivityLevel) => {
+    setSensitivity(val);
+    try {
+      await fetch('/api/settings/sensitivity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sensitivity: val }),
+      });
+    } catch {}
+  };
+
+  const pills: { val: SensitivityLevel; label: string }[] = [
+    { val: 'low', label: 'LOW' },
+    { val: 'medium', label: 'MED' },
+    { val: 'high', label: 'HIGH' },
+  ];
+
+  return (
+    <div className="px-4 pb-3">
+      <p className="text-[9px] text-muted-foreground/40 font-mono uppercase tracking-wider mb-2">
+        Loop Sensitivity
+      </p>
+      <div className="flex gap-1">
+        {pills.map(({ val, label }) => (
+          <button
+            key={val}
+            onClick={() => update(val)}
+            className={cn(
+              'flex-1 text-[9px] font-mono uppercase tracking-wider py-1.5 rounded border transition-all duration-150',
+              sensitivity === val
+                ? 'border-[#FFD166] text-[#FFD166] bg-[#FFD166]/8'
+                : 'border-border text-muted-foreground/30 hover:text-muted-foreground/60 hover:border-muted-foreground/30'
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
@@ -48,7 +108,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="w-60 flex-shrink-0 flex flex-col border-r border-border">
+      <aside className="hidden md:flex w-60 flex-shrink-0 flex-col border-r border-border">
         {/* Brand */}
         <div className="flex items-center gap-3 px-5 py-5 border-b border-border">
           <PraxisLogo />
@@ -66,7 +126,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive = href === "/"
-              ? location === "/"
+              ? location === "/" || location === ""
               : location.startsWith(href);
             return (
               <Link key={href} href={href}>
@@ -105,6 +165,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
 
+        {/* Sensitivity */}
+        <SensitivityControl />
+
         {/* Footer */}
         <div className="px-4 py-3 border-t border-border flex items-center justify-between">
           <span className="text-xs text-muted-foreground/60 font-mono tracking-wider">
@@ -122,9 +185,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto pb-24 md:pb-0">
         {children}
       </main>
+      <BottomNav />
     </div>
   );
 }

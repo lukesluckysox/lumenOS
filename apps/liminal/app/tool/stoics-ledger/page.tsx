@@ -24,20 +24,13 @@ export default async function StoicsLedgerPage() {
             name: "The Stoic's Ledger",
             tagline: 'Reckon daily with conduct and avoidance.',
             inputLabel: 'Your report for today',
-            inputPlaceholder: `Write an account of your day. You might address:
-
-— What happened, and what you did
-— What you handled well
-— Where you fell short or failed
-— What you avoided or deferred
-— What tested you
-
-Write plainly. The Ledger is not a journal — it is a reckoning.`,
+            inputPlaceholder: 'What did you do today? What did you avoid?',
             inputFieldName: 'report',
             minLength: 80,
             submitLabel: 'Open the ledger',
             processingLabel: 'The Ledger is reviewing your account…',
             accentHue: ACCENT,
+            cardBorderColor: '#6b7280',
             preamble: (
               <div
                 style={{

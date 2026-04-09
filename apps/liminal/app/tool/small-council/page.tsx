@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { Nav } from '@/components/nav';
 import { SmallCouncilClient } from '@/components/small-council-client';
 import { getSession } from '@/lib/auth/session';
@@ -16,7 +17,9 @@ export default async function SmallCouncilPage() {
     <>
       <Nav user={user} />
       <main>
-        <SmallCouncilClient />
+        <Suspense fallback={null}>
+          <SmallCouncilClient />
+        </Suspense>
       </main>
     </>
   );

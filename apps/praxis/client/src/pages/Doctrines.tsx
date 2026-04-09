@@ -16,6 +16,7 @@ import { formatDate } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { ErrorCard } from "@/components/ErrorCard";
 
 const schema = z.object({
   statement: z.string().min(5, "State the doctrine clearly"),
@@ -37,7 +38,7 @@ export default function Doctrines() {
   const [editValue, setEditValue] = useState("");
   const { toast } = useToast();
 
-  const { data: doctrines, isLoading } = useQuery<Doctrine[]>({
+  const { data: doctrines, isLoading, isError } = useQuery<Doctrine[]>({
     queryKey: ["/api/doctrines"],
   });
 
@@ -97,7 +98,7 @@ export default function Doctrines() {
   const superseded = doctrines?.filter(d => d.status === "superseded") ?? [];
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-4 md:p-8 max-w-2xl">
       <div className="flex items-start justify-between mb-8">
         <div>
           <h2 className="font-display text-xl font-semibold text-foreground mb-1">
@@ -206,7 +207,9 @@ export default function Doctrines() {
         </Dialog>
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorCard message="Could not load doctrines." onRetry={() => window.location.reload()} />
+      ) : isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-md" />)}
         </div>
@@ -216,8 +219,9 @@ export default function Doctrines() {
           <p className="text-sm text-muted-foreground mb-1">
             No doctrines yet.
           </p>
-          <p className="text-xs text-muted-foreground/60">
-            Complete experiments and extract principles from the evidence.
+          <p className="text-xs text-muted-foreground/60 max-w-sm mx-auto">
+            Principles you've validated through experimentation will be collected here.
+            You can also record one directly from your own understanding.
           </p>
         </div>
       ) : (
@@ -279,19 +283,19 @@ function DoctrineCard({
         )}>
           "{doc.statement}"
         </p>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+        <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0">
           <button
             data-testid={`button-cycle-${doc.id}`}
             onClick={() => onCycleStatus(doc)}
             title="Change status"
-            className="text-muted-foreground/50 hover:text-primary p-1 rounded transition-colors"
+            className="text-muted-foreground/50 hover:text-primary p-2 min-h-[44px] min-w-[44px] md:p-1 md:min-h-0 md:min-w-0 flex items-center justify-center rounded transition-colors"
           >
             <Check size={13} />
           </button>
           <button
             data-testid={`button-delete-doctrine-${doc.id}`}
             onClick={onDelete}
-            className="text-muted-foreground/50 hover:text-destructive p-1 rounded transition-colors"
+            className="text-muted-foreground/50 hover:text-destructive p-2 min-h-[44px] min-w-[44px] md:p-1 md:min-h-0 md:min-w-0 flex items-center justify-center rounded transition-colors"
           >
             <Trash2 size={13} />
           </button>

@@ -80,6 +80,7 @@ export function AccountClient() {
 
       {/* Comparison */}
       <div
+        className="tier-compare-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
@@ -181,7 +182,7 @@ export function AccountClient() {
           }}
         >
           When Cabinet is ready, you will be able to subscribe here.
-          Until then, the Oracle may grant Cabinet access manually.
+          Until then, early access may be granted on request.
         </p>
       </div>
     </section>

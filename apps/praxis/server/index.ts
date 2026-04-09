@@ -1,9 +1,13 @@
 import express, { type Request, Response, NextFunction } from "express";
+import session from 'express-session';
+// @ts-ignore
+import createMemoryStore from 'memorystore';
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
 const app = express();
+app.set('trust proxy', 1); // Railway terminates HTTPS at proxy layer
 const httpServer = createServer(app);
 
 declare module "http" {
@@ -60,6 +64,20 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  const MemoryStore = createMemoryStore(session);
+  app.use(session({
+    secret: process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17',
+    resave: false,
+    saveUninitialized: false,
+    store: new MemoryStore({ checkPeriod: 86400000 }),
+    cookie: {
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    },
+  }));
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {

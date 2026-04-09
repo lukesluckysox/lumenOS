@@ -13,7 +13,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Experiment } from "@shared/schema";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const schema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -53,8 +53,27 @@ export default function NewExperiment() {
   const { toast } = useToast();
   const [step, setStep] = useState(0);
 
+  // Parse ?from=<id> for Modify flow (pre-fill from a proposed experiment)
+  // Hash router puts query params inside the hash fragment (e.g. /#/experiments/new?from=123)
+  const fromId = typeof window !== "undefined"
+    ? (() => {
+        const hash = window.location.hash;
+        const qIndex = hash.indexOf("?");
+        if (qIndex !== -1) {
+          return new URLSearchParams(hash.slice(qIndex)).get("from");
+        }
+        return new URLSearchParams(window.location.search).get("from");
+      })()
+    : null;
+
   const { data: nextTrial } = useQuery<{ trialNumber: number }>({
     queryKey: ["/api/experiments/next-trial"],
+  });
+
+  // Load the proposed experiment to pre-fill the form
+  const { data: fromExperiment } = useQuery<Experiment>({
+    queryKey: ["/api/experiments", fromId],
+    enabled: !!fromId,
   });
 
   const form = useForm<FormValues>({
@@ -67,6 +86,18 @@ export default function NewExperiment() {
       experimentConstraint: "",
     },
   });
+
+  // Pre-fill form once proposed experiment data arrives
+  useEffect(() => {
+    if (!fromExperiment) return;
+    form.reset({
+      title: fromExperiment.title,
+      source: (fromExperiment.source === "lumen_push" ? "manual" : fromExperiment.source) as "manual" | "liminal" | "parallax",
+      hypothesis: fromExperiment.hypothesis,
+      design: fromExperiment.design,
+      experimentConstraint: fromExperiment.experimentConstraint ?? "",
+    });
+  }, [fromExperiment, form]);
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
@@ -99,7 +130,7 @@ export default function NewExperiment() {
   };
 
   return (
-    <div className="p-8 max-w-xl">
+    <div className="p-4 md:p-8 max-w-xl">
       {/* Back */}
       <Link href="/experiments">
         <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-6 transition-colors">
@@ -117,12 +148,21 @@ export default function NewExperiment() {
           </span>
         </div>
         <h2 className="font-display text-xl font-semibold text-foreground mb-1">
-          Design an Experiment
+          {fromExperiment ? "Modify Proposed Experiment" : "Design an Experiment"}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Begin with a belief. Design a test. Enter the laboratory.
+          {fromExperiment
+            ? "Review and refine this Loop-generated experiment before initiating."
+            : "Begin with a belief. Design a test. Enter the laboratory."}
         </p>
       </div>
+
+      {/* Modify mode notice */}
+      {fromExperiment && (
+        <div className="mb-6 px-4 py-3 rounded-md bg-muted/30 border border-dashed border-border/60 text-xs text-muted-foreground">
+          Pre-filled from a Loop-proposed experiment. Edit any fields before initiating.
+        </div>
+      )}
 
       {/* Step indicators */}
       <div className="flex items-center gap-2 mb-8">
@@ -164,7 +204,7 @@ export default function NewExperiment() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase tracking-widest text-muted-foreground/70">
-                      Signal Origin
+                      Origin
                     </FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
@@ -176,9 +216,9 @@ export default function NewExperiment() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="manual">Manual — self-initiated</SelectItem>
-                        <SelectItem value="liminal">Liminal — from unresolved belief</SelectItem>
-                        <SelectItem value="parallax">Parallax — from behavioral pattern</SelectItem>
+                        <SelectItem value="manual">Self-initiated</SelectItem>
+                        <SelectItem value="liminal">From an unresolved belief</SelectItem>
+                        <SelectItem value="parallax">From a behavioral pattern</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

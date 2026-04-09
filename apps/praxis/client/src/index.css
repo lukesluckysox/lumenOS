@@ -1,9 +1,8 @@
+@import url("https://api.fontshare.com/v2/css?f[]=zodiak@400,500,700&f[]=general-sans@300,400,500,600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* ── Praxis Typography ──────────────────────────────────────────────── */
-@import url("https://api.fontshare.com/v2/css?f[]=zodiak@400,500,700&f[]=general-sans@300,400,500,600&display=swap");
 
 :root {
   /* ── Praxis Light Mode ─── */
@@ -190,4 +189,18 @@ p, li, figcaption {
 /* ── Transition for interactive elements ─────────────────────────────── */
 a, button, [role="button"] {
   transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, opacity 180ms ease;
+}
+
+/* ── Mobile: prevent iOS auto-zoom on input focus ────────────────────── */
+@media screen and (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* ── Safe area support ───────────────────────────────────────────────── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }

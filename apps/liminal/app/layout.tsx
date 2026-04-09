@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { RegisterSW } from '@/components/register-sw';
+import { MobileNavWrapper } from '@/components/mobile-nav-wrapper';
 
 export const metadata: Metadata = {
   title: 'Liminal — A Cabinet of Instruments for Thought',
@@ -62,6 +63,7 @@ export default function RootLayout({
       </head>
       <body>
         {children}
+        <MobileNavWrapper />
         <RegisterSW />
       </body>
     </html>

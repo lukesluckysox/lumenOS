@@ -134,7 +134,7 @@ export async function pushCandidateToPraxis(candidate: typeof epistemicCandidate
     const body = distillPayload({
       title: candidate.title.slice(0, 200),
       hypothesis: candidate.summary,
-      design: 'Auto-generated from epistemic queue. Review and refine to structure your experiment.',
+      design: 'This experiment was suggested by patterns in your reflections. Shape it into something you can test.',
       source: ['belief_candidate', 'tension_candidate', 'hypothesis_candidate'].includes(candidate.candidateType) ? 'liminal' : 'parallax',
       status: 'active',
       experimentConstraint: '',

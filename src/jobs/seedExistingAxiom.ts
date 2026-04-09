@@ -108,7 +108,7 @@ export async function seedFromEntries(userId: string, entries: AxiomEntry[]): Pr
           destinationApp: 'liminal',
           promptType: 'discrepancy_prompt',
           title: `Reflect on tension: ${entry.statement.slice(0, 50)}`,
-          body: `A seeded tension from your Axiom records: "${entry.statement}". Reflect on whether this tension still resonates in your Liminal sessions.`,
+          body: `A tension worth exploring: "${entry.statement}". Something in your reflections echoes this.`,
           relatedAxiomId: axiom.id,
           priority: 30,
           status: 'open',

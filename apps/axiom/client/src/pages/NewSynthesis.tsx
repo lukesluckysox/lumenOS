@@ -115,7 +115,7 @@ function NumInput({
       <button
         type="button"
         onClick={() => onChange(Math.max(0, value - 1))}
-        className="w-7 h-7 rounded-sm border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors font-mono text-sm flex items-center justify-center"
+        className="w-11 h-11 md:w-7 md:h-7 rounded-sm border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors font-mono text-sm flex items-center justify-center"
       >
         −
       </button>
@@ -125,7 +125,7 @@ function NumInput({
       <button
         type="button"
         onClick={() => onChange(value + 1)}
-        className="w-7 h-7 rounded-sm border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors font-mono text-sm flex items-center justify-center"
+        className="w-11 h-11 md:w-7 md:h-7 rounded-sm border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors font-mono text-sm flex items-center justify-center"
       >
         +
       </button>
@@ -192,11 +192,11 @@ export default function NewSynthesis() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-8 pt-10 pb-16">
+    <div className="max-w-2xl mx-auto px-4 md:px-8 pt-10 pb-16">
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-mono text-xs tracking-widest-constitutional uppercase text-muted-foreground mb-3">
-          New Synthesis
+          Submit Proposal
         </h1>
         <p className="text-sm text-muted-foreground/60 leading-relaxed">
           {STEPS[step - 1].description}
@@ -212,7 +212,7 @@ export default function NewSynthesis() {
             Where does this synthesis come from?
           </div>
 
-          <Field label="Liminal Inputs">
+          <Field label="Liminal Dilemmas">
             <div className="mb-3">
               <NumInput value={form.liminalCount} onChange={set("liminalCount") as any} label="inputs" testId="input-liminal-count" />
             </div>
@@ -220,7 +220,7 @@ export default function NewSynthesis() {
               <Textarea
                 value={form.liminalDesc}
                 onChange={set("liminalDesc") as any}
-                placeholder="Describe what Liminal surfaced — which beliefs were questioned, what contradictions emerged…"
+                placeholder="Describe which beliefs were destabilized, which contradictions surfaced, or which dilemmas remained unresolved…"
                 rows={3}
                 testId="input-liminal-desc"
               />
@@ -235,14 +235,14 @@ export default function NewSynthesis() {
               <Textarea
                 value={form.parallaxDesc}
                 onChange={set("parallaxDesc") as any}
-                placeholder="Describe what Parallax revealed — which patterns, archetypes, or recurring structures…"
+                placeholder="Describe which archetypes, concealment patterns, or identity structures appeared…"
                 rows={3}
                 testId="input-parallax-desc"
               />
             )}
           </Field>
 
-          <Field label="Praxis Inputs">
+          <Field label="Praxis Experiments">
             <div className="mb-3">
               <NumInput value={form.praxisCount} onChange={set("praxisCount") as any} label="inputs" testId="input-praxis-count" />
             </div>
@@ -250,7 +250,7 @@ export default function NewSynthesis() {
               <Textarea
                 value={form.praxisDesc}
                 onChange={set("praxisDesc") as any}
-                placeholder="Describe what Praxis produced — which experiments ran, what outcomes were observed…"
+                placeholder="Describe which experiments ran, what was observed, and what was confirmed or refuted…"
                 rows={3}
                 testId="input-praxis-desc"
               />
@@ -323,7 +323,7 @@ export default function NewSynthesis() {
             What is true, and how should you act on it?
           </div>
 
-          <Field label="Truth Claim" desc="State the principle as a direct, earned claim. Not a preference — a provisional truth.">
+          <Field label="PROPOSED CLAIM" desc="State the principle as a direct, earned claim. Not a preference — a provisional truth.">
             <Textarea
               value={form.truthClaim}
               onChange={set("truthClaim") as any}
@@ -437,7 +437,7 @@ export default function NewSynthesis() {
             type="button"
             onClick={() => setStep((s) => s + 1)}
             disabled={!canProceed[step]}
-            className={`text-xs font-mono uppercase tracking-widest-constitutional px-5 py-2 rounded-sm transition-colors ${
+            className={`text-xs font-mono uppercase tracking-widest-constitutional px-5 py-2.5 min-h-[44px] rounded-sm transition-colors ${
               canProceed[step]
                 ? "bg-primary text-primary-foreground hover:bg-primary/90"
                 : "bg-muted text-muted-foreground/40 cursor-not-allowed"
@@ -451,14 +451,14 @@ export default function NewSynthesis() {
             type="button"
             onClick={submit}
             disabled={!canProceed[4] || createMutation.isPending}
-            className={`text-xs font-mono uppercase tracking-widest-constitutional px-5 py-2 rounded-sm transition-colors ${
+            className={`text-xs font-mono uppercase tracking-widest-constitutional px-5 py-2.5 min-h-[44px] rounded-sm transition-colors ${
               canProceed[4]
                 ? "bg-primary text-primary-foreground hover:bg-primary/90"
                 : "bg-muted text-muted-foreground/40 cursor-not-allowed"
             }`}
             data-testid="button-submit"
           >
-            {createMutation.isPending ? "Recording…" : "Record Axiom"}
+            {createMutation.isPending ? "Submitting…" : "Submit for Examination"}
           </button>
         )}
       </div>

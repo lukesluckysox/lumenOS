@@ -80,6 +80,21 @@ const REWRITE_RULES: RewriteRule[] = [
   { pattern: /as\s+a\s+held\s+belief\s*\(Liminal\)\s*and\s+as\s+a\s+behavioral\s+tendency\s*\(Parallax\)/gi,
     replacement: 'as a held belief and as a behavioral tendency' },
 
+  // ── Epistemic pipeline / queue / internal language cleanup ──────────────────
+  { pattern: /\bepistemic queue\b/gi,                                  replacement: 'your reflections' },
+  { pattern: /\bepistemic event\b/gi,                                  replacement: 'moment of inquiry' },
+  { pattern: /\bepistemic pipeline\b/gi,                               replacement: 'inquiry process' },
+  { pattern: /\bepistemic\b/gi,                                        replacement: 'inquiry' },
+  { pattern: /\bauto-promoted from event processing\b/gi,              replacement: 'emerged from recent inquiry' },
+  { pattern: /\bre-queued from reprocess\b/gi,                         replacement: 'revisiting for fresh perspective' },
+  { pattern: /\baccepted candidate ready for experimentation\b/gi,     replacement: 'ready to become an experiment' },
+  { pattern: /\bauto-generated from .+?\. Review and refine to structure your experiment\./gi,
+    replacement: 'This experiment was suggested by patterns in your reflections. Shape it into something you can test.' },
+  { pattern: /\bidentified in journal reflection\b/gi,                 replacement: 'noticed in your writing' },
+  { pattern: /\bfrom behavioral tracking data\b/gi,                    replacement: 'observed in your patterns' },
+  { pattern: /\bbelief pattern detected across (\d+) entries\b/gi,     replacement: 'a recurring theme across $1 reflections' },
+  { pattern: /\blumen_push\b/gi,                                       replacement: 'from your reflections' },
+
   // ── Generic fallback: any remaining bare tool names ─────────────────────────
   // These run last so the specific phrases above are matched first.
   { pattern: /\bParallax\b/g,  replacement: 'observation' },

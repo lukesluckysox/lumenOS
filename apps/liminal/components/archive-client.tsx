@@ -262,7 +262,7 @@ export function ArchiveClient({ sessions, canCompare: canCompareFeature = true }
             onChange={handleSearch}
             placeholder="Search sessions…"
             className="liminal-input"
-            style={{ paddingLeft: '2.25rem', fontSize: '0.875rem' }}
+            style={{ paddingLeft: '2.25rem' }}
             aria-label="Search sessions"
           />
           {/* Search glyph */}
@@ -335,7 +335,8 @@ export function ArchiveClient({ sessions, canCompare: canCompareFeature = true }
               background: 'none',
               border: '1px solid rgb(var(--color-border) / 0.1)',
               borderRadius: '3px',
-              padding: '0.3rem 0.625rem',
+              padding: '0.5rem 0.625rem',
+              minHeight: '44px',
               cursor: 'pointer',
               fontSize: '0.6875rem',
               letterSpacing: '0.06em',
@@ -441,7 +442,8 @@ function FilterPill({
         border: '1px solid',
         borderColor: active ? accentBorder : 'rgb(var(--color-border) / 0.12)',
         borderRadius: '3px',
-        padding: '0.25rem 0.5rem',
+        padding: '0.5rem 0.625rem',
+        minHeight: '44px',
         cursor: 'pointer',
         fontFamily: 'inherit',
         fontSize: '0.6875rem',
@@ -491,11 +493,11 @@ function SessionCard({
           aria-pressed={compareSelected}
           style={{
             position: 'absolute',
-            left: '-1.75rem',
+            left: '-2.25rem',
             top: '50%',
             transform: 'translateY(-50%)',
-            width: '1.125rem',
-            height: '1.125rem',
+            width: '2.75rem',
+            height: '2.75rem',
             border: `1px solid ${compareSelected ? `rgb(${ac} / 0.5)` : 'rgb(var(--color-border) / 0.2)'}`,
             borderRadius: '3px',
             background: compareSelected ? `rgb(${ac} / 0.15)` : 'transparent',

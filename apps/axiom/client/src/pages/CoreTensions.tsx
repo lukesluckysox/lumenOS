@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { Tension } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function TensionCard({ tension, onDelete }: { tension: Tension; onDelete: (id: number) => void }) {
   const [expanded, setExpanded] = useState(false);
@@ -15,7 +16,7 @@ function TensionCard({ tension, onDelete }: { tension: Tension; onDelete: (id: n
     >
       <button
         onClick={() => setExpanded((e) => !e)}
-        className="w-full text-left px-8 py-6 hover:bg-accent/20 transition-colors group"
+        className="w-full text-left px-4 md:px-8 py-6 hover:bg-accent/20 transition-colors group"
       >
         {/* Polarity Display */}
         <div className="flex items-center gap-4 mb-3">
@@ -37,8 +38,18 @@ function TensionCard({ tension, onDelete }: { tension: Tension; onDelete: (id: n
       </button>
 
       {expanded && (
-        <div className="px-8 pb-6">
+        <div className="px-4 md:px-8 pb-6">
           <p className="text-sm text-foreground/80 leading-relaxed mb-4">{tension.description}</p>
+
+          {/* Provenance note for auto-created tensions from the Parallax pipeline */}
+          {tension.description.startsWith('Parallax pattern contradicts proposed axiom') && (
+            <div className="mt-3 mb-1 flex items-start gap-2">
+              <div className="flex-shrink-0 mt-0.5" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4d8c9e', marginTop: '5px' }} />
+              <p className="text-[10px] font-mono text-muted-foreground/40 leading-relaxed italic">
+                This tension was surfaced when a Parallax pattern contradicted a constitutional principle.
+              </p>
+            </div>
+          )}
 
           {evidence.length > 0 && (
             <div className="mt-4">
@@ -55,18 +66,29 @@ function TensionCard({ tension, onDelete }: { tension: Tension; onDelete: (id: n
             </div>
           )}
 
-          <div className="mt-5 flex items-center justify-between">
+          <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
             <span className="font-mono text-[10px] text-muted-foreground/30">
               {new Date(tension.createdAt).toLocaleDateString("en-US", {
                 year: "numeric", month: "short", day: "numeric",
               })}
             </span>
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(tension.id); }}
-              className="text-[10px] font-mono uppercase tracking-widest-constitutional text-destructive/40 hover:text-destructive transition-colors"
-            >
-              Remove
-            </button>
+            <div className="flex items-center gap-4">
+              <a
+                href="https://praxis-production-da89.up.railway.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-[10px] font-mono tracking-wider text-primary/50 hover:text-primary transition-colors"
+              >
+                Design an experiment →
+              </a>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(tension.id); }}
+                className="text-[10px] font-mono uppercase tracking-widest-constitutional text-destructive/40 hover:text-destructive transition-colors min-h-[44px] flex items-center"
+              >
+                Remove
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -104,7 +126,7 @@ function NewTensionForm({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="px-8 py-6 border-b border-border bg-card/50">
+    <div className="px-4 md:px-8 py-6 border-b border-border bg-card/50">
       <div className="font-mono text-[10px] uppercase tracking-widest-constitutional text-muted-foreground/50 mb-4">
         New Tension
       </div>
@@ -172,7 +194,7 @@ export default function CoreTensions() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: tensions, isLoading } = useQuery<Tension[]>({
+  const { data: tensions, isLoading, isError, refetch } = useQuery<Tension[]>({
     queryKey: ["/api/tensions"],
   });
 
@@ -187,8 +209,8 @@ export default function CoreTensions() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="px-8 pt-10 pb-6 border-b border-border">
-        <div className="flex items-end justify-between">
+      <div className="px-4 md:px-8 pt-10 pb-6 border-b border-border">
+        <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="font-mono text-xs tracking-widest-constitutional uppercase text-muted-foreground mb-2">
               Core Tensions
@@ -202,7 +224,7 @@ export default function CoreTensions() {
           </div>
           <button
             onClick={() => setShowForm((s) => !s)}
-            className="text-[11px] font-mono tracking-widest-constitutional uppercase px-4 py-2 border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors rounded-sm"
+            className="text-[11px] font-mono tracking-widest-constitutional uppercase px-4 py-2 border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors rounded-sm flex-shrink-0"
             data-testid="button-new-tension"
           >
             {showForm ? "Cancel" : "+ New Tension"}
@@ -215,12 +237,44 @@ export default function CoreTensions() {
 
       {/* Tensions List */}
       {isLoading ? (
-        <div className="px-8 py-12 text-muted-foreground/40 font-mono text-sm">Loading…</div>
-      ) : (tensions?.length ?? 0) === 0 ? (
-        <div className="px-8 py-16 text-center">
-          <div className="font-serif text-xl text-muted-foreground/40 mb-3">
-            No tensions recorded yet.
+        <div className="px-4 md:px-8 py-6 space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="py-6 border-b border-border/50">
+              <div className="flex items-center gap-4 mb-3">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-6" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4 mt-2" />
+            </div>
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="px-4 md:px-8 py-16 text-center">
+          <div className="max-w-sm mx-auto border border-border/50 rounded-sm p-6 bg-card/30">
+            <div className="font-mono text-xs uppercase tracking-widest-constitutional text-destructive/70 mb-3">
+              Unable to load tensions
+            </div>
+            <p className="text-sm text-muted-foreground/50 leading-relaxed mb-4">
+              Something went wrong while fetching your tensions. Please try again.
+            </p>
+            <button
+              onClick={() => refetch()}
+              className="text-xs font-mono uppercase tracking-wider text-primary hover:text-primary/80 transition-colors"
+            >
+              Retry
+            </button>
           </div>
+        </div>
+      ) : (tensions?.length ?? 0) === 0 ? (
+        <div className="px-4 md:px-8 py-16 text-center">
+          <div className="font-serif text-xl text-muted-foreground/40 mb-3">
+            Points of productive contradiction will surface as your principles evolve.
+          </div>
+          <p className="text-sm text-muted-foreground/40 leading-relaxed mb-4 max-w-sm mx-auto">
+            As governing principles form and interact, tensions between them will emerge here for you to navigate.
+          </p>
           <button
             onClick={() => setShowForm(true)}
             className="text-xs font-mono tracking-wider text-primary hover:text-primary/80 transition-colors"

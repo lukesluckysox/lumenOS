@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth/session';
 import { queryOne } from '@/lib/db';
 import { runSmallCouncilStreaming } from '@/lib/tools/small-council/orchestrator';
 import { checkAndIncrementUsage } from '@/lib/usage';
+import { emitToParallax, emitToAxiom } from '@/lib/parallaxEmitter';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 90;
@@ -87,7 +88,26 @@ export async function POST(req: NextRequest) {
           ]
         );
 
-        controller.enqueue(sseEvent('complete', { sessionId: session!.id }));
+        // Collect downstream
+        const downstream: { destination: string; description: string }[] = [];
+        if (user.lumen_user_id && session) {
+          const emitPayload = {
+            lumenUserId: user.lumen_user_id,
+            sessionId: session.id,
+            toolSlug: 'small-council',
+            inputText: question,
+            structuredOutput: output,
+            summary: output.summary || '',
+          };
+          const [parallaxResult, axiomResult] = await Promise.all([
+            emitToParallax(emitPayload),
+            emitToAxiom(emitPayload),
+          ]);
+          if (parallaxResult.sent) downstream.push({ destination: parallaxResult.destination, description: parallaxResult.description });
+          if (axiomResult.sent) downstream.push({ destination: axiomResult.destination, description: axiomResult.description });
+        }
+
+        controller.enqueue(sseEvent('complete', { sessionId: session!.id, downstream }));
       } catch (err) {
         console.error('[small-council-stream]', err);
         controller.enqueue(

@@ -70,7 +70,8 @@ export function Nav({ user }: NavProps) {
                 style={{
                   textDecoration: 'none',
                   fontSize: 'clamp(0.8rem, 0.75rem + 0.25vw, 0.9rem)',
-                  opacity: pathname === '/archive' ? 1 : 0.8,
+                  color: pathname === '/archive' ? 'rgb(var(--color-gold))' : undefined,
+                  minHeight: '44px',
                 }}
               >
                 Archive
@@ -81,7 +82,8 @@ export function Nav({ user }: NavProps) {
                 style={{
                   textDecoration: 'none',
                   fontSize: 'clamp(0.8rem, 0.75rem + 0.25vw, 0.9rem)',
-                  opacity: pathname === '/account' ? 1 : 0.8,
+                  color: pathname === '/account' ? 'rgb(var(--color-gold))' : undefined,
+                  minHeight: '44px',
                 }}
               >
                 Account
@@ -95,6 +97,7 @@ export function Nav({ user }: NavProps) {
                     fontSize: 'clamp(0.8rem, 0.75rem + 0.25vw, 0.9rem)',
                     color: 'rgb(var(--color-gold) / 0.8)',
                     opacity: pathname === '/oracle' ? 1 : 0.8,
+                    minHeight: '44px',
                   }}
                 >
                   Oracle
@@ -106,6 +109,7 @@ export function Nav({ user }: NavProps) {
                 className="btn-ghost"
                 style={{
                   fontSize: 'clamp(0.8rem, 0.75rem + 0.25vw, 0.9rem)',
+                  minHeight: '44px',
                 }}
               >
                 {loggingOut ? 'Leaving…' : 'Leave'}
@@ -119,6 +123,7 @@ export function Nav({ user }: NavProps) {
                 style={{
                   textDecoration: 'none',
                   fontSize: 'clamp(0.8rem, 0.75rem + 0.25vw, 0.9rem)',
+                  minHeight: '44px',
                 }}
               >
                 Enter

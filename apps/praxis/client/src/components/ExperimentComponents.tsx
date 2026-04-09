@@ -3,10 +3,12 @@ import { cn } from "@/lib/utils";
 // ── Status Badge ──────────────────────────────────────────────────────────
 
 const STATUS_CONFIG = {
+  proposed: { label: "Proposed", color: "bg-amber-500/10 text-amber-400 dark:text-amber-300" },
   active: { label: "Active", color: "bg-blue-500/10 text-blue-400 dark:text-blue-300" },
   observing: { label: "Observing", color: "bg-primary/10 text-primary" },
   completed: { label: "Completed", color: "bg-muted text-muted-foreground" },
   archived: { label: "Archived", color: "bg-muted text-muted-foreground/60" },
+  dismissed: { label: "Dismissed", color: "bg-muted text-muted-foreground/50" },
 };
 
 export function StatusBadge({
@@ -37,10 +39,12 @@ export function StatusBadge({
 // ── Phase Dot ─────────────────────────────────────────────────────────────
 
 const PHASE_DOT_COLOR = {
+  proposed: "bg-amber-400",
   active: "bg-blue-400",
   observing: "bg-primary",
   completed: "bg-muted-foreground/40",
   archived: "bg-muted-foreground/20",
+  dismissed: "bg-muted-foreground/15",
 };
 
 export function PhaseDot({ status }: { status: string }) {
@@ -57,9 +61,10 @@ export function PhaseDot({ status }: { status: string }) {
 // ── Source Tag ────────────────────────────────────────────────────────────
 
 const SOURCE_CONFIG = {
-  liminal: { label: "Liminal", color: "text-purple-400 dark:text-purple-300" },
-  parallax: { label: "Parallax", color: "text-teal-500 dark:text-teal-400" },
-  manual: { label: "Manual", color: "text-muted-foreground" },
+  liminal: { label: "From inquiry", color: "text-purple-400 dark:text-purple-300" },
+  parallax: { label: "From patterns", color: "text-teal-500 dark:text-teal-400" },
+  lumen_push: { label: "From reflections", color: "text-yellow-400 dark:text-yellow-300" },
+  manual: { label: "Your experiment", color: "text-muted-foreground" },
 };
 
 export function SourceTag({ source }: { source: string }) {

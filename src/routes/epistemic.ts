@@ -343,7 +343,7 @@ router.post('/candidates/:id/accept', async (req: Request, res: Response) => {
       // Create prompt_queue item for Praxis
       createPraxisQueueItem(
         { ...candidate, status: 'accepted' } as typeof epistemicCandidates.$inferSelect,
-        `Accepted candidate ready for experimentation: "${candidate.summary}"`
+        `Ready to become an experiment: "${candidate.summary}"`
       );
       result.queued = 'praxis';
     }

@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "next-themes";
 import type { Axiom, Tension, Revision } from "@shared/schema";
 
 const AxiomLogo = () => (
@@ -13,9 +15,9 @@ const AxiomLogo = () => (
 const navItems = [
   {
     href: "/",
-    label: "Truth Claims",
-    shortLabel: "TRUTH CLAIMS",
-    queryKey: "/api/axioms",
+    label: "Proposed Axioms",
+    shortLabel: "PROPOSALS",
+    queryKey: "/api/axioms?stage=proving_ground",
   },
   {
     href: "/tensions",
@@ -33,13 +35,14 @@ const navItems = [
     href: "/constitution",
     label: "Constitution",
     shortLabel: "CONSTITUTION",
-    queryKey: null,
+    queryKey: "/api/axioms?stage=constitutional",
   },
 ];
 
 function NavCount({ queryKey }: { queryKey: string | null }) {
   const { data } = useQuery<any[]>({
     queryKey: [queryKey],
+    queryFn: queryKey ? () => fetch(queryKey).then(r => r.json()) : undefined,
     enabled: !!queryKey,
   });
   if (!queryKey || !data) return null;
@@ -47,6 +50,102 @@ function NavCount({ queryKey }: { queryKey: string | null }) {
     <span className="font-mono text-xs text-sidebar-foreground/40 tabular-nums">
       {data.length}
     </span>
+  );
+}
+
+type SensitivityLevel = 'low' | 'medium' | 'high';
+
+function SensitivityControl() {
+  const [sensitivity, setSensitivity] = useState<SensitivityLevel>('medium');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/settings/sensitivity')
+      .then(r => r.json())
+      .then((d: { sensitivity?: string }) => {
+        if (d.sensitivity === 'low' || d.sensitivity === 'medium' || d.sensitivity === 'high') {
+          setSensitivity(d.sensitivity);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const update = async (val: SensitivityLevel) => {
+    if (saving) return;
+    setSensitivity(val);
+    setSaving(true);
+    try {
+      await fetch('/api/settings/sensitivity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sensitivity: val }),
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const pills: { val: SensitivityLevel; label: string }[] = [
+    { val: 'low', label: 'LOW' },
+    { val: 'medium', label: 'MED' },
+    { val: 'high', label: 'HIGH' },
+  ];
+
+  return (
+    <div className="px-5 pb-4">
+      <div className="text-[9px] text-sidebar-foreground/25 font-mono uppercase tracking-wider mb-2">
+        Loop Sensitivity
+      </div>
+      <div className="flex gap-1">
+        {pills.map(({ val, label }) => (
+          <button
+            key={val}
+            onClick={() => update(val)}
+            className={`flex-1 text-[9px] font-mono uppercase tracking-wider py-1.5 rounded-sm border transition-all duration-150 ${
+              sensitivity === val
+                ? 'border-[#FFD166] text-[#FFD166] bg-[#FFD166]/8'
+                : 'border-sidebar-border text-sidebar-foreground/25 hover:text-sidebar-foreground/50 hover:border-sidebar-foreground/30'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
+  return (
+    <div className="px-5 pb-4">
+      <div className="text-[9px] text-sidebar-foreground/25 font-mono uppercase tracking-wider mb-2">
+        Theme
+      </div>
+      <div className="flex gap-1">
+        {[
+          { val: 'light', label: '☀' },
+          { val: 'dark', label: '☾' },
+          { val: 'system', label: 'SYS' },
+        ].map(({ val, label }) => (
+          <button
+            key={val}
+            onClick={() => setTheme(val)}
+            className={`flex-1 text-[9px] font-mono uppercase tracking-wider py-1.5 rounded-sm border transition-all duration-150 ${
+              theme === val
+                ? 'border-[#FFD166] text-[#FFD166] bg-[#FFD166]/8'
+                : 'border-sidebar-border text-sidebar-foreground/25 hover:text-sidebar-foreground/50 hover:border-sidebar-foreground/30'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -131,11 +230,17 @@ export default function AppSidebar() {
         </Link>
       </div>
 
+      {/* Sensitivity + Theme */}
+      <div className="mt-auto">
+        <SensitivityControl />
+        <ThemeToggle />
+      </div>
+
       {/* Footer */}
-      <div className="mt-auto px-5 pb-6">
+      <div className="px-5 pb-6">
         <div className="text-[10px] text-sidebar-foreground/25 font-mono uppercase tracking-wider leading-relaxed">
           AXIOM OS<br />
-          Fourth Tool
+          Synthesis Layer
         </div>
       </div>
     </aside>

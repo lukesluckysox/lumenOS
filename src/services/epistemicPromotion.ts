@@ -119,7 +119,7 @@ async function processLiminalEvent(event: EpistemicEvent): Promise<void> {
           userId: event.userId,
           candidateType: 'doctrine_candidate',
           title,
-          summary: `Belief pattern detected across ${allEventIds.length} entries`,
+          summary: `A recurring theme across ${allEventIds.length} reflections`,
           status: 'queued_for_axiom',
           targetApp: 'axiom',
           confidence: event.confidence,
@@ -139,7 +139,7 @@ async function processLiminalEvent(event: EpistemicEvent): Promise<void> {
           userId: event.userId,
           candidateType: 'tension_candidate',
           title: payload.summary || 'Tension detected',
-          summary: payload.text || 'A tension was identified in journal reflection',
+          summary: payload.text || 'A tension was noticed in your writing',
           status: 'open',
           targetApp: 'axiom',
           confidence: event.confidence,
@@ -240,7 +240,7 @@ async function processParallaxEvent(event: EpistemicEvent): Promise<void> {
         userId: event.userId,
         candidateType: 'hypothesis_candidate',
         title: (payload.summary as string) || 'Hypothesis from tracking',
-        summary: (payload.text as string) || 'A hypothesis was formed from behavioral tracking data',
+        summary: (payload.text as string) || 'A hypothesis was formed from observed patterns',
         status: 'queued_for_praxis',
         targetApp: 'praxis',
         confidence: event.confidence,
@@ -344,7 +344,7 @@ async function createCandidate(params: CreateCandidateParams): Promise<void> {
     // Re-queue only if status was re-opened (not if already accepted)
     if (newStatus !== 'accepted') {
       if (newStatus === 'queued_for_axiom') createAxiomQueueItem(existing);
-      else if (newStatus === 'queued_for_praxis') createPraxisQueueItem(existing, 'Re-queued from reprocess');
+      else if (newStatus === 'queued_for_praxis') createPraxisQueueItem(existing, 'Revisiting for fresh perspective');
     }
     return;
   }
@@ -374,7 +374,7 @@ async function createCandidate(params: CreateCandidateParams): Promise<void> {
   if (candidate.status === 'queued_for_axiom') {
     createAxiomQueueItem(candidate);
   } else if (candidate.status === 'queued_for_praxis') {
-    createPraxisQueueItem(candidate, 'Auto-promoted from event processing');
+    createPraxisQueueItem(candidate, 'Emerged from recent inquiry');
   }
 }
 
@@ -420,7 +420,7 @@ export function createPraxisQueueItem(candidate: typeof epistemicCandidates.$inf
       userId: candidate.userId,
       destinationApp: 'praxis',
       promptType: 'experiment_prompt',
-      title: `Test: ${candidate.title}`,
+      title: candidate.title,
       body: note || `Design an experiment to test: "${candidate.summary}"`,
       relatedCandidateId: candidate.id,
       priority: 50,

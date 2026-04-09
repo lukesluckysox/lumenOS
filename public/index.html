@@ -1485,7 +1485,7 @@
     }
 
     /* ─────────────────────────────────────────────
-       PIPELINE HEALTH MONITOR
+       CONNECTION STATUS MONITOR
     ───────────────────────────────────────────── */
     .pipeline {
       display: none;
@@ -2043,7 +2043,7 @@
 
       <ul class="nav__links" role="list">
         <li><a href="#tools"  class="nav__link">Tools</a></li>
-        <li><a href="#cockpit"   class="nav__link">System</a></li>
+        <li><a href="#cockpit"   class="nav__link">Overview</a></li>
         <li><a href="#" class="nav__link" id="nav-about-link">About</a></li>
       </ul>
 
@@ -2064,8 +2064,8 @@
           Enter
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
-        <div class="pipeline" id="pipeline" aria-label="Pipeline health">
-          <span class="pipeline__label">Pipeline</span>
+        <div class="pipeline" id="pipeline" aria-label="Connection status">
+          <span class="pipeline__label">Status</span>
           <div class="pipeline__dots" id="pipeline-dots">
             <span class="pipeline__dot pipeline__dot--off" data-app="liminal" title="Liminal"></span>
             <span class="pipeline__dot pipeline__dot--off" data-app="parallax" title="Parallax"></span>
@@ -2188,18 +2188,18 @@
 <div id="cockpit" class="cockpit" aria-label="Personal epistemic cockpit">
 
   <!-- A. System State -->
-  <section class="state-band" id="cockpit-state" aria-label="Current system state">
+  <section class="state-band" id="cockpit-state" aria-label="Current state">
     <div class="wrap">
       <div class="state-header">
         <span class="state-eye">Current State</span>
-        <h2 class="state-title">Where the system stands.</h2>
+        <h2 class="state-title">Where things stand.</h2>
       </div>
       <div class="state-grid" role="list" id="state-grid">
         <a class="state-card state-card--gold" role="listitem" href="https://axiomtool-production.up.railway.app/#/constitution" target="_blank" rel="noopener noreferrer" data-app="axiom" data-has-sso="true" aria-label="View Constitutional Principles in Axiom">
           <svg class="state-card__arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
           <span class="state-card__label">Constitutional Principles</span>
           <span class="state-card__count" id="state-axiom">—</span>
-          <span class="state-card__sub">Truths distilled by Axiom</span>
+          <span class="state-card__sub">Principles taking shape</span>
         </a>
         <a class="state-card state-card--red" role="listitem" href="https://axiomtool-production.up.railway.app/#/tensions" target="_blank" rel="noopener noreferrer" data-app="axiom" data-has-sso="true" aria-label="View Active Tensions in Axiom">
           <svg class="state-card__arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
@@ -2224,19 +2224,19 @@
   </section>
 
   <!-- B. Loop Activity Feed -->
-  <section class="feed-band" id="cockpit-feed" aria-label="Recent epistemic activity">
+  <section class="feed-band" id="cockpit-feed" aria-label="Recent activity">
     <div class="wrap wrap--mid">
       <div class="feed-header">
         <div>
           <span class="feed-header__eye">The Examined Life</span>
           <h2 class="feed-header__title">Recent Activity</h2>
         </div>
-        <a href="#" class="feed-header__link" aria-label="View all epistemic events">View all</a>
+        <a href="#" class="feed-header__link" aria-label="View all activity">View all</a>
       </div>
       <div id="feed-list" class="feed-list" role="feed" aria-label="Epistemic event feed">
         <!-- populated by JS -->
         <div class="feed-empty">
-          <p class="feed-empty__text">The system is listening. Use any tool to begin.</p>
+          <p class="feed-empty__text">Your reflections begin here. Choose where to start.</p>
         </div>
       </div>
     </div>
@@ -2374,7 +2374,7 @@
   <div class="wrap">
 
     <div class="section__head">
-      <span class="section__eye">The System</span>
+      <span class="section__eye">The Loop</span>
       <h2 class="section__title">Not a sequence.<br>A cycle.</h2>
       <p class="section__desc">Each pass through the loop refines what came before. The light Lumen produces — the truths Axiom distills — becomes the next layer of darkness that Liminal interrogates. The cycle is the method.</p>
     </div>
@@ -2878,7 +2878,7 @@ async function setSensitivity(val) {
     ]);
   }
 
-  /* ── System State ─────────────────────────────────────────── */
+  /* ── Current State ─────────────────────────────────────────── */
 
   async function loadState() {
     try {
@@ -2909,7 +2909,7 @@ async function setSensitivity(val) {
       if (!container) return;
 
       if (!events || events.length === 0) {
-        container.innerHTML = '<div class="feed-empty"><p class="feed-empty__text">The system is listening. Use any tool to begin.</p></div>';
+        container.innerHTML = '<div class="feed-empty"><p class="feed-empty__text">Your reflections begin here. Choose where to start.</p></div>';
         return;
       }
 
@@ -2917,7 +2917,7 @@ async function setSensitivity(val) {
       var shown = events.slice(0, 10);
       var html = shown.map(function (ev) {
         var dotClass  = 'feed-item__dot feed-item__dot--' + (ev.sourceApp || '');
-        var verb      = EVENT_VERBS[ev.eventType] || 'recorded an epistemic event';
+        var verb      = EVENT_VERBS[ev.eventType] || 'left a mark';
         var appName   = (ev.sourceApp || '').charAt(0).toUpperCase() + (ev.sourceApp || '').slice(1);
         var time      = relativeTime(ev.createdAt);
         var summary   = ev.summary

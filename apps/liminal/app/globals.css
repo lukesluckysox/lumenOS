@@ -6,6 +6,7 @@
 :root {
   --font-display: 'Cormorant Garamond';
   --font-body: 'Satoshi';
+  --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
 
   /* ── Surfaces — warm soot / umber-charcoal, not fantasy blue-black ── */
   --color-bg:        20 18 14;   /* deep warm near-black, like an aging book cover */
@@ -156,7 +157,7 @@ ul[role='list'], ol[role='list'] { list-style: none; }
   border-radius: 3px;
   padding: 0.75rem 1rem;
   color: rgb(var(--color-text));
-  font-size: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.0625rem);
   line-height: 1.65;
   transition: border-color 160ms ease;
   outline: none;
@@ -426,6 +427,56 @@ ul[role='list'], ol[role='list'] { list-style: none; }
   }
 }
 
+/* ─── Seed cards (inquiry seeds) ────────────────────────────────── */
+
+.seed-card:hover {
+  background: rgb(var(--color-surface-3)) !important;
+}
+
+.seed-card:hover .seed-card-explore {
+  opacity: 1 !important;
+}
+
+/* Show explore hint on touch devices (no hover) */
+@media (hover: none) {
+  .seed-card .seed-card-explore {
+    opacity: 0.7 !important;
+  }
+}
+
+/* ─── Tool personality animations ────────────────────────────────── */
+
+@keyframes foolPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(160, 82, 77, 0); }
+  50%       { box-shadow: 0 0 0 3px rgba(160, 82, 77, 0.22); }
+}
+
+.btn-fool-submit {
+  animation: foolPulse 2.4s ease-in-out infinite;
+}
+
+.btn-fool-submit:disabled {
+  animation: none;
+}
+
+@keyframes typingDots {
+  0%, 80%, 100% { opacity: 0.2; transform: translateY(0); }
+  40%           { opacity: 1;   transform: translateY(-3px); }
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  margin: 0 1.5px;
+  animation: typingDots 1.2s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
 /* ─── sr-only ────────────────────────────────────────────────────── */
 .sr-only {
   position: absolute;
@@ -437,4 +488,25 @@ ul[role='list'], ol[role='list'] { list-style: none; }
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* ─── Mobile bottom nav spacer ─────────────────────────────────── */
+@media (max-width: 767px) {
+  body { padding-bottom: 5rem; }
+}
+
+/* ─── iOS auto-zoom prevention ──────────────────────────────────── */
+@media screen and (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* ─── Responsive 2-column grids — stack on mobile ───────────────── */
+@media (max-width: 640px) {
+  .trust-notes-grid,
+  .tier-compare-grid,
+  .stoic-ledger-grid {
+    grid-template-columns: 1fr !important;
+  }
 }

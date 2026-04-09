@@ -65,7 +65,7 @@ function deriveSummary(payload: string, eventType: string): string {
     experiment_completed:    'A lived experiment concluded',
     doctrine_crystallized:   'A working doctrine crystallized',
   };
-  return fallbacks[eventType] ?? 'An epistemic event recorded';
+  return fallbacks[eventType] ?? 'A moment of inquiry noted';
 }
 
 // ─── GET /api/loop/feed ────────────────────────────────────────────────────────

@@ -24,12 +24,13 @@ export default async function InterlocutorPage() {
             tagline: 'Submit an argument. Receive its full examination.',
             inputLabel: 'The thesis or argument to examine',
             inputPlaceholder:
-              "State an argument, position, or thesis you hold or are working through. It could be an intellectual claim, a business thesis, a moral position, or an argument you're trying to refine. Be as specific as possible.",
+              'Present your thesis. The examination begins.',
             inputFieldName: 'thesis',
             minLength: 20,
             submitLabel: 'Begin the examination',
             processingLabel: 'The Interlocutor is examining your argument…',
             accentHue: ACCENT,
+            cardBorderColor: '#5a6e8a',
             preamble: (
               <div
                 style={{

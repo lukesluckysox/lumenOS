@@ -5,7 +5,10 @@ import path from "path";
 
 const dbPath = process.env.RAILWAY_VOLUME_MOUNT_PATH
   ? `${process.env.RAILWAY_VOLUME_MOUNT_PATH}/axiom.db`
-  : path.resolve(process.cwd(), "axiom.db");
+  : process.env.DATA_DIR
+    ? `${process.env.DATA_DIR}/axiom.db`
+    : path.resolve(process.cwd(), "axiom.db");
+console.log(`[axiomtool/db] SQLite path: ${dbPath} (volume: ${!!process.env.RAILWAY_VOLUME_MOUNT_PATH})`);
 const sqlite = new Database(dbPath);
 sqlite.pragma("journal_mode = WAL");
 sqlite.pragma("foreign_keys = ON");
@@ -56,4 +59,48 @@ sqlite.exec(`
     related_axiom_id INTEGER,
     created_at TEXT NOT NULL
   );
+`);
+
+// ─── Auth migrations ──────────────────────────────────────────────────────────
+try { sqlite.exec(`ALTER TABLE axioms ADD COLUMN user_id TEXT NOT NULL DEFAULT '1'`); } catch {}
+try { sqlite.exec(`ALTER TABLE tensions ADD COLUMN user_id TEXT NOT NULL DEFAULT '1'`); } catch {}
+try { sqlite.exec(`ALTER TABLE revisions ADD COLUMN user_id TEXT NOT NULL DEFAULT '1'`); } catch {}
+
+// Add source column to axioms (no-op if exists)
+try { sqlite.exec("ALTER TABLE axioms ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'"); } catch {}
+
+// Add stage column: proving_ground (default) or constitutional
+try { sqlite.exec("ALTER TABLE axioms ADD COLUMN stage TEXT NOT NULL DEFAULT 'proving_ground'"); } catch {}
+
+// Mark seeded axioms as constitutional (they were manually crafted originals)
+try {
+  sqlite.exec(`UPDATE axioms SET stage = 'constitutional' WHERE source = 'seeded'`);
+} catch {}
+
+// Mark original seeded axioms (first 5 per user)
+try {
+  const manualCount = sqlite.prepare(`SELECT COUNT(*) as cnt FROM axioms WHERE user_id = '1' AND source = 'manual'`).get() as { cnt: number };
+  if (manualCount.cnt > 0) {
+    sqlite.exec(`UPDATE axioms SET source = 'seeded' WHERE user_id = '1' AND number <= 5 AND source = 'manual'`);
+  }
+} catch {}
+
+// Create constitutions table
+sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS constitutions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL UNIQUE,
+    preamble TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL DEFAULT ''
+  );
+`);
+
+sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS axiom_users (
+    id TEXT PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    email TEXT,
+    lumen_user_id TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL
+  )
 `);

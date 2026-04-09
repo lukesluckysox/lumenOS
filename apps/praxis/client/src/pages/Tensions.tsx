@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Trash2, Star, GitFork } from "lucide-react";
+import { Plus, Trash2, Star, GitFork, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import { formatDate, getTensionLabel } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { ErrorCard } from "@/components/ErrorCard";
 
 const schema = z.object({
   poleA: z.string().min(2, "Name the first pole"),
@@ -34,7 +35,7 @@ export default function Tensions() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
-  const { data: tensions, isLoading } = useQuery<Tension[]>({
+  const { data: tensions, isLoading, isError } = useQuery<Tension[]>({
     queryKey: ["/api/tensions"],
   });
 
@@ -94,7 +95,7 @@ export default function Tensions() {
   const otherTensions = tensions?.filter(t => !t.isPrimary) ?? [];
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-4 md:p-8 max-w-2xl">
       <div className="flex items-start justify-between mb-8">
         <div>
           <h2 className="font-display text-xl font-semibold text-foreground mb-1">
@@ -247,7 +248,9 @@ export default function Tensions() {
         </Dialog>
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <ErrorCard message="Could not load tensions." onRetry={() => window.location.reload()} />
+      ) : isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 w-full rounded-md" />)}
         </div>
@@ -256,8 +259,8 @@ export default function Tensions() {
           <GitFork size={24} className="mx-auto mb-3 text-muted-foreground/40" />
           <p className="text-sm text-muted-foreground mb-1">No tensions mapped yet.</p>
           <p className="text-xs text-muted-foreground/60 max-w-sm mx-auto">
-            Life axes are the recurring conflicts that organize your decisions.
-            They emerge from patterns across experiments and dilemmas.
+            Points of productive contradiction will surface as your experiments reveal
+            the gravitational poles shaping your decisions.
           </p>
         </div>
       ) : (
@@ -330,19 +333,19 @@ function TensionCard({
             <Star size={12} className="text-primary fill-primary ml-1" />
           )}
         </div>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
           <button
             data-testid={`button-toggle-primary-${tension.id}`}
             onClick={onTogglePrimary}
             title={tension.isPrimary ? "Remove primary" : "Set as primary"}
-            className="text-muted-foreground/50 hover:text-primary p-1 rounded transition-colors"
+            className="text-muted-foreground/50 hover:text-primary p-2 min-h-[44px] min-w-[44px] md:p-1 md:min-h-0 md:min-w-0 flex items-center justify-center rounded transition-colors"
           >
             <Star size={13} className={tension.isPrimary ? "fill-primary text-primary" : ""} />
           </button>
           <button
             data-testid={`button-delete-tension-${tension.id}`}
             onClick={onDelete}
-            className="text-muted-foreground/50 hover:text-destructive p-1 rounded transition-colors"
+            className="text-muted-foreground/50 hover:text-destructive p-2 min-h-[44px] min-w-[44px] md:p-1 md:min-h-0 md:min-w-0 flex items-center justify-center rounded transition-colors"
           >
             <Trash2 size={13} />
           </button>
@@ -369,9 +372,19 @@ function TensionCard({
         </p>
       )}
 
-      <p className="text-xs text-muted-foreground/40 mt-3">
-        Identified {formatDate(tension.createdAt)}
-      </p>
+      <div className="flex items-center justify-between mt-3">
+        <p className="text-xs text-muted-foreground/40">
+          Identified {formatDate(tension.createdAt)}
+        </p>
+        <a
+          href="https://liminal-app.up.railway.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 transition-colors"
+        >
+          Explore this tension deeper <ExternalLink size={10} />
+        </a>
+      </div>
     </div>
   );
 }

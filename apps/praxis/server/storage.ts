@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import Database from "better-sqlite3";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import {
   experiments,
   doctrines,
@@ -55,110 +55,131 @@ sqlite.exec(`
   );
 `);
 
+// Add user_id columns to existing tables (no-op if already added)
+try { sqlite.exec("ALTER TABLE experiments ADD COLUMN user_id TEXT NOT NULL DEFAULT '1'"); } catch {}
+try { sqlite.exec("ALTER TABLE doctrines ADD COLUMN user_id TEXT NOT NULL DEFAULT '1'"); } catch {}
+try { sqlite.exec("ALTER TABLE tensions ADD COLUMN user_id TEXT NOT NULL DEFAULT '1'"); } catch {}
+
+// Add source_description column (no-op if already added)
+try { sqlite.exec("ALTER TABLE experiments ADD COLUMN source_description TEXT"); } catch {}
+
+// User table for SSO
+sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS praxis_users (
+    id TEXT PRIMARY KEY,
+    email TEXT,
+    username TEXT,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  );
+`);
+
 export interface IStorage {
   // Experiments
-  getExperiments(): Experiment[];
-  getExperiment(id: number): Experiment | undefined;
-  createExperiment(data: InsertExperiment): Experiment;
-  updateExperiment(id: number, data: Partial<InsertExperiment> & { completedAt?: number | null }): Experiment | undefined;
-  deleteExperiment(id: number): void;
-  getNextTrialNumber(): number;
+  getExperiments(userId: string): Experiment[];
+  getExperiment(id: number, userId: string): Experiment | undefined;
+  createExperiment(data: InsertExperiment, userId: string): Experiment;
+  updateExperiment(id: number, data: Partial<InsertExperiment> & { completedAt?: number | null }, userId: string): Experiment | undefined;
+  deleteExperiment(id: number, userId: string): void;
+  getNextTrialNumber(userId: string): number;
 
   // Doctrines
-  getDoctrines(): Doctrine[];
-  getDoctrine(id: number): Doctrine | undefined;
-  createDoctrine(data: InsertDoctrine): Doctrine;
-  updateDoctrine(id: number, data: Partial<InsertDoctrine>): Doctrine | undefined;
-  deleteDoctrine(id: number): void;
+  getDoctrines(userId: string): Doctrine[];
+  getDoctrine(id: number, userId: string): Doctrine | undefined;
+  createDoctrine(data: InsertDoctrine, userId: string): Doctrine;
+  updateDoctrine(id: number, data: Partial<InsertDoctrine>, userId: string): Doctrine | undefined;
+  deleteDoctrine(id: number, userId: string): void;
 
   // Tensions
-  getTensions(): Tension[];
-  getTension(id: number): Tension | undefined;
-  createTension(data: InsertTension): Tension;
-  updateTension(id: number, data: Partial<InsertTension>): Tension | undefined;
-  deleteTension(id: number): void;
+  getTensions(userId: string): Tension[];
+  getTension(id: number, userId: string): Tension | undefined;
+  createTension(data: InsertTension, userId: string): Tension;
+  updateTension(id: number, data: Partial<InsertTension>, userId: string): Tension | undefined;
+  deleteTension(id: number, userId: string): void;
 }
 
 class Storage implements IStorage {
   // ── Experiments ──────────────────────────────────────────────────────────
 
-  getExperiments(): Experiment[] {
-    return db.select().from(experiments).orderBy(desc(experiments.createdAt)).all();
+  getExperiments(userId: string): Experiment[] {
+    return db.select().from(experiments).where(eq(experiments.userId, userId)).orderBy(desc(experiments.createdAt)).all();
   }
 
-  getExperiment(id: number): Experiment | undefined {
-    return db.select().from(experiments).where(eq(experiments.id, id)).get();
+  getExperiment(id: number, userId: string): Experiment | undefined {
+    return db.select().from(experiments).where(and(eq(experiments.id, id), eq(experiments.userId, userId))).get();
   }
 
-  createExperiment(data: InsertExperiment): Experiment {
+  createExperiment(data: InsertExperiment, userId: string): Experiment {
     return db.insert(experiments).values({
       ...data,
+      userId,
       createdAt: Date.now(),
     }).returning().get();
   }
 
-  updateExperiment(id: number, data: Partial<InsertExperiment> & { completedAt?: number | null }): Experiment | undefined {
-    return db.update(experiments).set(data).where(eq(experiments.id, id)).returning().get();
+  updateExperiment(id: number, data: Partial<InsertExperiment> & { completedAt?: number | null }, userId: string): Experiment | undefined {
+    return db.update(experiments).set(data).where(and(eq(experiments.id, id), eq(experiments.userId, userId))).returning().get();
   }
 
-  deleteExperiment(id: number): void {
-    db.delete(experiments).where(eq(experiments.id, id)).run();
+  deleteExperiment(id: number, userId: string): void {
+    db.delete(experiments).where(and(eq(experiments.id, id), eq(experiments.userId, userId))).run();
   }
 
-  getNextTrialNumber(): number {
-    const rows = db.select({ trialNumber: experiments.trialNumber }).from(experiments).all();
+  getNextTrialNumber(userId: string): number {
+    const rows = db.select({ trialNumber: experiments.trialNumber }).from(experiments).where(eq(experiments.userId, userId)).all();
     if (rows.length === 0) return 1;
     return Math.max(...rows.map(r => r.trialNumber)) + 1;
   }
 
   // ── Doctrines ────────────────────────────────────────────────────────────
 
-  getDoctrines(): Doctrine[] {
-    return db.select().from(doctrines).orderBy(desc(doctrines.createdAt)).all();
+  getDoctrines(userId: string): Doctrine[] {
+    return db.select().from(doctrines).where(eq(doctrines.userId, userId)).orderBy(desc(doctrines.createdAt)).all();
   }
 
-  getDoctrine(id: number): Doctrine | undefined {
-    return db.select().from(doctrines).where(eq(doctrines.id, id)).get();
+  getDoctrine(id: number, userId: string): Doctrine | undefined {
+    return db.select().from(doctrines).where(and(eq(doctrines.id, id), eq(doctrines.userId, userId))).get();
   }
 
-  createDoctrine(data: InsertDoctrine): Doctrine {
+  createDoctrine(data: InsertDoctrine, userId: string): Doctrine {
     return db.insert(doctrines).values({
       ...data,
+      userId,
       createdAt: Date.now(),
     }).returning().get();
   }
 
-  updateDoctrine(id: number, data: Partial<InsertDoctrine>): Doctrine | undefined {
-    return db.update(doctrines).set(data).where(eq(doctrines.id, id)).returning().get();
+  updateDoctrine(id: number, data: Partial<InsertDoctrine>, userId: string): Doctrine | undefined {
+    return db.update(doctrines).set(data).where(and(eq(doctrines.id, id), eq(doctrines.userId, userId))).returning().get();
   }
 
-  deleteDoctrine(id: number): void {
-    db.delete(doctrines).where(eq(doctrines.id, id)).run();
+  deleteDoctrine(id: number, userId: string): void {
+    db.delete(doctrines).where(and(eq(doctrines.id, id), eq(doctrines.userId, userId))).run();
   }
 
   // ── Tensions ─────────────────────────────────────────────────────────────
 
-  getTensions(): Tension[] {
-    return db.select().from(tensions).orderBy(desc(tensions.isPrimary), desc(tensions.strength)).all();
+  getTensions(userId: string): Tension[] {
+    return db.select().from(tensions).where(eq(tensions.userId, userId)).orderBy(desc(tensions.isPrimary), desc(tensions.strength)).all();
   }
 
-  getTension(id: number): Tension | undefined {
-    return db.select().from(tensions).where(eq(tensions.id, id)).get();
+  getTension(id: number, userId: string): Tension | undefined {
+    return db.select().from(tensions).where(and(eq(tensions.id, id), eq(tensions.userId, userId))).get();
   }
 
-  createTension(data: InsertTension): Tension {
+  createTension(data: InsertTension, userId: string): Tension {
     return db.insert(tensions).values({
       ...data,
+      userId,
       createdAt: Date.now(),
     }).returning().get();
   }
 
-  updateTension(id: number, data: Partial<InsertTension>): Tension | undefined {
-    return db.update(tensions).set(data).where(eq(tensions.id, id)).returning().get();
+  updateTension(id: number, data: Partial<InsertTension>, userId: string): Tension | undefined {
+    return db.update(tensions).set(data).where(and(eq(tensions.id, id), eq(tensions.userId, userId))).returning().get();
   }
 
-  deleteTension(id: number): void {
-    db.delete(tensions).where(eq(tensions.id, id)).run();
+  deleteTension(id: number, userId: string): void {
+    db.delete(tensions).where(and(eq(tensions.id, id), eq(tensions.userId, userId))).run();
   }
 }
 

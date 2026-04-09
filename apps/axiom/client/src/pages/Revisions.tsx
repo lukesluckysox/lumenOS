@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { Revision } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const SIGNIFICANCE = {
   major: { label: "MAJOR", class: "text-amber-600/80 dark:text-amber-500/70" },
@@ -15,7 +16,7 @@ function RevisionEntry({ revision, onDelete }: { revision: Revision; onDelete: (
 
   return (
     <div
-      className="px-8 py-6 border-b border-border/50 last:border-0 group"
+      className="px-4 md:px-8 py-6 border-b border-border/50 last:border-0 group"
       data-testid={`revision-entry-${revision.id}`}
     >
       {/* Date + Significance */}
@@ -71,11 +72,17 @@ function RevisionEntry({ revision, onDelete }: { revision: Revision; onDelete: (
         </div>
       )}
 
+      {!revision.triggeringEvidence && (
+        <p className="mt-4 text-[10px] font-mono text-muted-foreground/25 italic">
+          No triggering evidence recorded — manually entered.
+        </p>
+      )}
+
       {/* Delete */}
-      <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="mt-4 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
         <button
           onClick={onDelete}
-          className="text-[10px] font-mono uppercase tracking-widest-constitutional text-destructive/40 hover:text-destructive transition-colors"
+          className="text-[10px] font-mono uppercase tracking-widest-constitutional text-destructive/40 hover:text-destructive transition-colors min-h-[44px] min-w-[44px] flex items-center"
         >
           Remove
         </button>
@@ -111,7 +118,7 @@ function NewRevisionForm({ onClose }: { onClose: () => void }) {
   const inputClass = "w-full bg-background border border-border rounded-sm px-3 py-2.5 text-sm placeholder:text-muted-foreground/30 focus:outline-none focus:ring-1 focus:ring-ring resize-none leading-relaxed";
 
   return (
-    <div className="px-8 py-6 border-b border-border bg-card/50">
+    <div className="px-4 md:px-8 py-6 border-b border-border bg-card/50">
       <div className="font-mono text-[10px] uppercase tracking-widest-constitutional text-muted-foreground/50 mb-4">
         New Revision
       </div>
@@ -191,7 +198,7 @@ export default function Revisions() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: revisions, isLoading } = useQuery<Revision[]>({
+  const { data: revisions, isLoading, isError, refetch } = useQuery<Revision[]>({
     queryKey: ["/api/revisions"],
   });
 
@@ -208,8 +215,8 @@ export default function Revisions() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="px-8 pt-10 pb-6 border-b border-border">
-        <div className="flex items-end justify-between">
+      <div className="px-4 md:px-8 pt-10 pb-6 border-b border-border">
+        <div className="flex items-end justify-between gap-4">
           <div>
             <h1 className="font-mono text-xs tracking-widest-constitutional uppercase text-muted-foreground mb-2">
               Revisions
@@ -225,7 +232,7 @@ export default function Revisions() {
           </div>
           <button
             onClick={() => setShowForm((s) => !s)}
-            className="text-[11px] font-mono tracking-widest-constitutional uppercase px-4 py-2 border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors rounded-sm"
+            className="text-[11px] font-mono tracking-widest-constitutional uppercase px-4 py-2 border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors rounded-sm flex-shrink-0"
             data-testid="button-new-revision"
           >
             {showForm ? "Cancel" : "+ New Revision"}
@@ -238,12 +245,44 @@ export default function Revisions() {
 
       {/* Revisions List */}
       {isLoading ? (
-        <div className="px-8 py-12 text-muted-foreground/40 font-mono text-sm">Loading…</div>
-      ) : (revisions?.length ?? 0) === 0 ? (
-        <div className="px-8 py-16 text-center">
-          <div className="font-serif text-xl text-muted-foreground/40 mb-3">
-            No revisions recorded yet.
+        <div className="px-4 md:px-8 py-6 space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="py-6 border-b border-border/50">
+              <div className="flex items-center gap-3 mb-3">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-3 w-6" />
+                <Skeleton className="h-3 w-28" />
+              </div>
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="px-4 md:px-8 py-16 text-center">
+          <div className="max-w-sm mx-auto border border-border/50 rounded-sm p-6 bg-card/30">
+            <div className="font-mono text-xs uppercase tracking-widest-constitutional text-destructive/70 mb-3">
+              Unable to load revisions
+            </div>
+            <p className="text-sm text-muted-foreground/50 leading-relaxed mb-4">
+              Something went wrong while fetching your revisions. Please try again.
+            </p>
+            <button
+              onClick={() => refetch()}
+              className="text-xs font-mono uppercase tracking-wider text-primary hover:text-primary/80 transition-colors"
+            >
+              Retry
+            </button>
           </div>
+        </div>
+      ) : (revisions?.length ?? 0) === 0 ? (
+        <div className="px-4 md:px-8 py-16 text-center">
+          <div className="font-serif text-xl text-muted-foreground/40 mb-3">
+            The evolution of your principles will be recorded here.
+          </div>
+          <p className="text-sm text-muted-foreground/40 leading-relaxed mb-4 max-w-sm mx-auto">
+            When beliefs change and principles shift, record the revision to track how your understanding evolves over time.
+          </p>
           <button
             onClick={() => setShowForm(true)}
             className="text-xs font-mono tracking-wider text-primary hover:text-primary/80 transition-colors"

@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useParams } from "wouter";
-import { ArrowLeft, CheckCircle2, Archive, Pencil, Save, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Archive, Pencil, Save, X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +12,48 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
+import { ErrorCard } from "@/components/ErrorCard";
+
+// ── Provenance breadcrumb ─────────────────────────────────────────────────
+
+const SOURCE_BORDER: Record<string, string> = {
+  parallax: "#4d8c9e",
+  liminal: "#9c8654",
+  lumen_push: "#FFD166",
+};
+
+const SOURCE_LABEL: Record<string, string> = {
+  parallax: "Behavioral pattern",
+  liminal: "Reflective inquiry",
+  lumen_push: "Your reflections",
+};
+
+function ProvenanceBreadcrumb({ experiment }: { experiment: Experiment }) {
+  if (experiment.source === "manual") return null;
+  const borderColor = SOURCE_BORDER[experiment.source] ?? "#888";
+  const sourceLabel = SOURCE_LABEL[experiment.source] ?? experiment.source;
+  return (
+    <div
+      className="mb-6 pl-4 py-3 pr-4 rounded-r-md bg-muted/30 border-l-2"
+      style={{ borderLeftColor: borderColor }}
+    >
+      <p className="text-xs font-medium text-foreground/80 mb-0.5">
+        Origin: {sourceLabel}
+      </p>
+      {experiment.sourceDescription && (
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {experiment.sourceDescription}
+        </p>
+      )}
+      <p className="text-xs text-muted-foreground/50 italic mt-1.5">
+        Proposed {formatDate(experiment.createdAt)}
+        {experiment.status !== "proposed" && experiment.status !== "dismissed" && (
+          <> · Accepted and moved to {experiment.status}</>
+        )}
+      </p>
+    </div>
+  );
+}
 
 interface Phase {
   key: "hypothesis" | "design" | "experimentConstraint" | "observation" | "meaningExtraction";
@@ -66,7 +108,7 @@ export default function ExperimentDetail() {
   const [editingPhase, setEditingPhase] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
 
-  const { data: experiment, isLoading } = useQuery<Experiment>({
+  const { data: experiment, isLoading, isError } = useQuery<Experiment>({
     queryKey: ["/api/experiments", id],
   });
 
@@ -110,7 +152,7 @@ export default function ExperimentDetail() {
 
   if (isLoading) {
     return (
-      <div className="p-8 max-w-2xl space-y-6">
+      <div className="p-4 md:p-8 max-w-2xl space-y-6">
         <Skeleton className="h-6 w-32" />
         <Skeleton className="h-8 w-80" />
         <Skeleton className="h-40 w-full rounded-md" />
@@ -119,9 +161,17 @@ export default function ExperimentDetail() {
     );
   }
 
+  if (isError) {
+    return (
+      <div className="p-4 md:p-8 max-w-2xl">
+        <ErrorCard message="Could not load this experiment." onRetry={() => window.location.reload()} />
+      </div>
+    );
+  }
+
   if (!experiment) {
     return (
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <p className="text-muted-foreground">Experiment not found.</p>
         <Link href="/experiments">
           <Button variant="ghost" size="sm" className="mt-2 gap-1.5">
@@ -143,7 +193,7 @@ export default function ExperimentDetail() {
   );
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-4 md:p-8 max-w-2xl">
       {/* Back */}
       <Link href="/experiments">
         <button
@@ -154,6 +204,9 @@ export default function ExperimentDetail() {
           All Experiments
         </button>
       </Link>
+
+      {/* Provenance breadcrumb — shown for non-manual experiments */}
+      <ProvenanceBreadcrumb experiment={experiment} />
 
       {/* Header */}
       <div className="mb-8">
@@ -296,6 +349,32 @@ export default function ExperimentDetail() {
             <Archive size={13} />
             Archive
           </Button>
+        </div>
+      )}
+
+      {/* Inter-app navigation CTAs */}
+      {experiment.status === "completed" && experiment.meaningExtraction && (
+        <div className="mt-6 pt-4 border-t border-border/50 space-y-2">
+          <a
+            href="https://axiomtool-production.up.railway.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-xs text-primary hover:text-primary/80 transition-colors"
+          >
+            This could become a principle <ExternalLink size={11} /> <span className="text-muted-foreground/40">Axiom</span>
+          </a>
+        </div>
+      )}
+      {experiment.source === "parallax" && (
+        <div className={`${experiment.status === "completed" && experiment.meaningExtraction ? "mt-2" : "mt-6 pt-4 border-t border-border/50"}`}>
+          <a
+            href="https://parallaxapp.up.railway.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-xs text-teal-500 hover:text-teal-400 transition-colors"
+          >
+            See the full pattern <ExternalLink size={11} /> <span className="text-muted-foreground/40">Parallax</span>
+          </a>
         </div>
       )}
     </div>

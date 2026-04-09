@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, ArrowRight } from "lucide-react";
 import type { Experiment, Doctrine, Tension } from "@shared/schema";
 import { StatusBadge, PhaseDot } from "@/components/ExperimentComponents";
+import { ErrorCard } from "@/components/ErrorCard";
 import { formatDate, getTensionLabel } from "@/lib/utils";
 
 interface Summary {
@@ -14,25 +15,33 @@ interface Summary {
 }
 
 export default function Dashboard() {
-  const { data: summary, isLoading: summaryLoading } = useQuery<Summary>({
+  const { data: summary, isLoading: summaryLoading, isError: summaryError } = useQuery<Summary>({
     queryKey: ["/api/summary"],
   });
-  const { data: experiments, isLoading: expLoading } = useQuery<Experiment[]>({
+  const { data: experiments, isLoading: expLoading, isError: expError } = useQuery<Experiment[]>({
     queryKey: ["/api/experiments"],
   });
-  const { data: doctrines, isLoading: docLoading } = useQuery<Doctrine[]>({
+  const { data: doctrines, isLoading: docLoading, isError: docError } = useQuery<Doctrine[]>({
     queryKey: ["/api/doctrines"],
   });
-  const { data: tensions, isLoading: tensionLoading } = useQuery<Tension[]>({
+  const { data: tensions, isLoading: tensionLoading, isError: tensionError } = useQuery<Tension[]>({
     queryKey: ["/api/tensions"],
   });
+
+  if (summaryError && expError && docError && tensionError) {
+    return (
+      <div className="p-4 md:p-8 max-w-4xl">
+        <ErrorCard onRetry={() => window.location.reload()} />
+      </div>
+    );
+  }
 
   const activeExperiments = experiments?.filter(e => e.status === "active" || e.status === "observing").slice(0, 3) ?? [];
   const recentDoctrines = doctrines?.slice(0, 3) ?? [];
   const primaryTension = tensions?.find(t => t.isPrimary);
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 md:p-8 max-w-4xl">
       {/* Header */}
       <div className="mb-10">
         <h2 className="font-display text-xl font-semibold text-foreground mb-1">
@@ -44,7 +53,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-4 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
         {[
           {
             label: "Active Trials",
@@ -114,7 +123,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Active Experiments */}
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -188,7 +197,7 @@ export default function Dashboard() {
           ) : recentDoctrines.length === 0 ? (
             <div className="border border-dashed border-border rounded-md p-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Doctrines emerge from completed experiments.
+                Principles you've validated through experimentation will appear here.
               </p>
             </div>
           ) : (

@@ -1,77 +1,105 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { queryOne, execute } from '@/lib/db';
-import { createSession, COOKIE_OPTIONS, COOKIE_NAME } from '@/lib/auth/session';
 import bcrypt from 'bcryptjs';
-import { randomUUID } from 'crypto';
+import { queryOne, execute } from '@/lib/db';
+import { createSession, COOKIE_NAME, COOKIE_OPTIONS } from '@/lib/auth/session';
 
-const JWT_SECRET = process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
-
-interface SSOPayload {
-  userId: number | string;
-  username: string;
-  email?: string;
-  sso: boolean;
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('[sso] JWT_SECRET env var is not set — SSO will not work.');
 }
 
-// GET /api/auth/sso?token=...&redirect=...
-// Exchanges a Lumen OS SSO token for a Liminal session.
-// Finds user by email, or creates a shadow account if none exists.
-// Links lumen_user_id so cross-app feeds work.
+/**
+ * GET /api/auth/sso?token=<lumen_sso_token>
+ *
+ * Validates the short-lived (2 min) SSO token issued by Lumen,
+ * finds or creates a Liminal user whose email is `<username>@lumen.sso`,
+ * creates a new session, sets the liminal_session cookie, and redirects
+ * the browser to the app root.
+ */
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const token = searchParams.get('token');
-  const redirect = searchParams.get('redirect');
+  const token = request.nextUrl.searchParams.get('token');
 
   if (!token) {
-    return NextResponse.json({ error: 'Missing token' }, { status: 400 });
+    return NextResponse.json({ error: 'Missing SSO token' }, { status: 400 });
   }
 
+  if (!JWT_SECRET) {
+    return NextResponse.json({ error: 'SSO not configured' }, { status: 503 });
+  }
+
+  let payload: { userId: number; username: string; email?: string | null; sso: boolean };
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as SSOPayload;
+    payload = jwt.verify(token, JWT_SECRET) as typeof payload;
+  } catch {
+    return NextResponse.json(
+      { error: 'SSO token expired or invalid. Return to Lumen and try again.' },
+      { status: 401 }
+    );
+  }
 
-    if (!payload.sso || !payload.email) {
-      return NextResponse.json({ error: 'Invalid SSO token' }, { status: 400 });
-    }
+  if (!payload.sso || !payload.username) {
+    return NextResponse.json({ error: 'Invalid SSO token' }, { status: 400 });
+  }
 
-    // Find existing user by email
+  // Use the real Lumen email if present so we find the user's existing Liminal
+  // account. Fall back to a synthetic email only for users who registered in
+  // Lumen with a different email than their Liminal account (rare edge case).
+  const ssoEmail =
+    payload.email && !payload.email.endsWith('@lumen.sso')
+      ? payload.email.toLowerCase().trim()
+      : `${payload.username.toLowerCase()}@lumen.sso`;
+
+  try {
+    // Find existing SSO-linked user
     let user = await queryOne<{ id: string }>(
-      `SELECT id FROM users WHERE email = $1`,
-      [payload.email]
+      'SELECT id FROM users WHERE email = $1',
+      [ssoEmail]
     );
 
+    // Create one on first sign-in
     if (!user) {
-      // Create a shadow account — no real password needed for SSO users
-      const randomHash = await bcrypt.hash(randomUUID(), 4);
+      const randomHash = await bcrypt.hash(crypto.randomUUID(), 10);
       user = await queryOne<{ id: string }>(
-        `INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id`,
-        [payload.email, randomHash]
+        `INSERT INTO users (email, password_hash, role, plan)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id`,
+        [ssoEmail, randomHash, 'user', 'open']
       );
     }
 
     if (!user) {
-      return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+      throw new Error('Failed to find or create SSO user');
     }
 
-    // Link lumen_user_id (idempotent)
-    await execute(
-      `UPDATE users SET lumen_user_id = $1 WHERE id = $2`,
-      [String(payload.userId), user.id]
-    );
+    // Persist the Lumen userId so epistemic events can reference it
+    if (payload.userId) {
+      await execute(
+        `UPDATE users SET lumen_user_id = $1 WHERE id = $2`,
+        [String(payload.userId), user.id]
+      );
+    }
 
-    // Create session + set cookie
+    // Create session (UUID token stored in auth_sessions table)
     const sessionToken = await createSession(user.id);
 
-    const dest = redirect && redirect.startsWith('/') ? redirect : '/';
-    const response = NextResponse.redirect(new URL(dest, request.url));
+    // Build the redirect URL from Railway's forwarded headers.
+    // Both request.url and request.nextUrl resolve to localhost:8080 inside
+    // the container — the real public host lives in x-forwarded-host.
+    const proto = request.headers.get('x-forwarded-proto') ?? 'https';
+    const host =
+      request.headers.get('x-forwarded-host') ??
+      request.headers.get('host') ??
+      'liminal-app.up.railway.app';
+    const response = NextResponse.redirect(`${proto}://${host}/`);
     response.cookies.set(COOKIE_NAME, sessionToken, COOKIE_OPTIONS);
 
     return response;
   } catch (err) {
-    console.error('[liminal/sso] token error:', err);
+    console.error('[sso]', err);
     return NextResponse.json(
-      { error: 'Invalid or expired token. Please re-enter from Lumen.' },
-      { status: 401 }
+      { error: 'SSO authentication failed. Please try again.' },
+      { status: 500 }
     );
   }
 }

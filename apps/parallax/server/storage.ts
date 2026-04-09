@@ -269,21 +269,6 @@ export class DatabaseStorage implements IStorage {
     } catch { /* already exists */ }
     try { sqlite.exec("ALTER TABLE users ADD COLUMN pro INTEGER DEFAULT 0"); } catch { /* already exists */ }
     try { sqlite.exec("ALTER TABLE users ADD COLUMN lumen_user_id TEXT"); } catch { /* already exists */ }
-
-    // One-time flush: liminal_sessions created before voice-transform fix (2026-04-08)
-    // are in the wrong grammatical person. Delete them + their synthetic checkins/writings.
-    // This is safe — it only touches cross-talk records, not user-authored data.
-    try {
-      const stale = sqlite.prepare(
-        `SELECT id, checkin_id, writing_id FROM liminal_sessions WHERE created_at < '2026-04-09T00:00:00'`
-      ).all() as { id: number; checkin_id: number | null; writing_id: number | null }[];
-      for (const s of stale) {
-        if (s.checkin_id) sqlite.prepare('DELETE FROM checkins WHERE id = ?').run(s.checkin_id);
-        if (s.writing_id) sqlite.prepare('DELETE FROM writings WHERE id = ?').run(s.writing_id);
-        sqlite.prepare('DELETE FROM liminal_sessions WHERE id = ?').run(s.id);
-      }
-      if (stale.length > 0) console.log(`[migration] Flushed ${stale.length} pre-fix liminal cross-talk entries`);
-    } catch (e) { console.error('[migration] liminal_sessions flush error (non-fatal):', e); }
   }
 
   // ---- User methods ----
@@ -291,12 +276,6 @@ export class DatabaseStorage implements IStorage {
   // were added via ALTER TABLE and Drizzle's schema doesn't know about them.
   getUserByUsername(username: string): User | undefined {
     const row = sqlite.prepare("SELECT * FROM users WHERE username = ?").get(username) as any;
-    if (!row) return undefined;
-    return { ...row, pro: !!row.pro, calibrated: !!row.calibrated } as User;
-  }
-
-  getUserByEmail(email: string): User | undefined {
-    const row = sqlite.prepare("SELECT * FROM users WHERE email = ?").get(email) as any;
     if (!row) return undefined;
     return { ...row, pro: !!row.pro, calibrated: !!row.calibrated } as User;
   }
@@ -726,40 +705,6 @@ export class DatabaseStorage implements IStorage {
   updateLiminalSessionIds(id: number, checkinId: number, writingId: number): void {
     sqlite.prepare("UPDATE liminal_sessions SET checkin_id = ?, writing_id = ? WHERE id = ?")
       .run(checkinId, writingId, id);
-  }
-
-  deleteLiminalSession(id: number, userId: number): boolean {
-    // Fetch the session first so we can clean up associated records
-    const session = db.select().from(liminalSessions)
-      .where(and(eq(liminalSessions.id, id), eq(liminalSessions.user_id, userId)))
-      .get();
-    if (!session) return false;
-    // Delete associated checkin and writing if they exist
-    if (session.checkin_id) {
-      db.delete(checkins).where(eq(checkins.id, session.checkin_id)).run();
-    }
-    if (session.writing_id) {
-      db.delete(writings).where(eq(writings.id, session.writing_id)).run();
-    }
-    db.delete(liminalSessions).where(eq(liminalSessions.id, id)).run();
-    return true;
-  }
-
-  deleteAllLiminalSessions(userId: number): number {
-    // Get all sessions for this user
-    const sessions = this.getLiminalSessions(userId, 1000);
-    for (const s of sessions) {
-      if (s.checkin_id) {
-        db.delete(checkins).where(eq(checkins.id, s.checkin_id)).run();
-      }
-      if (s.writing_id) {
-        db.delete(writings).where(eq(writings.id, s.writing_id)).run();
-      }
-    }
-    const result = db.delete(liminalSessions)
-      .where(eq(liminalSessions.user_id, userId))
-      .run();
-    return result.changes;
   }
 
   // ---- Account Deletion ----

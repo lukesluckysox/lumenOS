@@ -28,17 +28,13 @@
 
 import { distillText } from './distillText.js';
 
+// ─── Curly quote normalization ──────────────────────────────────────────────
+
+function normalizeCurlyQuotes(text: string): string {
+  return text.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
+}
+
 // ─── Tool-name scrubbing (reused from distillText) ──────────────────────────
-
-const TOOL_NAMES = /\b(Parallax|Liminal|Praxis|Axiom(?:tool)?)\b/gi;
-
-const TOOL_SYNONYMS: Record<string, string> = {
-  parallax: 'observation',
-  liminal:  'reflection',
-  praxis:   'experimentation',
-  axiom:    'conviction',
-  axiomtool: 'conviction',
-};
 
 function scrubToolNames(text: string): string {
   return distillText(text);
@@ -51,9 +47,13 @@ function scrubToolNames(text: string): string {
  * Used when cross-talk text needs to arrive as the user's own voice.
  */
 function youToI(text: string): string {
-  let result = text;
+  let result = normalizeCurlyQuotes(text);
 
   // Ordered: longer / more specific phrases first to avoid partial matches
+
+  // "you're" → "I'm"
+  result = result.replace(/\bYou're\b/g, "I'm");
+  result = result.replace(/\byou're\b/g, "I'm");
 
   // "you are" → "I am"
   result = result.replace(/\bYou are\b/g, 'I am');
@@ -154,7 +154,11 @@ function youToI(text: string): string {
   // Generic remaining "you" as subject → "I"  (only at start of sentence or after punctuation)
   result = result.replace(/(?<=^|[.!?]\s+)You\b/gm, 'I');
 
-  // "yourself" → "myself"
+  // Mid-sentence "you" (as object/subject not caught above) → "I"
+  // Catches: "how you see", "what you do", "that you", etc.
+  result = result.replace(/\byou\b/gi, 'I');
+
+  // "yourself" → "myself" (after "you" → "I" so "you see yourself" → "I see myself")
   result = result.replace(/\byourself\b/gi, 'myself');
 
   // "your" → "my" (possessive)
@@ -169,7 +173,7 @@ function youToI(text: string): string {
  * Used for backend logging / provenance metadata only.
  */
 function iToProvenance(text: string): string {
-  let result = text;
+  let result = normalizeCurlyQuotes(text);
 
   result = result.replace(/\bI am\b/gi, 'user states they are');
   result = result.replace(/\bI('m)\b/gi, 'user is');

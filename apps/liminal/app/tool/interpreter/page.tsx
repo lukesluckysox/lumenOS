@@ -25,12 +25,13 @@ export default async function InterpreterPage() {
             tagline: 'Hold a symbol beneath multiple lights.',
             inputLabel: 'The dream, symbol, or recurring pattern',
             inputPlaceholder:
-              'Describe a dream, a symbol that has stayed with you, or a pattern you keep encountering. Describe it as fully as you can — context, texture, feelings, what stood out. The Interpreter will apply five analytical lenses simultaneously.',
+              'Describe the dream, symbol, or pattern.',
             inputFieldName: 'symbol',
             minLength: 20,
             submitLabel: 'Begin the interpretation',
             processingLabel: 'The Interpreter is reading the symbol…',
             accentHue: ACCENT,
+            cardBorderColor: '#7a6b8a',
             preamble: (
               <div
                 style={{
