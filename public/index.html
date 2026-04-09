@@ -320,6 +320,9 @@
       border: 1.5px solid transparent;
       cursor: pointer;
       flex-shrink: 0;
+      padding: 0;
+      display: inline-block;
+      box-sizing: border-box;
       transition: transform .15s var(--ease), box-shadow .15s var(--ease), border-color .15s var(--ease);
       position: relative;
     }
@@ -1562,6 +1565,32 @@
     .pipeline__row-status--off  { color: var(--faint); }
 
     /* ─────────────────────────────────────────────
+       COCKPIT BAR — top bar when logged in
+    ───────────────────────────────────────────── */
+    .cockpit-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.4rem 1.5rem;
+      background: var(--surface);
+      border-bottom: 1px solid rgba(141,153,174,0.08);
+      font-family: 'Satoshi', sans-serif;
+    }
+    .cockpit-bar--visible {
+      display: flex;
+    }
+    .cockpit-bar__left {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-4);
+    }
+    .cockpit-bar__right {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-4);
+    }
+
+    /* ─────────────────────────────────────────────
        COCKPIT — ACTIVITY FEED
     ───────────────────────────────────────────── */
     .feed-band {
@@ -1960,33 +1989,24 @@
      NAV
 ═══════════════════════════════════════════╗ -->
 <header>
+  <div class="cockpit-bar" id="cockpit-bar">
+    <div class="cockpit-bar__left">
+      <!-- Pipeline health moved here by JS on login -->
+    </div>
+    <div class="cockpit-bar__right">
+      <!-- Palette dots, theme toggle, username moved here by JS on login -->
+    </div>
+  </div>
   <nav class="nav" id="nav" aria-label="Main navigation">
     <div class="wrap nav__row">
 
       <a href="#" class="nav__brand" aria-label="Lumen home">
-        <!-- Lumen mark — radiant light source -->
-        <svg width="24" height="24" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width=".5" opacity=".18"/>
-          <!-- Cardinal rays -->
-          <line x1="16" y1="2"  x2="16" y2="8"  stroke="#FFD166" stroke-width="1.2" stroke-linecap="round" opacity=".9"/>
-          <line x1="30" y1="16" x2="24" y2="16" stroke="currentColor" stroke-width=".7" stroke-linecap="round" opacity=".3"/>
-          <line x1="16" y1="30" x2="16" y2="24" stroke="currentColor" stroke-width=".7" stroke-linecap="round" opacity=".3"/>
-          <line x1="2"  y1="16" x2="8"  y2="16" stroke="currentColor" stroke-width=".7" stroke-linecap="round" opacity=".3"/>
-          <!-- Diagonal rays (shorter) -->
-          <line x1="5.6"  y1="5.6"  x2="9.5"  y2="9.5"  stroke="currentColor" stroke-width=".5" opacity=".18"/>
-          <line x1="26.4" y1="5.6"  x2="22.5" y2="9.5"  stroke="currentColor" stroke-width=".5" opacity=".18"/>
-          <line x1="5.6"  y1="26.4" x2="9.5"  y2="22.5" stroke="currentColor" stroke-width=".5" opacity=".18"/>
-          <line x1="26.4" y1="26.4" x2="22.5" y2="22.5" stroke="currentColor" stroke-width=".5" opacity=".18"/>
-          <!-- Centre -->
-          <circle cx="16" cy="16" r="4"   fill="#FFD166" opacity=".7"/>
-          <circle cx="16" cy="16" r="2.2" fill="#FFD166" opacity=".95"/>
-        </svg>
         <span class="nav__name"><svg class="lumen-loop-inline" width="18" height="18" viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M32 4C47.46 4 60 16.54 60 32S47.46 60 32 60" stroke="#FFD166" stroke-width="1.6" stroke-linecap="round" opacity=".6"/><path d="M32 60C16.54 60 4 47.46 4 32S16.54 4 32 4" stroke="#FFD166" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="4 3" opacity=".25"/><circle cx="32" cy="4" r="2.5" fill="#FFD166" opacity=".8"/><line x1="32" y1="14" x2="32" y2="22" stroke="#FFD166" stroke-width="1.4" stroke-linecap="round" opacity=".7"/><line x1="50" y1="32" x2="42" y2="32" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".2"/><line x1="32" y1="50" x2="32" y2="42" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".2"/><line x1="14" y1="32" x2="22" y2="32" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".2"/><circle cx="32" cy="32" r="5" fill="#FFD166" opacity=".5"/><circle cx="32" cy="32" r="3" fill="#FFD166" opacity=".8"/><circle cx="32" cy="32" r="1.5" fill="#FFD166"/></svg>Lumen</span>
       </a>
 
       <ul class="nav__links" role="list">
         <li><a href="#tools"  class="nav__link">Tools</a></li>
-        <li><a href="#loop"   class="nav__link">System</a></li>
+        <li><a href="#cockpit"   class="nav__link">System</a></li>
         <li><a href="#close"  class="nav__link">Philosophy</a></li>
       </ul>
 
@@ -2310,8 +2330,9 @@
 
 
 <!-- ╔══════════════════════════════════════════
-     LOOP
+     LOOP (moved to About page — content preserved)
 ═══════════════════════════════════════════╗ -->
+<div id="about-content" style="display:none">
 <section class="section loop-band" id="loop" aria-label="The system loop">
   <div class="wrap">
 
@@ -2371,9 +2392,7 @@
 
   </div>
 </section>
-
-
-
+</div><!-- /about-content -->
 
 
 <!-- ╔══════════════════════════════════════════
@@ -2417,9 +2436,10 @@
      FOOTER
 ═══════════════════════════════════════════╗ -->
 <footer class="footer">
-  <div class="wrap footer__row">
+  <div class="wrap footer__row" style="flex-wrap:wrap;">
     <span class="footer__brand"><svg class="lumen-loop-inline" width="18" height="18" viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M32 4C47.46 4 60 16.54 60 32S47.46 60 32 60" stroke="#FFD166" stroke-width="1.6" stroke-linecap="round" opacity=".6"/><path d="M32 60C16.54 60 4 47.46 4 32S16.54 4 32 4" stroke="#FFD166" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="4 3" opacity=".25"/><circle cx="32" cy="4" r="2.5" fill="#FFD166" opacity=".8"/><line x1="32" y1="14" x2="32" y2="22" stroke="#FFD166" stroke-width="1.4" stroke-linecap="round" opacity=".7"/><line x1="50" y1="32" x2="42" y2="32" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".2"/><line x1="32" y1="50" x2="32" y2="42" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".2"/><line x1="14" y1="32" x2="22" y2="32" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".2"/><circle cx="32" cy="32" r="5" fill="#FFD166" opacity=".5"/><circle cx="32" cy="32" r="3" fill="#FFD166" opacity=".8"/><circle cx="32" cy="32" r="1.5" fill="#FFD166"/></svg>Lumen</span>
     <span class="footer__tag">An operating system for the examined life.</span>
+    <a href="#" class="footer__about" id="footer-about" style="font-family:'Satoshi',sans-serif; font-size:var(--text-xs); color:var(--muted); text-decoration:none; letter-spacing:0.08em; text-transform:uppercase; transition:color 0.2s; opacity:0.7;">About</a>
   </div>
 </footer>
 
@@ -2495,8 +2515,36 @@
     loadSensitivity();
     loadCockpit();
     loadPipelineHealth();
-    var pipeEl = document.getElementById('pipeline');
-    if (pipeEl) pipeEl.classList.add('pipeline--visible');
+
+    // Move elements into cockpit bar (pipeline left, palette+user right)
+    var cockpitBar = document.getElementById('cockpit-bar');
+    if (cockpitBar) {
+      var barLeft  = cockpitBar.querySelector('.cockpit-bar__left');
+      var barRight = cockpitBar.querySelector('.cockpit-bar__right');
+
+      // Pipeline → left
+      var pipeEl = document.getElementById('pipeline');
+      if (pipeEl && barLeft) {
+        barLeft.appendChild(pipeEl);
+        pipeEl.classList.add('pipeline--visible');
+      }
+
+      // Palette dots, theme toggle, user → right
+      var paletteDots = document.querySelector('.nav__right .palette-dots');
+      var themeToggle = document.querySelector('[data-theme-toggle]');
+      var navUser     = document.getElementById('nav-user');
+      if (barRight) {
+        if (paletteDots)  barRight.appendChild(paletteDots);
+        if (themeToggle)  barRight.appendChild(themeToggle);
+        if (navUser)      barRight.appendChild(navUser);
+      }
+
+      cockpitBar.classList.add('cockpit-bar--visible');
+    }
+
+    // Hide the "Enter" button since user is already logged in
+    var enterBtn = document.querySelector('.btn-ghost');
+    if (enterBtn) enterBtn.style.display = 'none';
   }
 
   function showForm() {
@@ -3005,6 +3053,39 @@ async function setSensitivity(val) {
   requestAnimationFrame(() =>
     setTimeout(() => document.querySelectorAll('.hero .up').forEach(el => el.classList.add('in')), 80)
   );
+})();
+
+/* ── About page modal ── */
+(function() {
+  var aboutLink = document.getElementById('footer-about');
+  if (!aboutLink) return;
+
+  var modal = document.createElement('div');
+  modal.id = 'about-modal';
+  modal.style.cssText = 'display:none; position:fixed; inset:0; z-index:9999; background:var(--bg); overflow-y:auto; padding:3rem 1.5rem;';
+
+  var closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '← Back';
+  closeBtn.style.cssText = 'position:sticky; top:0; background:var(--bg); border:none; color:var(--muted); font-family:Satoshi,sans-serif; font-size:var(--text-sm); cursor:pointer; padding:0.75rem 0; margin-bottom:1rem; display:block; z-index:1;';
+  closeBtn.addEventListener('click', function() { modal.style.display = 'none'; document.body.style.overflow = ''; });
+  modal.appendChild(closeBtn);
+
+  var aboutContent = document.getElementById('about-content');
+  if (aboutContent) {
+    var clone = aboutContent.cloneNode(true);
+    clone.style.display = 'block';
+    clone.removeAttribute('id');
+    modal.appendChild(clone);
+  }
+
+  document.body.appendChild(modal);
+
+  aboutLink.addEventListener('click', function(e) {
+    e.preventDefault();
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    modal.scrollTop = 0;
+  });
 })();
 </script>
 
