@@ -39,7 +39,7 @@ export function registerRoutes(httpServer: Server, app: Express) {
   // ─── Internal: push from Parallax pattern detection ───────────────────────
   app.post('/api/internal/from-parallax', (req: any, res: any) => {
     const token = req.headers['x-lumen-internal-token'];
-    const expected = process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    const expected = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
     if (!token || token !== expected) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -112,7 +112,7 @@ export function registerRoutes(httpServer: Server, app: Express) {
   // ─── Internal: push from Lumen epistemic queue ───────────────────────────────
   app.post('/api/internal/from-lumen', (req: any, res: any) => {
     const token = req.headers['x-lumen-internal-token'];
-    const expected = process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    const expected = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
     if (!token || token !== expected) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
