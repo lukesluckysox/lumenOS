@@ -13,6 +13,30 @@ if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
 const COOKIE_NAME   = 'lumen-session';
 const COOKIE_MAXAGE = 30 * 24 * 60 * 60 * 1000; // 30 days
 
+// ─── Cross-app SSO link ─────────────────────────────────────────────────────
+// After login/register, silently link the user to Parallax (and other sub-apps)
+// so epistemic event emission works immediately.
+
+const PARALLAX_API_URL     = process.env.PARALLAX_API_URL || 'https://parallax-production.up.railway.app';
+const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN || '';
+
+function linkSubApps(userId: number, username: string): void {
+  if (!LUMEN_INTERNAL_TOKEN) return;
+
+  // Fire-and-forget: link Parallax
+  fetch(`${PARALLAX_API_URL}/api/internal/link-user`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-lumen-internal-token': LUMEN_INTERNAL_TOKEN,
+    },
+    body: JSON.stringify({ username, lumenUserId: String(userId) }),
+    signal: AbortSignal.timeout(5000),
+  })
+    .then(r => { if (!r.ok) console.error('[sso-link] Parallax link failed:', r.status); })
+    .catch(e => console.error('[sso-link] Parallax link error:', e.message));
+}
+
 function cookieOpts() {
   return {
     httpOnly: true,
@@ -66,6 +90,9 @@ router.post('/register', async (req: Request, res: Response) => {
     const token = signToken(result.id, result.username);
     res.cookie(COOKIE_NAME, token, cookieOpts());
 
+    // Link sub-apps (fire-and-forget)
+    linkSubApps(result.id, result.username);
+
     return res.status(201).json({ username: result.username });
   } catch (err) {
     console.error('[auth/register]', err);
@@ -101,6 +128,9 @@ router.post('/login', async (req: Request, res: Response) => {
 
     const token = signToken(user.id, user.username);
     res.cookie(COOKIE_NAME, token, cookieOpts());
+
+    // Link sub-apps (fire-and-forget)
+    linkSubApps(user.id, user.username);
 
     return res.json({ username: user.username });
   } catch (err) {
