@@ -74,7 +74,7 @@ function TensionCard({ tension, onDelete }: { tension: Tension; onDelete: (id: n
             </span>
             <div className="flex items-center gap-4">
               <a
-                href="https://praxis-production-da89.up.railway.app"
+                href="https://praxis-app.up.railway.app"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}

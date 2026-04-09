@@ -9,7 +9,7 @@ import { routeToLiminalTool, toolToPromptType } from '../services/liminalRouter.
 const LIMINAL_API_URL = process.env.LIMINAL_API_URL || 'https://liminal-app.up.railway.app';
 
 const AXIOM_API_URL = process.env.AXIOM_API_URL || 'https://axiomtool-production.up.railway.app';
-const PRAXIS_API_URL = process.env.PRAXIS_API_URL || 'https://praxis-production-da89.up.railway.app';
+const PRAXIS_API_URL = process.env.PRAXIS_API_URL || 'https://praxis-app.up.railway.app';
 const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN || '';
 
 function confidenceToText(score: number): string {

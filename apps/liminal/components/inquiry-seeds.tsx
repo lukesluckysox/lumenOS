@@ -26,7 +26,7 @@ const SOURCE_LABELS: Record<string, string> = {
 const SOURCE_URLS: Record<string, string> = {
   axiom:   'https://axiomtool-production.up.railway.app',
   parallax: 'https://parallaxapp.up.railway.app',
-  praxis:  'https://praxis-production-da89.up.railway.app',
+  praxis:  'https://praxis-app.up.railway.app',
 };
 
 const SOURCE_CTAS: Record<string, string> = {

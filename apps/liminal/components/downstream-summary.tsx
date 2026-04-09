@@ -20,7 +20,7 @@ const DESTINATION_LABELS: Record<string, string> = {
 const DESTINATION_URLS: Record<string, string> = {
   parallax: 'https://parallaxapp.up.railway.app',
   axiom:    'https://axiomtool-production.up.railway.app',
-  praxis:   'https://praxis-production-da89.up.railway.app',
+  praxis:   'https://praxis-app.up.railway.app',
 };
 
 // Simple loop icon (SVG)
