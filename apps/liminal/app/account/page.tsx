@@ -175,6 +175,36 @@ export default async function AccountPage() {
             </section>
           </>
         )}
+        {/* Lumen suite reference */}
+        <hr className="page-rule" style={{ margin: '2rem 0' }} />
+        <section>
+          <p className="eyebrow" style={{ marginBottom: '0.75rem' }}>
+            Part of Lumen
+          </p>
+          <p
+            style={{
+              fontSize: 'clamp(0.8125rem, 0.76rem + 0.18vw, 0.875rem)',
+              color: 'rgb(var(--color-text-muted))',
+              lineHeight: 1.65,
+              maxWidth: '44ch',
+              marginBottom: '1rem',
+            }}
+          >
+            What you explore here surfaces as patterns, experiments, and principles
+            across the suite.
+          </p>
+          <a
+            href="https://lumen-os.up.railway.app"
+            style={{
+              fontSize: 'clamp(0.8125rem, 0.76rem + 0.18vw, 0.875rem)',
+              color: 'rgb(var(--color-gold) / 0.65)',
+              textDecoration: 'none',
+              borderBottom: '1px solid rgb(var(--color-gold) / 0.15)',
+            }}
+          >
+            Open Lumen &rarr;
+          </a>
+        </section>
       </main>
     </>
   );

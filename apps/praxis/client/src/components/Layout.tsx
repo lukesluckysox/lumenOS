@@ -104,6 +104,14 @@ function SensitivityControl() {
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.username) setUsername(d.username); })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -178,9 +186,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Footer */}
         <div className="px-4 py-3 border-t border-border flex items-center justify-between">
-          <span className="text-xs text-muted-foreground/60 font-mono tracking-wider">
-            PRAXIS / v1
-          </span>
+          {username ? (
+            <Link href="/profile">
+              <span className="text-xs text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors font-mono tracking-wider cursor-pointer">
+                {username}
+              </span>
+            </Link>
+          ) : (
+            <span className="text-xs text-muted-foreground/60 font-mono tracking-wider">
+              PRAXIS
+            </span>
+          )}
           <button
             data-testid="button-theme-toggle"
             onClick={toggleTheme}

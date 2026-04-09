@@ -14,6 +14,7 @@ import CoreTensions from "@/pages/CoreTensions";
 import Revisions from "@/pages/Revisions";
 import Constitution from "@/pages/Constitution";
 import NotFound from "@/pages/not-found";
+import Profile from "@/pages/Profile";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<'loading' | 'ok' | 'unauth'>('loading');
@@ -72,6 +73,7 @@ function App() {
                   <Route path="/tensions" component={CoreTensions} />
                   <Route path="/revisions" component={Revisions} />
                   <Route path="/constitution" component={Constitution} />
+                  <Route path="/profile" component={Profile} />
                   <Route component={NotFound} />
                 </Switch>
               </main>

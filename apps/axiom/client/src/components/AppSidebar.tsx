@@ -151,6 +151,14 @@ function ThemeToggle() {
 
 export default function AppSidebar() {
   const [location] = useLocation();
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.username) setUsername(d.username); })
+      .catch(() => {});
+  }, []);
 
   const isActive = (href: string) => {
     if (href === "/") return location === "/" || location === "";
@@ -246,10 +254,17 @@ export default function AppSidebar() {
 
       {/* Footer */}
       <div className="px-5 pb-6">
-        <div className="text-[10px] text-sidebar-foreground/25 font-mono uppercase tracking-wider leading-relaxed">
-          AXIOM OS<br />
-          Synthesis Layer
-        </div>
+        {username ? (
+          <Link href="/profile">
+            <div className="text-[10px] text-sidebar-foreground/35 hover:text-sidebar-foreground/60 transition-colors font-mono uppercase tracking-wider cursor-pointer">
+              {username}
+            </div>
+          </Link>
+        ) : (
+          <div className="text-[10px] text-sidebar-foreground/25 font-mono uppercase tracking-wider leading-relaxed">
+            AXIOM
+          </div>
+        )}
       </div>
     </aside>
   );
