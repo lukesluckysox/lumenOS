@@ -47,18 +47,38 @@ export function Nav({ user }: NavProps) {
           justifyContent: 'space-between',
         }}
       >
-        {/* Logo */}
-        <Link
-          href="/"
-          style={{
-            color: 'rgb(var(--color-text))',
-            textDecoration: 'none',
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <LiminalWordmark />
-        </Link>
+        {/* Logo + Lumen return */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <a
+            href="https://lumen-os.up.railway.app"
+            style={{
+              color: 'rgb(var(--color-text-faint))',
+              textDecoration: 'none',
+              fontSize: '0.7rem',
+              letterSpacing: '0.06em',
+              opacity: 0.5,
+              transition: 'opacity 0.15s ease',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.5')}
+          >
+            ◁ Lumen
+          </a>
+          <Link
+            href="/"
+            style={{
+              color: 'rgb(var(--color-text))',
+              textDecoration: 'none',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <LiminalWordmark />
+          </Link>
+        </div>
 
         {/* Right side */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>

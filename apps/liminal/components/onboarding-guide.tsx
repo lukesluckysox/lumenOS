@@ -181,6 +181,18 @@ export function OnboardingGuide({ compact = false }: OnboardingGuideProps) {
             onDismiss={() => setPhase('dismissed')}
             selectedId={null}
           />
+
+          <p
+            style={{
+              fontSize: 'clamp(0.75rem, 0.7rem + 0.18vw, 0.8125rem)',
+              color: 'rgb(var(--color-text-faint))',
+              marginTop: '0.25rem',
+              maxWidth: '48ch',
+              lineHeight: 1.55,
+            }}
+          >
+            What you explore here surfaces as patterns, experiments, and principles across Lumen.
+          </p>
         </>
       )}
 

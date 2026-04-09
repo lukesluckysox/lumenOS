@@ -164,18 +164,26 @@ export default function AppSidebar() {
       data-testid="app-sidebar"
     >
       {/* Logo / Brand */}
-      <div className="flex items-center gap-3 px-5 pt-7 pb-6">
-        <span className="text-sidebar-foreground/60">
-          <AxiomLogo />
-        </span>
-        <div>
-          <div
-            className="text-sidebar-foreground font-mono text-sm font-medium tracking-widest-constitutional uppercase"
-          >
-            AXIOM
-          </div>
-          <div className="text-sidebar-foreground/35 text-[10px] tracking-wider font-mono uppercase mt-0.5">
-            Synthesis Layer
+      <div className="px-5 pt-7 pb-6">
+        <a
+          href="https://lumen-os.up.railway.app"
+          className="text-sidebar-foreground/25 hover:text-sidebar-foreground/50 transition-colors text-[9px] font-mono tracking-wider uppercase mb-3 block"
+        >
+          ◁ Lumen
+        </a>
+        <div className="flex items-center gap-3">
+          <span className="text-sidebar-foreground/60">
+            <AxiomLogo />
+          </span>
+          <div>
+            <div
+              className="text-sidebar-foreground font-mono text-sm font-medium tracking-widest-constitutional uppercase"
+            >
+              AXIOM
+            </div>
+            <div className="text-sidebar-foreground/35 text-[10px] tracking-wider font-mono uppercase mt-0.5">
+              Synthesis Layer
+            </div>
           </div>
         </div>
       </div>

@@ -55,8 +55,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#191b2a', color: '#F4F5F8', fontFamily: 'sans-serif', padding: '1.5rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2.5rem 2rem', border: '1px solid rgba(255,209,102,0.1)', borderRadius: '8px', background: 'rgba(255,255,255,0.02)' }}>
           <p style={{ color: '#c4943e', fontSize: '0.75rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 600 }}>Praxis</p>
-          <p style={{ color: '#C8CCD5', fontSize: '1rem' }}>Authentication required</p>
-          <p style={{ color: '#8D99AE', fontSize: '0.875rem' }}>Open Praxis through Lumen</p>
+          <p style={{ color: '#C8CCD5', fontSize: '1rem' }}>The laboratory opens from within Lumen.</p>
+          <p style={{ color: '#8D99AE', fontSize: '0.8rem', maxWidth: '28ch', textAlign: 'center', lineHeight: 1.5 }}>Where your reflections become testable experiments.</p>
           <a href="https://lumen-os.up.railway.app" style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#FFD166', textDecoration: 'none', letterSpacing: '0.05em', border: '1px solid rgba(255,209,102,0.3)', padding: '0.75rem 1.5rem', borderRadius: '6px', minHeight: '44px', display: 'inline-flex', alignItems: 'center' }}>
             Go to Lumen →
           </a>

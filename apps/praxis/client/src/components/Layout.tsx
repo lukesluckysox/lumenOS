@@ -110,15 +110,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside className="hidden md:flex w-60 flex-shrink-0 flex-col border-r border-border">
         {/* Brand */}
-        <div className="flex items-center gap-3 px-5 py-5 border-b border-border">
-          <PraxisLogo />
-          <div>
-            <h1 className="font-display text-lg font-semibold text-foreground leading-none tracking-tight">
-              Praxis
-            </h1>
-            <p className="text-xs text-muted-foreground mt-0.5 leading-none">
-              Laboratory of the Self
-            </p>
+        <div className="px-5 py-5 border-b border-border">
+          <a
+            href="https://lumen-os.up.railway.app"
+            className="text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors text-[10px] font-mono tracking-wider uppercase mb-2 block"
+          >
+            ◁ Lumen
+          </a>
+          <div className="flex items-center gap-3">
+            <PraxisLogo />
+            <div>
+              <h1 className="font-display text-lg font-semibold text-foreground leading-none tracking-tight">
+                Praxis
+              </h1>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-none">
+                Laboratory of the Self
+              </p>
+            </div>
           </div>
         </div>
 
