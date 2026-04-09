@@ -1975,8 +1975,8 @@
       <div class="gate__panel" id="panel-login" role="tabpanel">
         <form id="form-login" novalidate>
           <div class="gate__field">
-            <label for="login-email" class="sr-only">Email</label>
-            <input type="email" id="login-email" class="gate__input" placeholder="Email" autocomplete="email" />
+            <label for="login-email" class="sr-only">Username or email</label>
+            <input type="text" id="login-email" class="gate__input" placeholder="Username or email" autocomplete="username" />
           </div>
           <div class="gate__field">
             <label for="login-password" class="sr-only">Password</label>
@@ -2185,7 +2185,7 @@
      COCKPIT — authenticated user modules
      Hidden by default; JS reveals after auth.
 ═══════════════════════════════════════════╗ -->
-<div id="cockpit" class="cockpit" aria-label="Personal epistemic cockpit">
+<div id="cockpit" class="cockpit" aria-label="Personal observation cockpit">
 
   <!-- A. System State -->
   <section class="state-band" id="cockpit-state" aria-label="Current state">
@@ -2271,7 +2271,7 @@
   <div class="wrap">
     <div class="section__head">
       <span class="section__eye">The Architecture</span>
-      <h2 class="section__title">Four instruments.<br>One epistemic loop.</h2>
+      <h2 class="section__title">Four instruments.<br>One recursive loop.</h2>
       <p class="section__desc">Each tool operates independently, but their power is in sequence. Together they close a system of reflective inquiry — one that spirals toward earned understanding, not comfortable answers.</p>
     </div>
   </div>
@@ -2353,7 +2353,7 @@
     <div style="border:1px solid rgba(141,153,174,0.15); border-radius:6px; padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem;">
       <div>
         <div style="font-family:monospace; font-size:10px; letter-spacing:0.12em; color:var(--muted); text-transform:uppercase; margin-bottom:0.25rem;">Loop Sensitivity</div>
-        <div style="font-size:12px; color:var(--muted); opacity:0.6;">Controls how readily the epistemic loop promotes signals to candidates</div>
+        <div style="font-size:12px; color:var(--muted); opacity:0.6;">Controls how readily the loop promotes signals to candidates</div>
       </div>
       <div style="display:flex; gap:0.375rem; flex-shrink:0;" id="sensitivityPills">
         <button class="sens-pill" data-val="low"    onclick="setSensitivity('low')"    style="font-family:monospace; font-size:10px; letter-spacing:0.1em; padding:0.35rem 0.75rem; border-radius:4px; border:1px solid rgba(141,153,174,0.25); background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; text-transform:uppercase;">LOW</button>
@@ -2629,7 +2629,7 @@
       e.preventDefault();
       var email    = document.getElementById('login-email').value.trim();
       var password = document.getElementById('login-password').value;
-      if (!email || !password) { showError('Email and password required.'); return; }
+      if (!email || !password) { showError('Username or email and password required.'); return; }
 
       var btn = formLogin.querySelector('.gate__submit');
       btn.disabled = true;

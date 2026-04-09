@@ -6,7 +6,10 @@ import { db, users } from '../db';
 
 const router = Router();
 
-const JWT_SECRET    = process.env.JWT_SECRET || 'lumen-dev-secret-CHANGE-IN-PRODUCTION';
+const JWT_SECRET = process.env.JWT_SECRET || 'lumen-dev-secret-CHANGE-IN-PRODUCTION';
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('[auth] WARNING: JWT_SECRET env var not set — using dev fallback. SSO will fail if sub-apps use a different secret.');
+}
 const COOKIE_NAME   = 'lumen-session';
 const COOKIE_MAXAGE = 30 * 24 * 60 * 60 * 1000; // 30 days
 
@@ -76,14 +79,15 @@ router.post('/login', async (req: Request, res: Response) => {
   const { email, password } = req.body ?? {};
 
   if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required.' });
+    return res.status(400).json({ error: 'Username or email and password are required.' });
   }
 
   try {
+    const identifier = email.trim().toLowerCase();
     const user = db
       .select()
       .from(users)
-      .where(eq(users.email, email.trim().toLowerCase()))
+      .where(or(eq(users.email, identifier), eq(users.username, identifier)))
       .get();
 
     if (!user) {
