@@ -739,4 +739,88 @@ router.get('/convergence/:userId', requireInternalToken, (req: Request, res: Res
   });
 });
 
+// ─── DELETE /candidates/:id — delete a single candidate ─────────────────────
+
+router.delete('/candidates/:id', (req: Request, res: Response) => {
+  const auth = requireAuth(req, res);
+  if (!auth) return;
+
+  const { id } = req.params;
+  const result = sqlite
+    .prepare('DELETE FROM epistemic_candidates WHERE id = ? AND user_id = ?')
+    .run(id, auth.userId);
+
+  if (result.changes === 0) {
+    return res.status(404).json({ error: 'Candidate not found.' });
+  }
+  res.json({ deleted: true });
+});
+
+// ─── DELETE /events/:id — delete a single epistemic event ───────────────────
+
+router.delete('/events/:id', (req: Request, res: Response) => {
+  const auth = requireAuth(req, res);
+  if (!auth) return;
+
+  const { id } = req.params;
+  const result = sqlite
+    .prepare('DELETE FROM epistemic_events WHERE id = ? AND user_id = ?')
+    .run(id, auth.userId);
+
+  if (result.changes === 0) {
+    return res.status(404).json({ error: 'Event not found.' });
+  }
+  res.json({ deleted: true });
+});
+
+// ─── DELETE /prompts/:id — delete a single prompt queue item ────────────────
+
+router.delete('/prompts/:id', (req: Request, res: Response) => {
+  const auth = requireAuth(req, res);
+  if (!auth) return;
+
+  const { id } = req.params;
+  const result = sqlite
+    .prepare('DELETE FROM prompt_queue WHERE id = ? AND user_id = ?')
+    .run(id, auth.userId);
+
+  if (result.changes === 0) {
+    return res.status(404).json({ error: 'Prompt not found.' });
+  }
+  res.json({ deleted: true });
+});
+
+// ─── POST /clear/:userId — clear all pipeline entries for cleanup ───────────
+
+router.post('/clear/:userId', (req: Request, res: Response) => {
+  const auth = requireAuth(req, res);
+  if (!auth) return;
+
+  const { userId } = req.params;
+  if (String(auth.userId) !== String(userId)) {
+    return res.status(403).json({ error: 'Forbidden.' });
+  }
+
+  const { scope } = req.body ?? {};
+  // scope: 'candidates', 'events', 'prompts', 'all'
+  let candidatesDeleted = 0;
+  let eventsDeleted = 0;
+  let promptsDeleted = 0;
+
+  if (scope === 'candidates' || scope === 'all') {
+    const r = sqlite.prepare('DELETE FROM epistemic_candidates WHERE user_id = ?').run(userId);
+    candidatesDeleted = r.changes;
+  }
+  if (scope === 'events' || scope === 'all') {
+    const r = sqlite.prepare('DELETE FROM epistemic_events WHERE user_id = ?').run(userId);
+    eventsDeleted = r.changes;
+  }
+  if (scope === 'prompts' || scope === 'all') {
+    const r = sqlite.prepare('DELETE FROM prompt_queue WHERE user_id = ?').run(userId);
+    promptsDeleted = r.changes;
+  }
+
+  res.json({ candidatesDeleted, eventsDeleted, promptsDeleted });
+});
+
 export { router as epistemicRouter };
