@@ -625,54 +625,16 @@
       line-height: 1.75;
     }
 
-    /* Progression chain */
-    .chain {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 0;
-      margin-top: var(--sp-4);
+    /* ── Solar Cockpit ──────────────────────── */
+    .solar-cockpit {
+      position: relative;
+      width: min(480px, 82vw);
+      aspect-ratio: 1;
     }
-
-    .chain__pill {
-      font-family: var(--font-body);
-      font-size: var(--text-xs);
-      font-weight: 500;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: var(--muted);
-      padding: var(--sp-2) var(--sp-5);
-      display: inline-flex;
-      align-items: center;
-      gap: var(--sp-2);
-      transition: all var(--t);
-      white-space: nowrap;
-    }
-    .chain__pill:hover {
-      color: var(--text);
-    }
-    .chain__pill--apex {
-      color: var(--gold);
-    }
-    .chain__pill--apex:hover {
-      color: var(--gold);
-    }
-    .chain__loop-icon {
-      display: inline-block;
-      flex-shrink: 0;
-      opacity: .65;
-      transition: opacity var(--t), transform var(--t);
-    }
-    .chain__pill:hover .chain__loop-icon {
-      opacity: 1;
-      transform: rotate(90deg);
-    }
-
-    .chain__sep {
-      padding: 0 var(--sp-1);
-      color: var(--border-lg);
-      flex-shrink: 0;
+    .solar-cockpit canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
     }
 
     /* Scroll cue */
@@ -2125,44 +2087,14 @@
 
     <!-- Hero mark and kicker removed — single logo in nav bar only -->
 
-    <h1 class="hero__headline up">
+    <!-- Solar Cockpit —— static radial display -->
+    <div class="solar-cockpit up" aria-label="Alignment cockpit — 9 dimensions">
+      <canvas id="solar-canvas" width="840" height="840"></canvas>
+    </div>
+
+    <h1 class="hero__headline up d1">
       Where reflection<br>becomes structure.
     </h1>
-
-    <p class="hero__sub up d1">
-      A four-part operating system for questioning belief, revealing pattern,
-      testing hypothesis, and distilling truth. Not a productivity tool.
-      A constitutional framework for the examined life.
-    </p>
-
-    <!-- Four-tool chain -->
-    <nav class="chain up d2" aria-label="Four-tool progression">
-      <a href="#tools" class="chain__pill">
-        <svg class="chain__loop-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10" stroke-linecap="round"/><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2" stroke-linecap="round" stroke-dasharray="3 3" opacity=".4"/><circle cx="12" cy="2" r="1.5" fill="currentColor" opacity=".8"/></svg>
-        Liminal
-      </a>
-      <span class="chain__sep" aria-hidden="true">
-        <svg width="22" height="1" viewBox="0 0 22 1" fill="none"><line x1="0" y1=".5" x2="17" y2=".5" stroke="currentColor" stroke-opacity=".35"/><path d="M15 -2L21 .5L15 3" stroke="currentColor" stroke-opacity=".35" stroke-width=".9" fill="none"/></svg>
-      </span>
-      <a href="#tools" class="chain__pill">
-        <svg class="chain__loop-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10" stroke-linecap="round"/><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2" stroke-linecap="round" stroke-dasharray="3 3" opacity=".4"/><circle cx="12" cy="2" r="1.5" fill="currentColor" opacity=".8"/></svg>
-        Parallax
-      </a>
-      <span class="chain__sep" aria-hidden="true">
-        <svg width="22" height="1" viewBox="0 0 22 1" fill="none"><line x1="0" y1=".5" x2="17" y2=".5" stroke="currentColor" stroke-opacity=".35"/><path d="M15 -2L21 .5L15 3" stroke="currentColor" stroke-opacity=".35" stroke-width=".9" fill="none"/></svg>
-      </span>
-      <a href="#tools" class="chain__pill">
-        <svg class="chain__loop-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10" stroke-linecap="round"/><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2" stroke-linecap="round" stroke-dasharray="3 3" opacity=".4"/><circle cx="12" cy="2" r="1.5" fill="currentColor" opacity=".8"/></svg>
-        Praxis
-      </a>
-      <span class="chain__sep" aria-hidden="true">
-        <svg width="22" height="1" viewBox="0 0 22 1" fill="none"><line x1="0" y1=".5" x2="17" y2=".5" stroke="currentColor" stroke-opacity=".35"/><path d="M15 -2L21 .5L15 3" stroke="currentColor" stroke-opacity=".35" stroke-width=".9" fill="none"/></svg>
-      </span>
-      <a href="#tools" class="chain__pill chain__pill--apex">
-        <svg class="chain__loop-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD166" stroke-width="1.5" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10" stroke-linecap="round"/><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2" stroke-linecap="round" stroke-dasharray="3 3" opacity=".4"/><circle cx="12" cy="2" r="1.5" fill="#FFD166" opacity=".8"/></svg>
-        Axiom
-      </a>
-    </nav>
 
   </div>
 
@@ -3134,6 +3066,207 @@ async function setSensitivity(val) {
   var navLink = document.getElementById('nav-about-link');
   if (footerLink) footerLink.addEventListener('click', openAbout);
   if (navLink) navLink.addEventListener('click', openAbout);
+})();
+</script>
+
+<!-- ══ Solar Cockpit Canvas ══ -->
+<script>
+(function() {
+  var c = document.getElementById('solar-canvas');
+  if (!c) return;
+  var ctx = c.getContext('2d');
+  var W = c.width, H = c.height;
+  var CX = W / 2, CY = H / 2;
+
+  /* ── palette (monochrome gold) ── */
+  var GOLD      = '#FFD166';
+  var GOLD_DIM  = 'rgba(255,209,102,0.30)';
+  var GOLD_GLOW = 'rgba(255,209,102,0.18)';
+  var GOLD_FAINT= 'rgba(255,209,102,0.08)';
+  var BG        = '#191b2a';
+
+  /* ── layout radii (relative to canvas) ── */
+  var SUN_R     = W * 0.085;  /* center orb */
+  var INNER_R   = W * 0.16;   /* where rays start */
+  var MAX_R     = W * 0.36;   /* full-scale radius for value 1.0 */
+  var LABEL_R   = W * 0.41;   /* dimension label placement */
+
+  /* ── data (all 9 as equal peers) ── */
+  var dims = [
+    { name: 'Clarity',       fed: 0.82, target: 0.90 },
+    { name: 'Groundedness',  fed: 0.75, target: 0.85 },
+    { name: 'Agency',        fed: 0.70, target: 0.88 },
+    { name: 'Vitality',      fed: 0.79, target: 0.85 },
+    { name: 'Connection',    fed: 0.60, target: 0.82 },
+    { name: 'Expression',    fed: 0.74, target: 0.80 },
+    { name: 'Discovery',     fed: 0.86, target: 0.85 },
+    { name: 'Purpose',       fed: 0.65, target: 0.90 },
+    { name: 'Integrity',     fed: 0.68, target: 0.90 }
+  ];
+  var ALIGNMENT = 0.76;
+  var N = dims.length;
+  var STEP = (Math.PI * 2) / N;
+  var OFFSET = -Math.PI / 2; /* 12 o'clock start */
+
+  function valRadius(v) {
+    return INNER_R + (MAX_R - INNER_R) * v;
+  }
+
+  function ptOnRay(angle, r) {
+    return { x: CX + Math.cos(angle) * r, y: CY + Math.sin(angle) * r };
+  }
+
+  /* ── background (transparent — hero atmo shows through) ── */
+  ctx.clearRect(0, 0, W, H);
+
+  /* ── faint reference circles ── */
+  [0.25, 0.5, 0.75, 1.0].forEach(function(v) {
+    ctx.beginPath();
+    ctx.arc(CX, CY, valRadius(v), 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,209,102,0.07)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  /* ── ray axis lines (very faint) ── */
+  for (var i = 0; i < N; i++) {
+    var angle = OFFSET + i * STEP;
+    var pInner = ptOnRay(angle, INNER_R);
+    var pOuter = ptOnRay(angle, MAX_R);
+    ctx.beginPath();
+    ctx.moveTo(pInner.x, pInner.y);
+    ctx.lineTo(pOuter.x, pOuter.y);
+    ctx.strokeStyle = 'rgba(255,209,102,0.10)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  /* ── draw lines for each dimension ── */
+  for (var i = 0; i < N; i++) {
+    var angle = OFFSET + i * STEP;
+    var d = dims[i];
+
+    /* Targeted line — dashed, faint */
+    var tR = valRadius(d.target);
+    var tPerpLen = 14;
+    var tPerpX = Math.cos(angle + Math.PI / 2) * tPerpLen;
+    var tPerpY = Math.sin(angle + Math.PI / 2) * tPerpLen;
+    var tP = ptOnRay(angle, tR);
+    ctx.beginPath();
+    ctx.moveTo(tP.x - tPerpX, tP.y - tPerpY);
+    ctx.lineTo(tP.x + tPerpX, tP.y + tPerpY);
+    ctx.strokeStyle = GOLD_DIM;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* Fed line — solid, bright, glowing */
+    var fR = valRadius(d.fed);
+    var fPerpLen = 14;
+    var fPerpX = Math.cos(angle + Math.PI / 2) * fPerpLen;
+    var fPerpY = Math.sin(angle + Math.PI / 2) * fPerpLen;
+    var fP = ptOnRay(angle, fR);
+
+    /* glow pass */
+    ctx.beginPath();
+    ctx.moveTo(fP.x - fPerpX, fP.y - fPerpY);
+    ctx.lineTo(fP.x + fPerpX, fP.y + fPerpY);
+    ctx.strokeStyle = GOLD_GLOW;
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    /* solid pass */
+    ctx.beginPath();
+    ctx.moveTo(fP.x - fPerpX, fP.y - fPerpY);
+    ctx.lineTo(fP.x + fPerpX, fP.y + fPerpY);
+    ctx.strokeStyle = GOLD;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.9;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    /* ── dimension label ── */
+    var lP = ptOnRay(angle, LABEL_R);
+    ctx.font = '500 17px Satoshi, sans-serif';
+    ctx.fillStyle = 'rgba(255,209,102,0.65)';
+    ctx.textBaseline = 'middle';
+    /* handle text alignment based on position */
+    var angleDeg = ((angle * 180 / Math.PI) % 360 + 360) % 360;
+    var labelX = lP.x;
+    if (angleDeg > 85 && angleDeg < 95) {
+      ctx.textAlign = 'center';
+    } else if (angleDeg > 265 && angleDeg < 275) {
+      ctx.textAlign = 'center';
+    } else if (angleDeg > 90 && angleDeg < 270) {
+      ctx.textAlign = 'right';
+      /* keep right-aligned labels from hitting left edge */
+      var tw = ctx.measureText(d.name).width;
+      if (labelX - tw < 10) labelX = tw + 10;
+    } else {
+      ctx.textAlign = 'left';
+      /* keep left-aligned labels from hitting right edge */
+      var tw2 = ctx.measureText(d.name).width;
+      if (labelX + tw2 > W - 10) labelX = W - tw2 - 10;
+    }
+    ctx.fillText(d.name, labelX, lP.y);
+
+    /* ── small value label near fed line ── */
+    var vP = ptOnRay(angle, fR + 16);
+    ctx.font = '600 13px Satoshi, sans-serif';
+    ctx.fillStyle = 'rgba(255,209,102,0.5)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(d.fed.toFixed(2), vP.x, vP.y);
+  }
+
+  /* ── Alignment Sun (center orb) ── */
+  /* outer glow */
+  var sunGrd = ctx.createRadialGradient(CX, CY, SUN_R * 0.3, CX, CY, SUN_R * 2);
+  sunGrd.addColorStop(0, 'rgba(255,209,102,0.18)');
+  sunGrd.addColorStop(1, 'rgba(255,209,102,0)');
+  ctx.beginPath();
+  ctx.arc(CX, CY, SUN_R * 2, 0, Math.PI * 2);
+  ctx.fillStyle = sunGrd;
+  ctx.fill();
+
+  /* solid orb */
+  var orbGrd = ctx.createRadialGradient(CX, CY - SUN_R * 0.2, 0, CX, CY, SUN_R);
+  orbGrd.addColorStop(0, 'rgba(255,209,102,0.25)');
+  orbGrd.addColorStop(0.7, 'rgba(255,209,102,0.10)');
+  orbGrd.addColorStop(1, 'rgba(255,209,102,0.03)');
+  ctx.beginPath();
+  ctx.arc(CX, CY, SUN_R, 0, Math.PI * 2);
+  ctx.fillStyle = orbGrd;
+  ctx.fill();
+
+  /* orb ring */
+  ctx.beginPath();
+  ctx.arc(CX, CY, SUN_R, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,209,102,0.2)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  /* inner bright ring */
+  ctx.beginPath();
+  ctx.arc(CX, CY, SUN_R * 0.55, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,209,102,0.12)';
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+
+  /* Alignment score */
+  ctx.font = '300 48px Cormorant, serif';
+  ctx.fillStyle = GOLD;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(ALIGNMENT.toFixed(2), CX, CY + 4);
+
+  /* ALIGNMENT label */
+  ctx.font = '500 11px Satoshi, sans-serif';
+  ctx.fillStyle = 'rgba(255,209,102,0.45)';
+  ctx.textBaseline = 'top';
+  ctx.letterSpacing = '0.18em';
+  ctx.fillText('ALIGNMENT', CX, CY + 16);
 })();
 </script>
 
