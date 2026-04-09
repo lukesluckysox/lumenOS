@@ -236,7 +236,7 @@ function computeIntegrity(userId: string): number {
     const convergences = db
       .select()
       .from(epistemicCandidates)
-      .where(sql`${epistemicCandidates.userId} = ${userId} AND ${epistemicCandidates.convergenceGroupId} IS NOT NULL`)
+      .where(sql`${epistemicCandidates.userId} = ${userId} AND convergence_group_id IS NOT NULL`)
       .all();
     const convergenceBonus = Math.min(8, convergences.length * 2);
 
