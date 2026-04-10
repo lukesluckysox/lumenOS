@@ -4,7 +4,8 @@ import { getSession } from '@/lib/auth/session';
 import { queryOne } from '@/lib/db';
 import { runSmallCouncilStreaming } from '@/lib/tools/small-council/orchestrator';
 import { checkAndIncrementUsage } from '@/lib/usage';
-import { emitToParallax, emitToAxiom } from '@/lib/parallaxEmitter';
+import { emitToParallax, emitToAxiom, emitToPraxis } from '@/lib/parallaxEmitter';
+import { emitForSession } from '@/lib/lumenEmitter';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 90;
@@ -88,6 +89,11 @@ export async function POST(req: NextRequest) {
           ]
         );
 
+        // Fire-and-forget: emit base + enriched epistemic events to Lumen
+        if (user.lumen_user_id && session) {
+          emitForSession({ lumenUserId: user.lumen_user_id, sessionId: session.id, toolSlug: 'small-council', inputText: question, summary: output.summary });
+        }
+
         // Collect downstream
         const downstream: { destination: string; description: string }[] = [];
         if (user.lumen_user_id && session) {
@@ -99,12 +105,14 @@ export async function POST(req: NextRequest) {
             structuredOutput: output,
             summary: output.summary || '',
           };
-          const [parallaxResult, axiomResult] = await Promise.all([
+          const [parallaxResult, axiomResult, praxisResult] = await Promise.all([
             emitToParallax(emitPayload),
             emitToAxiom(emitPayload),
+            emitToPraxis(emitPayload),
           ]);
           if (parallaxResult.sent) downstream.push({ destination: parallaxResult.destination, description: parallaxResult.description });
           if (axiomResult.sent) downstream.push({ destination: axiomResult.destination, description: axiomResult.description });
+          if (praxisResult.sent) downstream.push({ destination: praxisResult.destination, description: praxisResult.description });
         }
 
         controller.enqueue(sseEvent('complete', { sessionId: session!.id, downstream }));

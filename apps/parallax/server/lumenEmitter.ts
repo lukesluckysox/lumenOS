@@ -1,12 +1,12 @@
 // server/lumenEmitter.ts
 
-const LUMEN_API_URL = process.env.LUMEN_API_URL;
+const LUMEN_API_URL = (process.env.LUMEN_API_URL || '').replace(/\/+$/, '');  // strip trailing slash
 const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN;
 
 export interface ParallaxLumenEvent {
   userId: string;
   sourceRecordId: string;
-  eventType: "pattern_candidate" | "identity_discrepancy" | "hypothesis_candidate";
+  eventType: "pattern_candidate" | "identity_discrepancy" | "hypothesis_candidate" | "belief_candidate";
   confidence: number;
   salience: number;
   domain?: string;
@@ -31,9 +31,13 @@ export async function emitLumenEvent(event: ParallaxLumenEvent): Promise<void> {
   }
 }
 
-// Pattern signal classifier
-export function classifyParallaxRecord(record: any): Array<{ eventType: "pattern_candidate"|"identity_discrepancy"|"hypothesis_candidate"; confidence: number; salience: number; payload: any }> {
-  const results: Array<{ eventType: "pattern_candidate"|"identity_discrepancy"|"hypothesis_candidate"; confidence: number; salience: number; payload: any }> = [];
+type EmittableEventType = "pattern_candidate" | "identity_discrepancy" | "hypothesis_candidate" | "belief_candidate";
+
+// Pattern signal classifier — enriches records with higher-signal event types.
+// All sensitivity gating happens on Lumen's side (processEvent / epistemicPromotion).
+// This classifier just tags what the record looks like; Lumen decides what to promote.
+export function classifyParallaxRecord(record: any): Array<{ eventType: EmittableEventType; confidence: number; salience: number; payload: any }> {
+  const results: Array<{ eventType: EmittableEventType; confidence: number; salience: number; payload: any }> = [];
 
   // Pattern candidate: repeated occurrence across contexts
   const frequency = record.frequency ?? record.count ?? record.occurrences ?? 1;
@@ -72,5 +76,38 @@ export function classifyParallaxRecord(record: any): Array<{ eventType: "pattern
     });
   }
 
-  return results.filter(r => r.confidence >= 0.4);
+  // No confidence filter here — Lumen's processEvent applies user sensitivity thresholds
+  return results;
 }
+
+// ─── Direct Praxis push ─────────────────────────────────────────────────────
+// When classifyParallaxRecord detects hypothesis_candidates, push them directly
+// to Praxis in addition to going through Lumen's pipeline. Mirrors Liminal's
+// emitToPraxis pattern for lower-latency experiment creation.
+
+const PRAXIS_URL = (process.env.PRAXIS_URL || '').replace(/\/+$/, '');
+
+export function emitToPraxis(userId: string, record: any, signals: Array<{ eventType: EmittableEventType; confidence: number; salience: number; payload: any }>): void {
+  if (!PRAXIS_URL || !LUMEN_INTERNAL_TOKEN) return;
+
+  const hypotheses = signals.filter(s => s.eventType === 'hypothesis_candidate');
+  if (hypotheses.length === 0) return;
+
+  const patterns = hypotheses.map(h => ({
+    type: 'hypothesis' as const,
+    description: h.payload.lever
+      ? `Manipulable lever detected: ${h.payload.lever} (observed ${h.payload.frequency || '?'} times)`
+      : (record.label || record.title || record.description || 'Hypothesis from pattern tracking'),
+    dimensions: h.payload.lever ? [h.payload.lever] : [],
+    confidence: h.confidence,
+  }));
+
+  fetch(`${PRAXIS_URL}/api/internal/from-parallax`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-lumen-internal-token': LUMEN_INTERNAL_TOKEN },
+    body: JSON.stringify({ lumenUserId: userId, patterns }),
+  }).catch(e => {
+    console.error('[LumenEmitter:Parallax→Praxis] Failed:', e);
+  });
+}
+// Railway deploy trigger: 20260409T225638Z

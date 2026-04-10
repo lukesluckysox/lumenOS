@@ -9,7 +9,7 @@ import { getAuthUrl, exchangeCode, refreshAccessToken, spotifyApi } from "./spot
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 import type { InsertIdentityMode } from "@shared/schema";
-import { emitLumenEvent, classifyParallaxRecord } from "./lumenEmitter";
+import { emitLumenEvent, classifyParallaxRecord, emitToPraxis } from "./lumenEmitter";
 import { decisions as decisionsTable, checkins as checkinsTable, users as usersTable } from "@shared/schema";
 import { computeMixture, topArchetype } from "@shared/archetype-math";
 import { eq, and } from "drizzle-orm";
@@ -64,25 +64,50 @@ function getUserId(req: Request): number | null {
   return null;
 }
 
-// Fire-and-forget: classify a record and emit Lumen events
-function emitForRecord(userId: number, recordId: number, record: any) {
+// Fire-and-forget: emit a base Lumen event for every record, plus enriched signals
+function emitForRecord(userId: number, recordId: number, record: any, recordType: string = "record") {
   try {
     const user = storage.getUserById(userId) as any;
     const lumenUserId = user?.lumen_user_id;
     if (!lumenUserId) return;
+
+    const now = new Date().toISOString();
+    const ts = record.timestamp || now;
+    const description = record.label || record.title || record.description || record.content || record.feeling_text || record.decision_text || record.feeling || record.mood || record.context || "";
+    const descSnippet = typeof description === "string" ? description.slice(0, 200) : "";
+
+    // Namespace sourceRecordId by type so checkin#1 and writing#1 don't collide
+    const nsRecordId = `${recordType}:${recordId}`;
+
+    // 1. Always emit a base event so every record shows in Lumen's activity feed
+    emitLumenEvent({
+      userId: lumenUserId,
+      sourceRecordId: nsRecordId,
+      eventType: "belief_candidate",
+      confidence: 0.5,
+      salience: 0.5,
+      payload: { description: descSnippet, createdAt: ts, historical: false },
+      ingestionMode: "live",
+      createdAt: now,
+    }).catch(() => {});
+
+    // 2. Emit any enriched signals from classification (pattern, discrepancy, hypothesis)
     const signals = classifyParallaxRecord(record);
     for (const signal of signals) {
       emitLumenEvent({
         userId: lumenUserId,
-        sourceRecordId: String(recordId),
+        sourceRecordId: nsRecordId + ":" + signal.eventType,
         eventType: signal.eventType,
         confidence: signal.confidence,
         salience: signal.salience,
-        payload: { ...signal.payload, createdAt: record.timestamp || new Date().toISOString(), historical: false },
+        payload: { ...signal.payload, createdAt: ts, historical: false },
         ingestionMode: "live",
-        createdAt: new Date().toISOString(),
-      }).catch(() => {}); // swallow
+        createdAt: now,
+      }).catch(() => {});
     }
+
+    // 3. Direct push: hypothesis_candidates go straight to Praxis (in addition to Lumen pipeline)
+    emitToPraxis(lumenUserId, record, signals);
   } catch {
     // Never throw from emitter
   }
@@ -153,6 +178,77 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  // ===================== BUILD DIAGNOSTICS =====================
+  const BUILD_TIMESTAMP = new Date().toISOString();
+  app.get("/api/build-info", (_req, res) => {
+    res.json({
+      app: "Parallax",
+      version: "1.0.0-docker",
+      buildTimestamp: BUILD_TIMESTAMP,
+      nodeEnv: process.env.NODE_ENV,
+      port: process.env.PORT,
+      hasVolume: !!process.env.RAILWAY_VOLUME_MOUNT_PATH,
+      lumenApiUrl: process.env.LUMEN_API_URL ? process.env.LUMEN_API_URL.replace(/\/\/(.{3}).*@/, '//$1***@') : null,
+      hasLumenToken: !!process.env.LUMEN_INTERNAL_TOKEN,
+      lumenTokenLen: process.env.LUMEN_INTERNAL_TOKEN?.length ?? 0,
+    });
+  });
+
+  // Diagnostic: test the Lumen emitter pipeline end-to-end
+  app.get("/api/diag/lumen-emit", async (_req, res) => {
+    const LUMEN_API_URL = (process.env.LUMEN_API_URL || '').replace(/\/+$/, '');
+    const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN;
+
+    const diag: any = {
+      step1_env: {
+        LUMEN_API_URL: LUMEN_API_URL || "NOT SET",
+        LUMEN_INTERNAL_TOKEN_set: !!LUMEN_INTERNAL_TOKEN,
+        LUMEN_INTERNAL_TOKEN_len: LUMEN_INTERNAL_TOKEN?.length ?? 0,
+      },
+      step2_would_emit: !!(LUMEN_API_URL && LUMEN_INTERNAL_TOKEN),
+    };
+
+    if (LUMEN_API_URL && LUMEN_INTERNAL_TOKEN) {
+      // Actually try a test POST
+      const testBody = {
+        userId: "diag-test",
+        sourceApp: "parallax",
+        sourceRecordId: `diag:${Date.now()}`,
+        eventType: "belief_candidate",
+        confidence: 0.1,
+        salience: 0.1,
+        payload: { title: "[DIAGNOSTIC] Pipeline test event" },
+        ingestionMode: "live",
+      };
+      try {
+        const url = `${LUMEN_API_URL}/api/epistemic/events`;
+        diag.step3_target_url = url;
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-lumen-internal-token": LUMEN_INTERNAL_TOKEN,
+          },
+          body: JSON.stringify(testBody),
+        });
+        const text = await resp.text();
+        diag.step4_response = { status: resp.status, body: text.slice(0, 500) };
+      } catch (e: any) {
+        diag.step4_response = { error: e.message };
+      }
+    }
+
+    // Also check a real user's lumen_user_id
+    try {
+      const firstUser = sqlite.prepare("SELECT id, username, lumen_user_id FROM users LIMIT 5").all();
+      diag.step5_sample_users = firstUser;
+    } catch (e: any) {
+      diag.step5_sample_users = { error: e.message };
+    }
+
+    res.json(diag);
+  });
 
   // ===================== AUTH ROUTES =====================
 
@@ -1037,7 +1133,7 @@ Return ONLY valid JSON:
       });
 
       // Lumen epistemic emission (fire-and-forget)
-      if (userId) emitForRecord(userId, writing.id, { title, content, timestamp: writing.timestamp });
+      if (userId) emitForRecord(userId, writing.id, { title, content, timestamp: writing.timestamp }, "writing");
 
       // Return immediately
       res.json({ id: writing.id, status: "pending" });
@@ -1370,7 +1466,7 @@ Return ONLY valid JSON:
       }
 
       // Lumen epistemic emission (fire-and-forget)
-      if (userId) emitForRecord(userId, checkin.id, { ...body, timestamp: checkin.timestamp });
+      if (userId) emitForRecord(userId, checkin.id, { ...body, timestamp: checkin.timestamp }, "checkin");
 
       return res.json(checkin);
     } catch (err: any) {
@@ -1396,7 +1492,7 @@ Return ONLY valid JSON:
       const decision = storage.createDecision({ ...req.body, user_id: userId });
 
       // Lumen epistemic emission (fire-and-forget)
-      if (userId) emitForRecord(userId, decision.id, { ...req.body, timestamp: decision.timestamp });
+      if (userId) emitForRecord(userId, decision.id, { ...req.body, timestamp: decision.timestamp }, "decision");
 
       return res.json(decision);
     } catch (err: any) {
@@ -3466,6 +3562,40 @@ Return ONLY valid JSON:
     return true;
   }
 
+  // POST /api/internal/link-user — Lumen calls after login to set lumen_user_id
+  // Finds or creates a Parallax user by username, then links the Lumen userId.
+  app.post("/api/internal/link-user", async (req, res) => {
+    if (!requireInternalToken(req, res)) return;
+
+    const { username, lumenUserId } = req.body ?? {};
+    if (!username || !lumenUserId) {
+      return res.status(400).json({ error: "username and lumenUserId are required" });
+    }
+
+    try {
+      let user = storage.getUserByUsername(username);
+      if (!user) {
+        // Create a shadow account — SSO users don't need a real password
+        const { randomUUID } = await import("crypto");
+        const bcrypt = await import("bcryptjs");
+        const randomHash = await bcrypt.hash(randomUUID(), 10);
+        user = storage.createUser({
+          username,
+          password_hash: randomHash,
+          display_name: username,
+          created_at: new Date().toISOString(),
+        });
+      }
+
+      storage.setLumenUserId(user.id, String(lumenUserId));
+
+      return res.json({ ok: true, parallaxUserId: user.id, linked: true });
+    } catch (err) {
+      console.error("[internal/link-user]", err);
+      return res.status(500).json({ error: "Failed to link user" });
+    }
+  });
+
   // GET /api/internal/export-records — Lumen pulls all records
   app.get("/api/internal/export-records", async (req, res) => {
     if (!requireInternalToken(req, res)) return;
@@ -3617,8 +3747,8 @@ Return ONLY valid JSON:
           byUser.get(luid)!.push({
             id: `archetype-pattern-${arch}-${luid}`,
             type: "checkin-pattern",
-            label: `Identifies as "${arch}"`,
-            description: `Consistent self-archetype "${arch}" across ${group.length} check-ins over ${uniqueDays} days.` +
+            label: `Identifies as ${arch}`,
+            description: `Consistent ${arch} orientation across ${group.length} sessions over ${uniqueDays} days.` +
               (highDims.length ? ` Consistently high: ${highDims.join(", ")}.` : "") +
               (lowDims.length  ? ` Consistently low: ${lowDims.join(", ")}.`  : ""),
             frequency: group.length,
@@ -3795,12 +3925,12 @@ Return ONLY valid JSON:
         frequency: 2, // Liminal sessions always represent deliberate engagement (2+ implies recurrence signal)
         contextCount: outputKeys,
         ...(scaledNudges as any),
-      });
+      }, "liminal-checkin");
       emitForRecord(userId, writing.id, {
         title: `Liminal: ${toolSlug}`,
         content: inputText || "",
         timestamp,
-      });
+      }, "liminal-writing");
 
       // Clear relevant caches for this user
       storage.clearUserCache(userId, "discover");
@@ -3928,7 +4058,7 @@ Return ONLY valid JSON:
             const confidence = Math.min(0.9, 0.4 + maxStreak * 0.1);
             patternSignals.push({
               type: "dimension_trend",
-              description: `${dim} consistently ${direction} over ${maxStreak + 1} check-ins`,
+              description: `${dim} consistently ${direction} over ${maxStreak + 1} consecutive sessions`,
               confidence,
               firstSeen: parsedVecs[maxStreakStart > 0 ? maxStreakStart - 1 : 0]?.ts || allCheckins[0].timestamp,
               lastSeen: parsedVecs[maxStreakEnd]?.ts || allCheckins[allCheckins.length - 1].timestamp,
@@ -3996,7 +4126,7 @@ Return ONLY valid JSON:
             const dominantSlotArch = Object.entries(archCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
             patternSignals.push({
               type: "time_of_day_correlation",
-              description: `${slot} check-ins show ${dir} ${topDim} (avg ${Math.round(topVal)})${dominantSlotArch ? `, often as ${dominantSlotArch}` : ""}`,
+              description: `${slot} sessions show ${dir} ${topDim} (avg ${Math.round(topVal)})${dominantSlotArch ? `, often as ${dominantSlotArch}` : ""}`,
               confidence: Math.min(0.8, 0.3 + vecs.length * 0.08),
               firstSeen: chronCheckins.find((c: any) => {
                 const h = new Date(c.timestamp).getUTCHours();
