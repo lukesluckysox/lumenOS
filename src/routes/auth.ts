@@ -17,10 +17,11 @@ const COOKIE_MAXAGE = 30 * 24 * 60 * 60 * 1000; // 30 days
 // After login/register, silently link the user to Parallax (and other sub-apps)
 // so epistemic event emission works immediately.
 
-const PARALLAX_API_URL     = process.env.PARALLAX_API_URL || 'https://parallax-production.up.railway.app';
+const PARALLAX_API_URL     = process.env.PARALLAX_API_URL || 'https://parallaxapp.up.railway.app';
+const LIMINAL_API_URL      = process.env.LIMINAL_API_URL  || 'https://liminal-app.up.railway.app';
 const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN || '';
 
-function linkSubApps(userId: number, username: string): void {
+function linkSubApps(userId: number, username: string, email: string): void {
   if (!LUMEN_INTERNAL_TOKEN) return;
 
   // Fire-and-forget: link Parallax
@@ -35,6 +36,19 @@ function linkSubApps(userId: number, username: string): void {
   })
     .then(r => { if (!r.ok) console.error('[sso-link] Parallax link failed:', r.status); })
     .catch(e => console.error('[sso-link] Parallax link error:', e.message));
+
+  // Fire-and-forget: link Liminal (endpoint may not exist yet — fails silently)
+  fetch(`${LIMINAL_API_URL}/api/internal/link-user`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-lumen-internal-token': LUMEN_INTERNAL_TOKEN,
+    },
+    body: JSON.stringify({ email, username, lumenUserId: String(userId) }),
+    signal: AbortSignal.timeout(5000),
+  })
+    .then(r => { if (!r.ok) console.error('[sso-link] Liminal link failed:', r.status); })
+    .catch(e => console.error('[sso-link] Liminal link error:', e.message));
 }
 
 function cookieOpts() {
@@ -91,7 +105,7 @@ router.post('/register', async (req: Request, res: Response) => {
     res.cookie(COOKIE_NAME, token, cookieOpts());
 
     // Link sub-apps (fire-and-forget)
-    linkSubApps(result.id, result.username);
+    linkSubApps(result.id, result.username, mail);
 
     return res.status(201).json({ username: result.username });
   } catch (err) {
@@ -130,7 +144,7 @@ router.post('/login', async (req: Request, res: Response) => {
     res.cookie(COOKIE_NAME, token, cookieOpts());
 
     // Link sub-apps (fire-and-forget)
-    linkSubApps(user.id, user.username);
+    linkSubApps(user.id, user.username, user.email);
 
     return res.json({ username: user.username });
   } catch (err) {

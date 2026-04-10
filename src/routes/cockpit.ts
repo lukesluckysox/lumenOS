@@ -84,7 +84,7 @@ sqlite.exec(`CREATE INDEX IF NOT EXISTS cockpit_targets_user_idx ON cockpit_targ
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
-const PARALLAX_API_URL = process.env.PARALLAX_API_URL || 'https://parallax-production.up.railway.app';
+const PARALLAX_API_URL = process.env.PARALLAX_API_URL || 'https://parallaxapp.up.railway.app';
 const AXIOM_API_URL    = process.env.AXIOM_API_URL    || 'https://axiomtool-production.up.railway.app';
 const PRAXIS_API_URL   = process.env.PRAXIS_API_URL   || 'https://praxis-app.up.railway.app';
 const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN || '';

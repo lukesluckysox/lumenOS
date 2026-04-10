@@ -2655,7 +2655,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     fetch('/api/auth/me', { credentials: 'same-origin' })
       .then(function (res) {
-        if (res.ok) return res.json().then(function (d) { dismissGate(d.username); });
+        if (res.ok) return res.json().then(function (d) { window.__lumenUserId = d.userId; dismissGate(d.username); });
         showForm();
       })
       .catch(function () {
@@ -2862,7 +2862,7 @@
 /* ── Sensitivity Control ────────────────────────────────────────────────────────── */
 async function loadSensitivity() {
   try {
-    const res = await fetch('/api/epistemic/sensitivity/1', {
+    const res = await fetch(`/api/epistemic/sensitivity/${window.__lumenUserId || 1}`, {
       credentials: 'include',
     });
     if (res.ok) {
@@ -2884,7 +2884,7 @@ function highlightSensitivity(val) {
 async function setSensitivity(val) {
   highlightSensitivity(val); // optimistic
   try {
-    await fetch('/api/epistemic/sensitivity/1', {
+    await fetch(`/api/epistemic/sensitivity/${window.__lumenUserId || 1}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
