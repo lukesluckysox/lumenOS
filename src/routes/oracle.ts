@@ -60,8 +60,12 @@ async function fetchSubAppUsers(url: string): Promise<any[]> {
       const data = await r.json() as any;
       return data.users || data || [];
     }
+    console.error(`[oracle/fetchUsers] ${url} returned ${r.status}`);
     return [];
-  } catch { return []; }
+  } catch (err: any) {
+    console.error(`[oracle/fetchUsers] ${url} error:`, err.message);
+    return [];
+  }
 }
 
 // ─── GET /api/oracle/users ──────────────────────────────────────────────────
