@@ -1360,6 +1360,67 @@
       0%,100% { opacity: .25; transform: scale(.9); }
       50%     { opacity: .8;  transform: scale(1.1); }
     }
+    /* ── Plan cards (pre-login) ── */
+    .gate__plans { width: 100%; display: none; gap: var(--sp-3); margin-top: var(--sp-2); }
+    .gate__plans--visible { display: grid; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 480px) { .gate__plans--visible { grid-template-columns: 1fr; } }
+    .plan-card {
+      padding: var(--sp-4) var(--sp-4) var(--sp-3);
+      border: 1px solid var(--border-md);
+      border-radius: var(--r-md);
+      background: var(--surface);
+      text-align: left;
+    }
+    .plan-card--fellow {
+      border-color: rgba(255,209,102,.18);
+      background: linear-gradient(135deg, var(--surface) 0%, rgba(255,209,102,.03) 100%);
+    }
+    .plan-card__name {
+      font-family: var(--font-display);
+      font-size: clamp(0.95rem, 0.85rem + 0.3vw, 1.1rem);
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: var(--sp-1);
+    }
+    .plan-card--fellow .plan-card__name { color: var(--gold); }
+    .plan-card__price {
+      font-family: var(--font-body);
+      font-size: 11px;
+      color: var(--faint);
+      letter-spacing: .06em;
+      margin-bottom: var(--sp-3);
+    }
+    .plan-card__app {
+      font-family: var(--font-body);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: var(--sp-2);
+      margin-bottom: 2px;
+    }
+    .plan-card__features {
+      list-style: none; margin: 0; padding: 0;
+    }
+    .plan-card__features li {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.7;
+      padding-left: 14px;
+      position: relative;
+    }
+    .plan-card__features li::before {
+      content: '·';
+      position: absolute;
+      left: 4px;
+      color: var(--faint);
+    }
+    .plan-card--fellow .plan-card__features li::before {
+      content: '·';
+      color: var(--gold);
+      opacity: .6;
+    }
     .gate__auth { width: 100%; display: none; flex-direction: column; gap: var(--sp-4); }
     .gate__auth--visible { display: flex; }
     .gate__tabs { display: flex; width: 100%; border-bottom: 1px solid rgba(141,153,174,.15); }
@@ -2259,6 +2320,69 @@
       <span class="gate__loader-dot"></span>
     </div>
 
+    <!-- Plan cards — shown alongside auth form before login -->
+    <div class="gate__plans" id="gate-plans">
+
+      <!-- Aspirant (free) -->
+      <div class="plan-card">
+        <p class="plan-card__name">Aspirant</p>
+        <p class="plan-card__price">Free forever</p>
+
+        <p class="plan-card__app">Liminal</p>
+        <ul class="plan-card__features">
+          <li>All six thinking tools</li>
+          <li>8 sessions per month</li>
+          <li>7-day session archive</li>
+        </ul>
+
+        <p class="plan-card__app">Parallax</p>
+        <ul class="plan-card__features">
+          <li>Check-ins and gauges</li>
+          <li>Archetype tracking</li>
+          <li>Trajectory (data-driven unlock)</li>
+          <li>Decision evaluation</li>
+        </ul>
+
+        <p class="plan-card__app">Praxis &amp; Axiom</p>
+        <ul class="plan-card__features">
+          <li>Full access</li>
+        </ul>
+      </div>
+
+      <!-- Fellow (paid) -->
+      <div class="plan-card plan-card--fellow">
+        <p class="plan-card__name">Fellow</p>
+        <p class="plan-card__price">$15 / month &middot; coming soon</p>
+
+        <p class="plan-card__app">Liminal</p>
+        <ul class="plan-card__features">
+          <li>All six thinking tools</li>
+          <li>Unlimited sessions</li>
+          <li>Full session archive</li>
+          <li>Session comparison</li>
+          <li>Markdown export</li>
+        </ul>
+
+        <p class="plan-card__app">Parallax</p>
+        <ul class="plan-card__features">
+          <li>Everything in Aspirant</li>
+          <li>Daily Reading</li>
+          <li>Feeling interpretation</li>
+          <li>Decision analysis &amp; suggestions</li>
+          <li>Writing analysis</li>
+          <li>Sonic Reading</li>
+          <li>Signal Forecast</li>
+          <li>Identity Wrapped</li>
+        </ul>
+
+        <p class="plan-card__app">Praxis &amp; Axiom</p>
+        <ul class="plan-card__features">
+          <li>Full access</li>
+        </ul>
+      </div>
+
+    </div>
+
     <!-- Auth form — shown only if not authenticated -->
     <div class="gate__auth" id="gate-auth">
 
@@ -2813,6 +2937,8 @@
   function showForm() {
     loader.style.display = 'none';
     auth.classList.add('gate__auth--visible');
+    var plans = document.getElementById('gate-plans');
+    if (plans) plans.classList.add('gate__plans--visible');
     document.body.style.overflow = 'hidden';
     var firstInput = auth.querySelector('input');
     if (firstInput) firstInput.focus();
@@ -3838,12 +3964,12 @@ if ('serviceWorker' in navigator) {
       tableHtml += '<td class="muted" style="font-size:10px;white-space:nowrap">' + shortJoined + '</td>';
 
       // Plan column — show on all tabs
-      var currentPlan = u.plan || 'free';
+      var currentPlan = u.plan || 'aspirant';
       var planHtml = '<td class="oracle-actions">';
       if (isLumen) {
         // Lumen tab: editable plan toggle
         planHtml += '<span class="oracle-plan-group">';
-        ['free', 'pro', 'founder'].forEach(function(p) {
+        ['aspirant', 'fellow', 'founder'].forEach(function(p) {
           planHtml += '<button class="oracle-plan-btn' + (currentPlan === p ? ' oracle-plan-btn--active' : '') + '"';
           planHtml += ' data-user-id="' + u.id + '" data-plan="' + p + '"';
           planHtml += ' onclick="oracleSetPlan(' + u.id + ',\'' + p + '\')">' + p + '</button>';

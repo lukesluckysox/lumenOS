@@ -115,7 +115,7 @@ router.get('/users', async (req: Request, res: Response) => {
         id:        u.id,
         username:  u.username,
         email:     u.email,
-        plan:      u.plan || 'free',
+        plan:      u.plan || 'aspirant',
         role:      u.role || 'user',
         createdAt: u.createdAt,
       })),
@@ -150,8 +150,8 @@ router.patch('/users/:id/plan', async (req: Request, res: Response) => {
   if (isNaN(targetId)) return res.status(400).json({ error: 'Invalid user id.' });
 
   const plan = req.body?.plan;
-  if (!plan || !['free', 'pro', 'founder'].includes(plan)) {
-    return res.status(400).json({ error: 'Plan must be free, pro, or founder.' });
+  if (!plan || !['aspirant', 'fellow', 'founder'].includes(plan)) {
+    return res.status(400).json({ error: 'Plan must be aspirant, fellow, or founder.' });
   }
 
   try {

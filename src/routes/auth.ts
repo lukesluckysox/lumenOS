@@ -104,8 +104,8 @@ router.post('/register', async (req: Request, res: Response) => {
     const token = signToken(result.id, result.username);
     res.cookie(COOKIE_NAME, token, cookieOpts());
 
-    // Link sub-apps (fire-and-forget) — new users get 'free' plan
-    linkSubApps(result.id, result.username, mail, 'free');
+    // Link sub-apps (fire-and-forget) — new users get 'aspirant' plan
+    linkSubApps(result.id, result.username, mail, 'aspirant');
 
     return res.status(201).json({ username: result.username });
   } catch (err) {
@@ -144,7 +144,7 @@ router.post('/login', async (req: Request, res: Response) => {
     res.cookie(COOKIE_NAME, token, cookieOpts());
 
     // Link sub-apps (fire-and-forget) — pass current plan
-    const userPlan = (user as any).plan || 'free';
+    const userPlan = (user as any).plan || 'aspirant';
     linkSubApps(user.id, user.username, user.email, userPlan);
 
     return res.json({ username: user.username });
@@ -215,7 +215,7 @@ router.get('/profile', (req: Request, res: Response) => {
       username:    user.username,
       email:       user.email,
       sensitivity: user.sensitivity ?? 'medium',
-      plan:        user.plan ?? 'free',
+      plan:        user.plan ?? 'aspirant',
       createdAt:   user.createdAt,
       isOwner,
     });
