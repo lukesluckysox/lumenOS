@@ -2323,14 +2323,7 @@
      NAV
 ═══════════════════════════════════════════╗ -->
 <header>
-  <div class="cockpit-bar" id="cockpit-bar">
-    <div class="cockpit-bar__left">
-      <!-- Pipeline health moved here by JS on login -->
-    </div>
-    <div class="cockpit-bar__right">
-      <!-- Palette dots, theme toggle, username moved here by JS on login -->
-    </div>
-  </div>
+
   <nav class="nav" id="nav" aria-label="Main navigation">
     <div class="wrap nav__row">
 
@@ -2809,31 +2802,9 @@
     loadCockpit();
     loadPipelineHealth();
 
-    // Move elements into cockpit bar (pipeline left, palette+user right)
-    var cockpitBar = document.getElementById('cockpit-bar');
-    if (cockpitBar) {
-      var barLeft  = cockpitBar.querySelector('.cockpit-bar__left');
-      var barRight = cockpitBar.querySelector('.cockpit-bar__right');
-
-      // Pipeline → left
-      var pipeEl = document.getElementById('pipeline');
-      if (pipeEl && barLeft) {
-        barLeft.appendChild(pipeEl);
-        pipeEl.classList.add('pipeline--visible');
-      }
-
-      // Palette dots, theme toggle, user → right
-      var paletteDots = document.querySelector('.nav__right .palette-dots');
-      var themeToggle = document.querySelector('[data-theme-toggle]');
-      var navUser     = document.getElementById('nav-user');
-      if (barRight) {
-        if (paletteDots)  barRight.appendChild(paletteDots);
-        if (themeToggle)  barRight.appendChild(themeToggle);
-        if (navUser)      barRight.appendChild(navUser);
-      }
-
-      cockpitBar.classList.add('cockpit-bar--visible');
-    }
+    // Show pipeline status in nav
+    var pipeEl = document.getElementById('pipeline');
+    if (pipeEl) pipeEl.classList.add('pipeline--visible');
 
     // Hide the "Enter" button since user is already logged in
     var enterBtn = document.querySelector('.btn-ghost');
