@@ -31,7 +31,7 @@ function linkSubApps(userId: number, username: string, email: string, plan: stri
       'Content-Type': 'application/json',
       'x-lumen-internal-token': LUMEN_INTERNAL_TOKEN,
     },
-    body: JSON.stringify({ username, lumenUserId: String(userId), plan }),
+    body: JSON.stringify({ username, email, lumenUserId: String(userId), plan }),
     signal: AbortSignal.timeout(5000),
   })
     .then(r => { if (!r.ok) console.error('[sso-link] Parallax link failed:', r.status); })
