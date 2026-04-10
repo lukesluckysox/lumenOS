@@ -680,6 +680,38 @@
     }
     .settings-toggle.open svg { transform: rotate(180deg); }
 
+    /* ── Collapsible Cockpit ──────────────── */
+    .cockpit-collapsed-orb {
+      width: 130px; height: 130px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,209,102,0.18) 0%, transparent 70%);
+      border: 1px solid rgba(255,209,102,0.2);
+      cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      margin: 0 auto;
+    }
+    .cockpit-collapsed-orb__score {
+      font: 300 42px 'Cormorant', serif;
+      color: #FFD166;
+      line-height: 1;
+    }
+    .cockpit-collapsed-orb__label {
+      font: 500 9px 'Satoshi', sans-serif;
+      letter-spacing: 0.18em;
+      color: rgba(255,209,102,0.45);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .cockpit-wrapper--collapsed .solar-cockpit,
+    .cockpit-wrapper--collapsed .cockpit-sources,
+    .cockpit-wrapper--collapsed .settings-toggle,
+    .cockpit-wrapper--collapsed .cockpit-settings { display: none; }
+    .cockpit-wrapper--collapsed .cockpit-collapsed-orb { display: flex; }
+    .cockpit-wrapper--expanded .cockpit-collapsed-orb { display: none; }
+    @keyframes cockpitExpand { from { opacity:0; transform:scale(0.85) } to { opacity:1; transform:scale(1) } }
+    .cockpit-wrapper--expanded .solar-cockpit {
+      animation: cockpitExpand 400ms ease;
+    }
+
     .settings-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -2247,6 +2279,19 @@
       color: var(--faint);
       white-space: nowrap;
     }
+    .pulse-day--today .pulse-day__dot {
+      box-shadow: 0 0 6px 2px rgba(255,209,102,0.4);
+      border: 1.5px solid rgba(255,209,102,0.6);
+      opacity: 1;
+    }
+    .pulse-day--today .pulse-day__dot--zero {
+      box-shadow: 0 0 4px 1px rgba(255,209,102,0.2);
+      border: 1.5px solid rgba(255,209,102,0.3);
+      opacity: 0.35;
+    }
+    .pulse-day--today .pulse-day__label {
+      color: rgba(255,209,102,0.65);
+    }
 
     .pulse-empty {
       font-family: var(--font-display);
@@ -2521,29 +2566,35 @@
     <!-- Hero mark and kicker removed — single logo in nav bar only -->
 
     <!-- Solar Cockpit —— live radial display -->
-    <div class="solar-cockpit up" aria-label="Alignment cockpit — 9 dimensions">
-      <canvas id="solar-canvas" width="840" height="840"></canvas>
-    </div>
+    <div id="cockpit-wrapper" class="cockpit-wrapper--collapsed">
+      <div class="cockpit-collapsed-orb" id="cockpit-collapsed-orb" tabindex="0" role="button" aria-label="Expand alignment sundial">
+        <span class="cockpit-collapsed-orb__score" id="collapsed-orb-score">50</span>
+        <span class="cockpit-collapsed-orb__label">Alignment</span>
+      </div>
+      <div class="solar-cockpit up" aria-label="Alignment cockpit — 9 dimensions">
+        <canvas id="solar-canvas" width="840" height="840"></canvas>
+      </div>
 
-    <div class="cockpit-sources" id="cockpit-sources"></div>
+      <div class="cockpit-sources" id="cockpit-sources"></div>
+
+      <!-- Target settings toggle + panel -->
+      <button class="settings-toggle" id="settings-toggle" aria-expanded="false">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15.5l-6-6h12l-6 6z" fill="currentColor" stroke="none"/></svg>
+        Set Targets
+      </button>
+
+      <div class="cockpit-settings collapsed" id="cockpit-settings">
+        <div class="settings-total">Target Total: <strong id="target-total">180</strong> / 360</div>
+        <div class="settings-grid" id="settings-grid"></div>
+        <div class="settings-save">
+          <button class="btn-save-targets" id="btn-save">Save Targets</button>
+        </div>
+      </div>
+    </div>
 
     <h1 class="hero__headline up d1">
       Where reflection<br>becomes structure.
     </h1>
-
-    <!-- Target settings toggle + panel -->
-    <button class="settings-toggle" id="settings-toggle" aria-expanded="false">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15.5l-6-6h12l-6 6z" fill="currentColor" stroke="none"/></svg>
-      Set Targets
-    </button>
-
-    <div class="cockpit-settings collapsed" id="cockpit-settings">
-      <div class="settings-total">Target Total: <strong id="target-total">180</strong> / 360</div>
-      <div class="settings-grid" id="settings-grid"></div>
-      <div class="settings-save">
-        <button class="btn-save-targets" id="btn-save">Save Targets</button>
-      </div>
-    </div>
 
   </div>
 
@@ -3374,17 +3425,21 @@ async function setSensitivity(val) {
         var maxCount = Math.max.apply(null, data.byDay.map(function (d) { return d.count; }));
         var MIN_PX = 6;
         var MAX_PX = 28;
+        var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var lastIdx = data.byDay.length - 1;
 
-        dotsEl.innerHTML = data.byDay.map(function (d) {
+        dotsEl.innerHTML = data.byDay.map(function (d, idx) {
           var isZero = d.count === 0;
           var size   = isZero ? MIN_PX : Math.round(MIN_PX + (d.count / Math.max(maxCount, 1)) * (MAX_PX - MIN_PX));
-          var dayStr = DAYS[new Date(d.date + 'T00:00:00').getDay()];
+          var dt = new Date(d.date + 'T00:00:00');
+          var dateLabel = MONTHS[dt.getMonth()] + ' ' + dt.getDate();
           var dotCls = 'pulse-day__dot' + (isZero ? ' pulse-day__dot--zero' : '');
+          var dayCls = 'pulse-day' + (idx === lastIdx ? ' pulse-day--today' : '');
           var title  = d.count + ' event' + (d.count === 1 ? '' : 's') + ' on ' + d.date;
           return [
-            '<div class="pulse-day">',
+            '<div class="' + dayCls + '">',
             '  <div class="' + dotCls + '" style="width:' + size + 'px;height:' + size + 'px" title="' + title + '" aria-label="' + title + '"></div>',
-            '  <span class="pulse-day__label">' + dayStr + '</span>',
+            '  <span class="pulse-day__label">' + dateLabel + '</span>',
             '</div>',
           ].join('');
         }).join('');
@@ -3787,17 +3842,79 @@ async function setSensitivity(val) {
         renderCockpit(currentState);
         renderSources(currentState.sources || {});
         buildSettingsGrid(currentState.dimensions);
+        updateCollapsedOrb(currentState.alignment);
       })
       .catch(function(err) {
         console.warn('[cockpit] API unavailable, using defaults:', err.message);
         renderCockpit(currentState);
         buildSettingsGrid(currentState.dimensions);
+        updateCollapsedOrb(currentState.alignment);
       });
+  }
+
+  /* ---- collapsible cockpit ---- */
+  function updateCollapsedOrb(score) {
+    var el = document.getElementById('collapsed-orb-score');
+    if (el) el.textContent = score;
+  }
+
+  function expandCockpit() {
+    var w = document.getElementById('cockpit-wrapper');
+    if (!w) return;
+    w.className = 'cockpit-wrapper--expanded';
+    renderCockpit(currentState);
+  }
+
+  function collapseCockpit() {
+    var w = document.getElementById('cockpit-wrapper');
+    if (!w) return;
+    w.className = 'cockpit-wrapper--collapsed';
+    updateCollapsedOrb(currentState.alignment);
+  }
+
+  /* collapsed orb click → expand */
+  var collapsedOrb = document.getElementById('cockpit-collapsed-orb');
+  if (collapsedOrb) {
+    collapsedOrb.addEventListener('click', expandCockpit);
+    collapsedOrb.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        expandCockpit();
+      }
+    });
+  }
+
+  /* canvas center click → collapse; mousemove → pointer cursor over sun */
+  var solarCanvas = document.getElementById('solar-canvas');
+  if (solarCanvas) {
+    solarCanvas.addEventListener('click', function(e) {
+      var rect = solarCanvas.getBoundingClientRect();
+      var cx = rect.width / 2;
+      var cy = rect.height / 2;
+      var x = e.clientX - rect.left - cx;
+      var y = e.clientY - rect.top - cy;
+      var SUN_R = solarCanvas.width * 0.085;
+      var hitR = SUN_R * 1.5 * (rect.width / solarCanvas.width);
+      if (Math.sqrt(x * x + y * y) <= hitR) {
+        collapseCockpit();
+      }
+    });
+    solarCanvas.addEventListener('mousemove', function(e) {
+      var rect = solarCanvas.getBoundingClientRect();
+      var cx = rect.width / 2;
+      var cy = rect.height / 2;
+      var x = e.clientX - rect.left - cx;
+      var y = e.clientY - rect.top - cy;
+      var SUN_R = solarCanvas.width * 0.085;
+      var hitR = SUN_R * 1.5 * (rect.width / solarCanvas.width);
+      solarCanvas.style.cursor = Math.sqrt(x * x + y * y) <= hitR ? 'pointer' : '';
+    });
   }
 
   /* ---- init: render fallback immediately, then fetch live ---- */
   renderCockpit(currentState);
   buildSettingsGrid(currentState.dimensions);
+  updateCollapsedOrb(currentState.alignment);
   loadCockpitState();
 })();
 </script>
