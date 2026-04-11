@@ -2,7 +2,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { authRouter } from './routes/auth';
-import { epistemicRouter } from './routes/epistemic';
+import { epistemicRouter } from './routes/epistemic/index';
 import { loopRouter } from './routes/loop';
 import { cockpitRouter } from './routes/cockpit';
 import { oracleRouter } from './routes/oracle';
