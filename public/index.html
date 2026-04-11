@@ -535,13 +535,13 @@
        HERO
     ───────────────────────────────────────────── */
     .hero {
-      min-height: 100dvh;
+      min-height: auto;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding-block: clamp(var(--sp-20), 14vw, var(--sp-32));
-      padding-top: calc(clamp(var(--sp-20), 14vw, var(--sp-32)) + 72px);
+      padding-block: clamp(var(--sp-12), 8vw, var(--sp-20));
+      padding-top: calc(clamp(var(--sp-12), 8vw, var(--sp-20)) + 72px);
       position: relative;
       overflow: hidden;
     }
@@ -2774,7 +2774,7 @@
     /* Reduce section padding on mobile */
     @media (max-width: 640px) {
       .hero {
-        padding-block: var(--sp-12) var(--sp-8);
+        padding-block: var(--sp-8) var(--sp-6);
         min-height: auto;
       }
       .tools-band,
@@ -3233,54 +3233,11 @@
       Where reflection<br>becomes structure.
     </h1>
 
-    <!-- Loop diagram animation -->
-    <div class="loop-diagram" aria-hidden="true">
-      <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Connecting lines (diamond path) -->
-        <path d="M100 30 L170 100 L100 170 L30 100 Z" stroke="rgba(255,209,102,0.12)" stroke-width="1" fill="none" />
-
-        <!-- Nodes -->
-        <!-- Liminal (top) -->
-        <circle cx="100" cy="30" r="5" fill="#9c8654" />
-        <!-- Parallax (right) -->
-        <circle cx="170" cy="100" r="5" fill="#4d8c9e" />
-        <!-- Praxis (bottom) -->
-        <circle cx="100" cy="170" r="5" fill="#c4943e" />
-        <!-- Axiom (left) -->
-        <circle cx="30" cy="100" r="5" fill="#3d7bba" />
-
-        <!-- Labels -->
-        <text x="100" y="18" text-anchor="middle" fill="rgba(141,153,174,0.45)" font-family="'Satoshi', sans-serif" font-size="9" letter-spacing="0.08em">LIMINAL</text>
-        <text x="170" y="120" text-anchor="middle" fill="rgba(141,153,174,0.45)" font-family="'Satoshi', sans-serif" font-size="9" letter-spacing="0.08em">PARALLAX</text>
-        <text x="100" y="190" text-anchor="middle" fill="rgba(141,153,174,0.45)" font-family="'Satoshi', sans-serif" font-size="9" letter-spacing="0.08em">PRAXIS</text>
-        <text x="30" y="120" text-anchor="middle" fill="rgba(141,153,174,0.45)" font-family="'Satoshi', sans-serif" font-size="9" letter-spacing="0.08em">AXIOM</text>
-
-        <!-- Glow filter -->
-        <defs>
-          <filter id="loop-glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        <!-- Traveling pulse -->
-        <circle r="3" fill="#FFD166" opacity="0.85" filter="url(#loop-glow)">
-          <animateMotion dur="7s" repeatCount="indefinite" path="M100 30 L170 100 L100 170 L30 100 Z" />
-        </circle>
-      </svg>
-      <p class="loop-diagram__caption">A recursive loop. Each tool feeds the next.</p>
-    </div>
+    <!-- Loop diagram removed — redundant on mobile -->
 
   </div>
 
-  <div class="hero__cue" aria-hidden="true">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M12 5v14M5 12l7 7 7-7"/>
-    </svg>
-  </div>
+  <!-- scroll cue removed with loop -->
 
 </section>
 
