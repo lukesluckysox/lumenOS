@@ -127,19 +127,37 @@ function scaleTo40(val: number): number {
   return Math.round((Math.max(0, Math.min(100, val)) / 100) * 40 * 100) / 100;
 }
 
+/** Per-dimension breakdown data */
+interface DimBreakdown {
+  parallaxBase: number;
+  epistemicBoost: number;
+  praxisBoost: number;
+  integrityFactor: number | null;
+  topContributors: string[];
+}
+
 /** Compute cockpit fed values from Parallax vector + epistemic signals */
 function computeFedValues(
   parallaxVec: Record<string, number> | null,
   epistemicBoosts: Record<CockpitDim, number>,
   integrityScore: number,
   praxisBoost: Record<CockpitDim, number>,
-): Record<CockpitDim, number> {
+): { fed: Record<CockpitDim, number>; breakdowns: Record<CockpitDim, DimBreakdown> } {
   const fed = {} as Record<CockpitDim, number>;
+  const breakdowns = {} as Record<CockpitDim, DimBreakdown>;
 
   for (const dim of COCKPIT_DIMS) {
     if (dim === 'integrity') {
       // Integrity is entirely from cross-app synthesis
       fed[dim] = Math.round(Math.max(0, Math.min(40, integrityScore)) * 100) / 100;
+      const contributors: string[] = ['Synthesized from the alignment between stated values and observed patterns'];
+      breakdowns[dim] = {
+        parallaxBase: 0,
+        epistemicBoost: 0,
+        praxisBoost: 0,
+        integrityFactor: integrityScore,
+        topContributors: contributors,
+      };
       continue;
     }
 
@@ -155,17 +173,48 @@ function computeFedValues(
 
     // Scale base (0-100) to cockpit (0-40)
     let scaled = scaleTo40(base);
+    const parallaxBase = scaled;
+
+    const epBoost = Math.max(-4, Math.min(4, epistemicBoosts[dim] || 0));
+    const prBoost = Math.max(-3, Math.min(3, praxisBoost[dim] || 0));
 
     // Apply epistemic boost (small nudge from reflective activity, max ±4)
-    scaled += Math.max(-4, Math.min(4, epistemicBoosts[dim] || 0));
+    scaled += epBoost;
 
     // Apply praxis boost (experiments that touched this dimension, max ±3)
-    scaled += Math.max(-3, Math.min(3, praxisBoost[dim] || 0));
+    scaled += prBoost;
 
     fed[dim] = Math.round(Math.max(0, Math.min(40, scaled)) * 100) / 100;
+
+    // Generate top contributors
+    const contributors: string[] = [];
+    const label = dim.charAt(0).toUpperCase() + dim.slice(1);
+    if (parallaxBase >= scaled * 0.6) {
+      const level = parallaxBase > 25 ? 'high' : parallaxBase > 15 ? 'moderate' : 'low';
+      contributors.push(`Parallax check-ins reflect ${level} ${label.toLowerCase()}`);
+    }
+    if (epBoost > 2) {
+      contributors.push(`${Math.round(epBoost * 2)} epistemic events reinforce this dimension`);
+    } else if (epBoost > 0) {
+      contributors.push(`Epistemic events provide a modest boost`);
+    }
+    if (prBoost > 0) {
+      contributors.push('Active experiments in Praxis contribute to this score');
+    }
+    if (contributors.length === 0) {
+      contributors.push(`Based on baseline signals across all sources`);
+    }
+
+    breakdowns[dim] = {
+      parallaxBase: Math.round(parallaxBase * 100) / 100,
+      epistemicBoost: Math.round(epBoost * 100) / 100,
+      praxisBoost: Math.round(prBoost * 100) / 100,
+      integrityFactor: null,
+      topContributors: contributors,
+    };
   }
 
-  return fed;
+  return { fed, breakdowns };
 }
 
 /** Compute epistemic boosts from recent events and candidates */
@@ -295,7 +344,7 @@ router.get('/state', async (req: Request, res: Response) => {
     }
 
     const integrityScore = computeIntegrity(userId);
-    const fed = computeFedValues(parallaxVec, epistemicBoosts, integrityScore, praxisBoost);
+    const { fed, breakdowns } = computeFedValues(parallaxVec, epistemicBoosts, integrityScore, praxisBoost);
 
     // Load targets (defaults to 20 for each dimension if not set)
     const targetRows = sqlite.prepare(
@@ -318,6 +367,7 @@ router.get('/state', async (req: Request, res: Response) => {
       label: dim.charAt(0).toUpperCase() + dim.slice(1),
       fed: fed[dim],
       target: targets[dim],
+      breakdown: breakdowns[dim],
     }));
 
     return res.json({

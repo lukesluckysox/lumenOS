@@ -2382,6 +2382,333 @@
       .state-card { padding: var(--sp-4) var(--sp-5); }
     }
 
+    /* ─────────────────────────────────────────────
+       COCKPIT — WHAT ADVANCED
+    ───────────────────────────────────────────── */
+    .advanced-band {
+      background: var(--bg);
+      padding-block: clamp(var(--sp-8), 4vw, var(--sp-12));
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .advanced-band::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 0%,
+        rgba(255,209,102,.015) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .advanced-header {
+      margin-bottom: var(--sp-6);
+    }
+    .advanced-header__eye {
+      display: block;
+      font-family: monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: .82;
+      margin-bottom: var(--sp-2);
+    }
+    .advanced-header__title {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--text);
+      line-height: 1.15;
+    }
+    .advanced-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);
+    }
+    .advanced-card {
+      background: var(--surface);
+      border-left: 2px solid var(--adv-accent, var(--gold));
+      padding: var(--sp-4) var(--sp-5);
+      border-radius: 0 var(--r-md) var(--r-md) 0;
+      transition: background var(--t);
+    }
+    .advanced-card:hover { background: var(--surface-2); }
+    .advanced-card[data-dest="axiom"]   { --adv-accent: #FFD166; }
+    .advanced-card[data-dest="praxis"]  { --adv-accent: #c4943e; }
+    .advanced-card[data-dest="liminal"] { --adv-accent: #9c8654; }
+    .advanced-card__header {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-2);
+    }
+    .advanced-card__type {
+      font-family: monospace;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--faint);
+    }
+    .advanced-card__dest {
+      font-family: monospace;
+      font-size: 10px;
+      letter-spacing: .1em;
+      color: var(--gold);
+      opacity: .7;
+    }
+    .advanced-card__title {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1.4;
+      margin: 0 0 var(--sp-2);
+    }
+    .advanced-card__why {
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 0 0 var(--sp-2);
+    }
+    .advanced-card__time {
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--faint);
+      letter-spacing: .06em;
+    }
+    .advanced-empty {
+      padding: var(--sp-8) 0;
+      text-align: center;
+    }
+    .advanced-empty__text {
+      font-family: var(--font-display);
+      font-size: var(--text-base);
+      font-style: italic;
+      font-weight: 300;
+      color: var(--faint);
+      letter-spacing: .02em;
+    }
+
+    /* ─────────────────────────────────────────────
+       SENSITIVITY EXPLAINER
+    ───────────────────────────────────────────── */
+    .sens-explain {
+      margin-top: var(--sp-3);
+    }
+    .sens-explain__current {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 var(--sp-2);
+      font-style: italic;
+    }
+    .sens-explain__more {
+      font-family: monospace;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--faint);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: var(--sp-1) 0;
+      transition: color var(--t);
+    }
+    .sens-explain__more:hover { color: var(--gold); }
+    .sens-explain__detail {
+      margin-top: var(--sp-3);
+      padding: var(--sp-4);
+      background: var(--surface);
+      border-radius: var(--r-md);
+      border: 1px solid var(--border);
+    }
+    .sens-explain__detail p {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 var(--sp-3);
+      line-height: 1.5;
+    }
+    .sens-explain__detail dl {
+      margin: 0;
+    }
+    .sens-explain__detail dt {
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: var(--sp-2);
+    }
+    .sens-explain__detail dd {
+      font-size: 12px;
+      color: var(--muted);
+      margin: var(--sp-1) 0 0 0;
+      line-height: 1.5;
+    }
+
+    /* ─────────────────────────────────────────────
+       COCKPIT DIMENSION CHIPS + DRILLDOWN
+    ───────────────────────────────────────────── */
+    .cockpit-dims {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-2);
+      justify-content: center;
+      margin-top: var(--sp-4);
+    }
+    .cockpit-dim-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-2);
+      font-family: monospace;
+      font-size: 10px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--sp-1) var(--sp-3);
+      cursor: pointer;
+      transition: all var(--t);
+    }
+    .cockpit-dim-chip:hover {
+      border-color: rgba(255,209,102,.3);
+      color: var(--gold);
+    }
+    .cockpit-dim-chip--active {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: var(--gold-dim);
+    }
+    .cockpit-dim-chip__name { font-weight: 500; }
+    .cockpit-dim-chip__value {
+      font-weight: 600;
+      color: var(--gold);
+      opacity: .7;
+    }
+    .cockpit-drilldown {
+      margin-top: var(--sp-4);
+      padding: var(--sp-5);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      max-width: var(--w-narrow);
+      margin-inline: auto;
+    }
+    .cockpit-drilldown__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--sp-4);
+    }
+    .cockpit-drilldown__name {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 400;
+      color: var(--text);
+      margin: 0;
+    }
+    .cockpit-drilldown__close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+      padding: var(--sp-1);
+      line-height: 1;
+      transition: color var(--t);
+    }
+    .cockpit-drilldown__close:hover { color: var(--gold); }
+    .cockpit-drilldown__bar {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-3);
+    }
+    .cockpit-drilldown__bar-label {
+      font-family: monospace;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      min-width: 70px;
+    }
+    .cockpit-drilldown__bar-track {
+      flex: 1;
+      height: 6px;
+      background: var(--surface-2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .cockpit-drilldown__bar-fill {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 3px;
+      transition: width 300ms var(--ease);
+    }
+    .cockpit-drilldown__bar-value {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--faint);
+      min-width: 32px;
+      text-align: right;
+    }
+    .cockpit-drilldown__contributors {
+      margin-top: var(--sp-3);
+      padding-top: var(--sp-3);
+      border-top: 1px solid var(--divider);
+    }
+    .cockpit-drilldown__contributors p {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0 0 var(--sp-2);
+      line-height: 1.5;
+    }
+
+    /* ─────────────────────────────────────────────
+       ABOUT GLOSSARY
+    ───────────────────────────────────────────── */
+    .about-glossary {
+      margin-top: var(--sp-12);
+      padding-top: var(--sp-8);
+      border-top: 1px solid var(--border);
+      max-width: var(--w-narrow);
+      margin-inline: auto;
+    }
+    .about-glossary h3 {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 400;
+      font-style: italic;
+      color: var(--text);
+      margin: 0 0 var(--sp-6);
+    }
+    .about-glossary dl {
+      margin: 0;
+    }
+    .about-glossary dt {
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: var(--sp-5);
+    }
+    .about-glossary dt:first-of-type { margin-top: 0; }
+    .about-glossary dd {
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      color: var(--muted);
+      margin: var(--sp-1) 0 0 0;
+      line-height: 1.6;
+      padding-bottom: var(--sp-4);
+      border-bottom: 1px solid var(--divider);
+    }
+    .about-glossary dd:last-of-type { border-bottom: none; }
+
     /* Body text max line-length on mobile */
     @media (max-width: 640px) {
       .card__desc,
@@ -2399,7 +2726,8 @@
       }
       .state-title,
       .feed-header__title,
-      .pulse-title {
+      .pulse-title,
+      .advanced-header__title {
         font-size: var(--text-base);
       }
     }
@@ -2413,7 +2741,8 @@
       .tools-band,
       .state-band,
       .feed-band,
-      .pulse-band {
+      .pulse-band,
+      .advanced-band {
         padding-block: var(--sp-6);
       }
       .card {
@@ -2958,23 +3287,19 @@
     </div>
   </section>
 
-  <!-- B. Loop Activity Feed -->
-  <section class="feed-band" id="cockpit-feed" aria-label="Recent activity">
+  <!-- B. What Advanced -->
+  <section class="advanced-band" id="cockpit-advanced" aria-label="What advanced in the loop">
     <div class="wrap wrap--mid">
-      <div class="feed-header">
+      <div class="advanced-header">
         <div>
-          <span class="feed-header__eye">The Examined Life</span>
-          <h2 class="feed-header__title">Recent Activity</h2>
+          <span class="advanced-header__eye">The Loop</span>
+          <h2 class="advanced-header__title">What Advanced</h2>
         </div>
-        <button class="feed-toggle" id="feed-toggle" aria-expanded="false" aria-controls="feed-list">
-          <span class="feed-toggle__label">Show</span>
-          <svg class="feed-toggle__chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
       </div>
-      <div id="feed-list" class="feed-list" role="feed" aria-label="Epistemic event feed">
+      <div id="advanced-list" class="advanced-list" role="list">
         <!-- populated by JS -->
-        <div class="feed-empty">
-          <p class="feed-empty__text">Nothing here yet. As I reflect in Liminal, run experiments in Praxis, and check in through Parallax, my activity will stream into this feed.</p>
+        <div class="advanced-empty">
+          <p class="advanced-empty__text">Nothing has advanced yet. As the loop processes reflections and patterns, meaningful progress will appear here.</p>
         </div>
       </div>
     </div>
@@ -2994,6 +3319,28 @@
           <div class="pulse-dots" id="pulse-dots" role="img" aria-label="Seven-day activity sparkline">
             <!-- populated by JS -->
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- D. Event History (formerly Recent Activity — collapsed by default) -->
+  <section class="feed-band" id="cockpit-feed" aria-label="Event history">
+    <div class="wrap wrap--mid">
+      <div class="feed-header">
+        <div>
+          <span class="feed-header__eye">Activity Log</span>
+          <h2 class="feed-header__title">Event History</h2>
+        </div>
+        <button class="feed-toggle" id="feed-toggle" aria-expanded="false" aria-controls="feed-list">
+          <span class="feed-toggle__label">View activity log</span>
+          <svg class="feed-toggle__chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+      <div id="feed-list" class="feed-list" role="feed" aria-label="Epistemic event feed">
+        <!-- populated by JS -->
+        <div class="feed-empty">
+          <p class="feed-empty__text">Nothing here yet. As I reflect in Liminal, run experiments in Praxis, and check in through Parallax, my activity will stream into this feed.</p>
         </div>
       </div>
     </div>
@@ -3097,6 +3444,18 @@
         <button class="sens-pill" data-val="low"    onclick="setSensitivity('low')"    style="font-family:monospace; font-size:10px; letter-spacing:0.1em; padding:0.35rem 0.75rem; border-radius:4px; border:1px solid rgba(141,153,174,0.25); background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; text-transform:uppercase;">LOW</button>
         <button class="sens-pill" data-val="medium" onclick="setSensitivity('medium')" style="font-family:monospace; font-size:10px; letter-spacing:0.1em; padding:0.35rem 0.75rem; border-radius:4px; border:1px solid rgba(141,153,174,0.25); background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; text-transform:uppercase;">MED</button>
         <button class="sens-pill" data-val="high"   onclick="setSensitivity('high')"   style="font-family:monospace; font-size:10px; letter-spacing:0.1em; padding:0.35rem 0.75rem; border-radius:4px; border:1px solid rgba(141,153,174,0.25); background:transparent; color:var(--muted); cursor:pointer; transition:all 0.15s; text-transform:uppercase;">HIGH</button>
+      </div>
+    </div>
+    <div class="sens-explain" id="sens-explain">
+      <p class="sens-explain__current" id="sens-explain-current"></p>
+      <button class="sens-explain__more" id="sens-learn-more" aria-expanded="false">What does this control?</button>
+      <div class="sens-explain__detail" id="sens-detail" style="display:none;">
+        <p>Sensitivity determines how quickly the loop promotes recurring material into candidates, prompts, and downstream actions.</p>
+        <dl>
+          <dt>Low</dt><dd>Surfaces more possibilities sooner. Good for exploration.</dd>
+          <dt>Medium</dt><dd>Balanced. Waits for modest repetition before promoting.</dd>
+          <dt>High</dt><dd>Waits for strong repetition and evidence. Promotes less, but with more conviction.</dd>
+        </dl>
       </div>
     </div>
   </div>
@@ -3536,6 +3895,12 @@ async function loadSensitivity() {
   } catch {}
 }
 
+var SENS_DESCRIPTIONS = {
+  low: 'The loop is casting a wide net — more signals will be promoted sooner.',
+  medium: 'Balanced sensitivity — patterns need moderate repetition to advance.',
+  high: 'The loop is conservative — only well-evidenced patterns will advance.',
+};
+
 function highlightSensitivity(val) {
   document.querySelectorAll('.sens-pill').forEach(btn => {
     const isActive = btn.getAttribute('data-val') === val;
@@ -3543,6 +3908,11 @@ function highlightSensitivity(val) {
     btn.style.color = isActive ? '#FFD166' : 'var(--muted)';
     btn.style.background = isActive ? 'rgba(255,209,102,0.08)' : 'transparent';
   });
+  // Update sensitivity explainer
+  var explainEl = document.getElementById('sens-explain-current');
+  if (explainEl) {
+    explainEl.textContent = SENS_DESCRIPTIONS[val] || '';
+  }
 }
 
 async function setSensitivity(val) {
@@ -3556,6 +3926,19 @@ async function setSensitivity(val) {
     });
   } catch {}
 }
+
+/* ── Sensitivity learn-more toggle ── */
+(function() {
+  var btn = document.getElementById('sens-learn-more');
+  var detail = document.getElementById('sens-detail');
+  if (!btn || !detail) return;
+  btn.addEventListener('click', function() {
+    var open = detail.style.display !== 'none';
+    detail.style.display = open ? 'none' : 'block';
+    btn.setAttribute('aria-expanded', !open ? 'true' : 'false');
+    btn.textContent = open ? 'What does this control?' : 'Hide details';
+  });
+})();
 
 /* ── Cockpit — Epistemic Loop Modules ──────────────────────────────────────── */
 (function () {
@@ -3599,12 +3982,59 @@ async function setSensitivity(val) {
     if (!cockpit) return;
     cockpit.classList.add('cockpit--visible');
 
-    // Fire all three in parallel
+    // Fire all four in parallel
     await Promise.allSettled([
       loadState(),
       loadFeed(),
       loadPulse(),
+      loadAdvanced(),
     ]);
+  }
+
+  /* ── What Advanced ────────────────────────────────────────── */
+
+  async function loadAdvanced() {
+    try {
+      var res = await fetch('/api/loop/promoted', { credentials: 'same-origin' });
+      if (!res.ok) return;
+      var data = await res.json();
+      renderAdvanced(data.promoted || []);
+    } catch (e) {
+      console.error('[dashboard] loadAdvanced failed:', e);
+    }
+  }
+
+  function renderAdvanced(items) {
+    var container = document.getElementById('advanced-list');
+    if (!container) return;
+
+    if (!items || items.length === 0) {
+      container.innerHTML = '<div class="advanced-empty"><p class="advanced-empty__text">Nothing has advanced yet. As the loop processes reflections and patterns, meaningful progress will appear here.</p></div>';
+      return;
+    }
+
+    var html = items.map(function (item) {
+      var typeLabel = (item.candidateType || '').replace(/_/g, ' ');
+      var destLabel = item.targetApp ? ('→ ' + item.targetApp.charAt(0).toUpperCase() + item.targetApp.slice(1)) : '';
+      var title = item.title ? item.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+      var why = item.explanation ? item.explanation.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+      var time = relativeTime(item.updatedAt);
+      var dest = item.targetApp || '';
+
+      return [
+        '<article class="advanced-card" role="listitem" data-dest="' + dest + '">',
+        '  <div class="advanced-card__header">',
+        '    <span class="advanced-card__type">' + typeLabel + '</span>',
+        destLabel ? '    <span class="advanced-card__dest">' + destLabel + '</span>' : '',
+        '  </div>',
+        '  <h3 class="advanced-card__title">' + title + '</h3>',
+        why ? '  <p class="advanced-card__why">' + why + '</p>' : '',
+        '  <time class="advanced-card__time">' + time + '</time>',
+        '</article>',
+      ].join('\n');
+    }).join('\n');
+
+    container.innerHTML = html;
   }
 
   /* ── Feed toggle (collapsed by default) ──────────────────── */
@@ -3615,7 +4045,7 @@ async function setSensitivity(val) {
     btn.addEventListener('click', function () {
       var open = band.classList.toggle('feed-band--open');
       btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      btn.querySelector('.feed-toggle__label').textContent = open ? 'Hide' : 'Show';
+      btn.querySelector('.feed-toggle__label').textContent = open ? 'Hide activity log' : 'View activity log';
     });
   })();
 
@@ -3683,18 +4113,6 @@ async function setSensitivity(val) {
       }).join('\n');
 
       container.innerHTML = html;
-
-      // Auto-expand feed when there are events so Recent Activity is always visible
-      var band = document.getElementById('cockpit-feed');
-      var btn  = document.getElementById('feed-toggle');
-      if (band && !band.classList.contains('feed-band--open')) {
-        band.classList.add('feed-band--open');
-        if (btn) {
-          btn.setAttribute('aria-expanded', 'true');
-          var label = btn.querySelector('.feed-toggle__label');
-          if (label) label.textContent = 'Hide';
-        }
-      }
     } catch {}
   }
 
@@ -3867,6 +4285,30 @@ async function setSensitivity(val) {
     clone.querySelectorAll('.up').forEach(function(el) { el.classList.add('in'); });
     modal.appendChild(clone);
   }
+
+  // Glossary
+  var glossaryDiv = document.createElement('div');
+  glossaryDiv.className = 'about-glossary';
+  glossaryDiv.innerHTML = '<h3>Glossary</h3>' +
+    '<dl>' +
+    '<dt>Sensitivity</dt>' +
+    '<dd>Controls how readily the loop promotes recurring signals into candidates. Low = more exploratory, High = more conservative.</dd>' +
+    '<dt>Candidate</dt>' +
+    '<dd>A piece of insight — a belief, pattern, tension, or hypothesis — that the loop has identified as worth examining further.</dd>' +
+    '<dt>Promotion</dt>' +
+    '<dd>When a candidate meets the current sensitivity threshold, it advances to a destination app (Axiom, Praxis, or Liminal) for deeper processing.</dd>' +
+    '<dt>Convergence</dt>' +
+    '<dd>When a belief from Liminal and a behavioral pattern from Parallax align on the same theme, they are paired and promoted together.</dd>' +
+    '<dt>Doctrine</dt>' +
+    '<dd>A recurring belief or principle that has been observed across multiple reflections, strong enough to be proposed as a governing truth.</dd>' +
+    '<dt>Tension</dt>' +
+    '<dd>A contradiction between two beliefs or between belief and behavior. Tensions are not errors — they are invitations to examine.</dd>' +
+    '<dt>Alignment</dt>' +
+    '<dd>A measure of how closely your current state across all dimensions matches your stated targets. Shown in the sundial.</dd>' +
+    '<dt>The Loop</dt>' +
+    '<dd>The recursive cycle connecting Liminal (questioning), Parallax (observing), Praxis (testing), and Axiom (governing). Each pass refines what came before.</dd>' +
+    '</dl>';
+  modal.appendChild(glossaryDiv);
 
   document.body.appendChild(modal);
 
@@ -4064,6 +4506,113 @@ async function setSensitivity(val) {
     el.innerHTML = html;
   }
 
+  /* ---- dimension chips + drilldown ---- */
+  function renderDimensionChips(dims) {
+    var wrapper = document.getElementById('cockpit-wrapper');
+    if (!wrapper) return;
+
+    // Create or find chips container
+    var chipsEl = document.getElementById('cockpit-dims');
+    if (!chipsEl) {
+      chipsEl = document.createElement('div');
+      chipsEl.id = 'cockpit-dims';
+      chipsEl.className = 'cockpit-dims';
+      // Insert after cockpit-sources
+      var sources = document.getElementById('cockpit-sources');
+      if (sources && sources.parentNode) {
+        sources.parentNode.insertBefore(chipsEl, sources.nextSibling);
+      }
+    }
+
+    // Create or find drilldown container
+    var drillEl = document.getElementById('cockpit-drilldown');
+    if (!drillEl) {
+      drillEl = document.createElement('div');
+      drillEl.id = 'cockpit-drilldown';
+      drillEl.className = 'cockpit-drilldown';
+      drillEl.style.display = 'none';
+      if (chipsEl.parentNode) {
+        chipsEl.parentNode.insertBefore(drillEl, chipsEl.nextSibling);
+      }
+    }
+
+    chipsEl.innerHTML = dims.map(function(d) {
+      return '<button class="cockpit-dim-chip" data-dim="' + d.name + '">' +
+        '<span class="cockpit-dim-chip__name">' + d.label + '</span>' +
+        '<span class="cockpit-dim-chip__value">' + Math.round(d.fed) + '</span>' +
+        '</button>';
+    }).join('');
+
+    // Attach click handlers
+    var activeDim = null;
+    chipsEl.querySelectorAll('.cockpit-dim-chip').forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        var dimName = this.getAttribute('data-dim');
+        if (activeDim === dimName) {
+          // Collapse
+          drillEl.style.display = 'none';
+          activeDim = null;
+          chipsEl.querySelectorAll('.cockpit-dim-chip').forEach(function(c) { c.classList.remove('cockpit-dim-chip--active'); });
+          return;
+        }
+        activeDim = dimName;
+        chipsEl.querySelectorAll('.cockpit-dim-chip').forEach(function(c) { c.classList.remove('cockpit-dim-chip--active'); });
+        this.classList.add('cockpit-dim-chip--active');
+
+        // Find the dimension data
+        var dim = null;
+        for (var i = 0; i < dims.length; i++) {
+          if (dims[i].name === dimName) { dim = dims[i]; break; }
+        }
+        if (!dim || !dim.breakdown) { drillEl.style.display = 'none'; return; }
+
+        var bd = dim.breakdown;
+        var maxVal = 40;
+        var bars = '';
+
+        if (dim.name === 'integrity') {
+          bars += renderBar('Integrity', bd.integrityFactor || 0, maxVal);
+        } else {
+          bars += renderBar('Parallax', bd.parallaxBase, maxVal);
+          bars += renderBar('Epistemic', bd.epistemicBoost, 4);
+          bars += renderBar('Praxis', bd.praxisBoost, 3);
+        }
+
+        var contribHtml = (bd.topContributors || []).map(function(c) {
+          return '<p>' + c.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>';
+        }).join('');
+
+        drillEl.innerHTML =
+          '<div class="cockpit-drilldown__header">' +
+          '  <h3 class="cockpit-drilldown__name">' + dim.label + '</h3>' +
+          '  <button class="cockpit-drilldown__close" aria-label="Close">&times;</button>' +
+          '</div>' +
+          '<div class="cockpit-drilldown__body">' +
+          bars +
+          '  <div class="cockpit-drilldown__contributors">' + contribHtml + '</div>' +
+          '</div>';
+
+        drillEl.style.display = 'block';
+
+        // Wire close button
+        drillEl.querySelector('.cockpit-drilldown__close').addEventListener('click', function() {
+          drillEl.style.display = 'none';
+          activeDim = null;
+          chipsEl.querySelectorAll('.cockpit-dim-chip').forEach(function(c) { c.classList.remove('cockpit-dim-chip--active'); });
+        });
+      });
+    });
+  }
+
+  function renderBar(label, value, maxValue) {
+    var pct = maxValue > 0 ? Math.round(Math.min(100, (value / maxValue) * 100)) : 0;
+    return '<div class="cockpit-drilldown__bar">' +
+      '<span class="cockpit-drilldown__bar-label">' + label + '</span>' +
+      '<div class="cockpit-drilldown__bar-track"><div class="cockpit-drilldown__bar-fill" style="width:' + pct + '%"></div></div>' +
+      '<span class="cockpit-drilldown__bar-value">' + (Math.round(value * 10) / 10) + '</span>' +
+      '</div>';
+  }
+
   /* ---- settings panel ---- */
   function buildSettingsGrid(dims) {
     var grid = document.getElementById('settings-grid');
@@ -4162,6 +4711,7 @@ async function setSensitivity(val) {
         renderCockpit(currentState);
         renderSources(currentState.sources || {});
         buildSettingsGrid(currentState.dimensions);
+        renderDimensionChips(currentState.dimensions);
         updateCollapsedOrb(currentState.alignment);
       })
       .catch(function(err) {

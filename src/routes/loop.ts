@@ -5,7 +5,10 @@ import {
   db,
   sqlite,
   epistemicEvents,
+  epistemicCandidates,
+  promptQueue,
 } from '../db';
+import type { EpistemicCandidate } from '../schema/epistemic';
 
 const router = Router();
 
@@ -315,6 +318,150 @@ router.get('/health', async (req: Request, res: Response) => {
     : 'healthy';
 
   return res.json({ status: overallStatus, checks });
+});
+
+// ─── GET /api/loop/promoted ──────────────────────────────────────────────────
+// Returns recently promoted/advanced candidates with plain-language explanations.
+
+function generateExplanation(candidate: EpistemicCandidate): string {
+  const parts: string[] = [];
+
+  // Why it was promoted — based on candidateType and scores
+  if (candidate.candidateType === 'doctrine_candidate') {
+    if (candidate.recurrenceScore >= 0.6) {
+      parts.push('Repeated across multiple reflections');
+    } else if (candidate.recurrenceScore >= 0.3) {
+      parts.push('Appeared in more than one context');
+    }
+    if (candidate.confidence >= 0.7) {
+      parts.push('high-confidence pattern');
+    }
+  }
+
+  if (candidate.candidateType === 'tension_candidate') {
+    parts.push('Identity discrepancy detected between stated beliefs and observed patterns');
+  }
+
+  if (candidate.candidateType === 'pattern_candidate') {
+    parts.push('Behavioral pattern exceeded current sensitivity threshold');
+  }
+
+  if (candidate.candidateType === 'hypothesis_candidate') {
+    parts.push('Testable hypothesis derived from observed patterns');
+  }
+
+  if (candidate.candidateType === 'identity_discrepancy') {
+    parts.push('Inconsistency found between what you believe and how you behave');
+  }
+
+  if (candidate.candidateType === 'revision_candidate') {
+    parts.push('Existing belief challenged by new evidence');
+  }
+
+  // Where it went
+  if (candidate.status === 'queued_for_axiom') {
+    parts.push('sent to Axiom for constitutional review');
+  } else if (candidate.status === 'queued_for_praxis') {
+    parts.push('sent to Praxis for experimental testing');
+  } else if (candidate.status === 'accepted') {
+    parts.push('accepted into the governing framework');
+  } else if (candidate.status === 'testing') {
+    parts.push('under active experimental testing');
+  }
+
+  // Source event count for depth
+  try {
+    const sourceIds = JSON.parse(candidate.sourceEventIds || '[]');
+    if (sourceIds.length >= 3) {
+      parts.push(`drawn from ${sourceIds.length} separate observations`);
+    }
+  } catch {}
+
+  return parts.length > 0 ? parts.join(' — ') : 'Promoted based on accumulated evidence';
+}
+
+const PROMPT_EXPLANATIONS: Record<string, string> = {
+  followup_question:   'A thread worth returning to — routed to Liminal for deeper inquiry',
+  experiment_prompt:   'Pattern strong enough to test — sent to Praxis as an experiment seed',
+  revision_prompt:     'Existing belief challenged — flagged for reconsideration',
+  discrepancy_prompt:  'Gap between stated belief and behavior — surfaced for examination',
+  counter_examination: 'Opposing perspective identified — sent for Socratic challenge',
+  deliberation_prompt: 'A question requiring careful weighing — sent for deliberation',
+  reckoning_prompt:    'A moment of reckoning surfaced — sent for honest confrontation',
+  origin_prompt:       'Origin of a belief traced — sent for deeper excavation',
+  examination_prompt:  'A claim worth examining — routed for structured inquiry',
+  interpretation_prompt:'An observation needing interpretation — sent for meaning-making',
+  accountability_prompt:'A commitment surfaced — sent for accountability tracking',
+};
+
+router.get('/promoted', (req: Request, res: Response) => {
+  const user = authenticate(req, res);
+  if (!user) return;
+
+  const userId = String(user.userId);
+
+  try {
+    // Fetch promoted candidates (status != 'open'), ordered by updated_at DESC
+    const candidates = db
+      .select()
+      .from(epistemicCandidates)
+      .where(sql`${epistemicCandidates.userId} = ${userId} AND ${epistemicCandidates.status} != 'open'`)
+      .orderBy(desc(epistemicCandidates.updatedAt))
+      .limit(10)
+      .all();
+
+    // Fetch recent prompt_queue items
+    const prompts = db
+      .select()
+      .from(promptQueue)
+      .where(eq(promptQueue.userId, userId))
+      .orderBy(desc(promptQueue.createdAt))
+      .limit(5)
+      .all();
+
+    const promoted: any[] = [];
+
+    for (const c of candidates) {
+      promoted.push({
+        id: c.id,
+        type: 'candidate',
+        candidateType: c.candidateType,
+        title: c.title,
+        summary: c.summary,
+        status: c.status,
+        targetApp: c.targetApp,
+        explanation: generateExplanation(c),
+        confidence: c.confidence,
+        recurrenceScore: c.recurrenceScore,
+        updatedAt: c.updatedAt,
+      });
+    }
+
+    for (const p of prompts) {
+      promoted.push({
+        id: p.id,
+        type: 'prompt',
+        candidateType: p.promptType,
+        title: p.title,
+        summary: p.body,
+        status: p.status,
+        targetApp: p.destinationApp,
+        explanation: PROMPT_EXPLANATIONS[p.promptType] || 'Routed for further inquiry',
+        confidence: null,
+        recurrenceScore: null,
+        updatedAt: p.createdAt,
+      });
+    }
+
+    // Sort all by updatedAt DESC, limit to 10
+    promoted.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+    const result = promoted.slice(0, 10);
+
+    return res.json({ promoted: result });
+  } catch (err) {
+    console.error('[loop/promoted]', err);
+    return res.status(500).json({ error: 'Failed to load promoted items.' });
+  }
 });
 
 export { router as loopRouter };
