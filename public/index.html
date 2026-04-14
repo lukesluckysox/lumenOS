@@ -2946,6 +2946,109 @@
       }
     }
 
+    /* ─────────────────────────────────────────────
+       SUNDIAL — Radial Progress Visualization
+    ───────────────────────────────────────────── */
+    .sundial {
+      position: relative;
+      width: min(340px, 72vw);
+      aspect-ratio: 1;
+      margin: 0 auto var(--sp-4);
+    }
+    .sundial__svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    /* Orb pulse */
+    @keyframes sundial-breathe {
+      0%, 100% { opacity: .7; transform: scale(1); }
+      50%      { opacity: 1;  transform: scale(1.04); }
+    }
+    .sundial__orb-pulse {
+      transform-origin: center;
+      animation: sundial-breathe 4s ease-in-out infinite;
+    }
+    /* Ray entrance animation */
+    @keyframes sundial-ray-in {
+      from { opacity: 0; transform: scaleY(0); }
+      to   { opacity: 1; transform: scaleY(1); }
+    }
+    .sundial__ray {
+      transform-origin: center bottom;
+      opacity: 0;
+      animation: sundial-ray-in 0.5s var(--ease) forwards;
+    }
+    /* Tooltip */
+    .sundial__tooltip {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      text-align: center;
+      z-index: 10;
+    }
+    .sundial:hover .sundial__tooltip,
+    .sundial:focus-within .sundial__tooltip {
+      opacity: 1;
+    }
+    .sundial__tooltip-bg {
+      background: rgba(25, 27, 42, 0.92);
+      border: 1px solid rgba(255, 209, 102, 0.2);
+      border-radius: var(--r-md);
+      padding: var(--sp-2) var(--sp-4);
+      backdrop-filter: blur(8px);
+    }
+    .sundial__tooltip-text {
+      font-family: var(--font-body);
+      font-size: 11px;
+      color: #e0e0e0;
+      letter-spacing: .06em;
+      white-space: nowrap;
+    }
+    /* Score label inside orb */
+    .sundial__score {
+      font-family: var(--font-display);
+      font-weight: 300;
+      fill: var(--gold);
+    }
+    .sundial__score-label {
+      font-family: var(--font-body);
+      font-weight: 500;
+      fill: rgba(255, 209, 102, 0.45);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    /* Caption below sundial */
+    .sundial__caption {
+      text-align: center;
+      font-family: var(--font-body);
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .06em;
+      margin-top: var(--sp-2);
+      opacity: 0.7;
+    }
+    .sundial__caption strong {
+      color: var(--gold);
+      font-weight: 600;
+    }
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .sundial__orb-pulse { animation: none; opacity: .85; }
+      .sundial__ray { animation: none; opacity: 1; }
+    }
+    /* Mobile sizing */
+    @media (max-width: 640px) {
+      .sundial {
+        width: min(280px, 68vw);
+      }
+    }
+
   </style>
 </head>
 <body style="background-color:#191b2a">
@@ -3224,6 +3327,48 @@
   <div class="wrap hero__body">
 
     <!-- Hero mark and kicker removed — single logo in nav bar only -->
+
+    <!-- Sundial — Radial Progress Visualization -->
+    <div class="sundial" id="sundial" role="img" aria-label="Alignment sundial progress" tabindex="0">
+      <svg class="sundial__svg" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="sundial-orb-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFD166" stop-opacity="0.25"/>
+            <stop offset="70%" stop-color="#FFD166" stop-opacity="0.08"/>
+            <stop offset="100%" stop-color="#FFD166" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="sundial-orb-fill" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#FFD166" stop-opacity="0.3"/>
+            <stop offset="60%" stop-color="#FFD166" stop-opacity="0.12"/>
+            <stop offset="100%" stop-color="#FFD166" stop-opacity="0.04"/>
+          </radialGradient>
+          <filter id="sundial-glow">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Rays container (populated by JS) -->
+        <g id="sundial-rays"></g>
+        <!-- Outer faint ring at ray base -->
+        <circle cx="200" cy="200" r="72" stroke="rgba(255,209,102,0.1)" stroke-width="0.5" fill="none"/>
+        <!-- Orb glow -->
+        <circle cx="200" cy="200" r="100" fill="url(#sundial-orb-glow)" class="sundial__orb-pulse"/>
+        <!-- Orb body -->
+        <circle cx="200" cy="200" r="48" fill="url(#sundial-orb-fill)"/>
+        <circle cx="200" cy="200" r="48" stroke="rgba(255,209,102,0.22)" stroke-width="1" fill="none"/>
+        <!-- Inner ring -->
+        <circle cx="200" cy="200" r="30" stroke="rgba(255,209,102,0.1)" stroke-width="0.5" fill="none"/>
+        <!-- Score text (populated by JS) -->
+        <text id="sundial-score" x="200" y="206" text-anchor="middle" dominant-baseline="central" class="sundial__score" font-size="42">—</text>
+        <text id="sundial-label" x="200" y="230" text-anchor="middle" class="sundial__score-label" font-size="9">ALIGNMENT</text>
+      </svg>
+      <div class="sundial__tooltip" id="sundial-tooltip">
+        <div class="sundial__tooltip-bg">
+          <span class="sundial__tooltip-text" id="sundial-tooltip-text">Loading...</span>
+        </div>
+      </div>
+    </div>
+    <p class="sundial__caption" id="sundial-caption"></p>
 
     <!-- Solar Cockpit —— live radial display -->
     <div id="cockpit-wrapper" class="cockpit-wrapper--collapsed">
@@ -4763,12 +4908,14 @@ async function setSensitivity(val) {
         buildSettingsGrid(currentState.dimensions);
         renderDimensionChips(currentState.dimensions);
         updateCollapsedOrb(currentState.alignment);
+        if (window.__updateSundial) window.__updateSundial(currentState);
       })
       .catch(function(err) {
         console.warn('[cockpit] API unavailable, using defaults:', err.message);
         renderCockpit(currentState);
         buildSettingsGrid(currentState.dimensions);
         updateCollapsedOrb(currentState.alignment);
+        if (window.__updateSundial) window.__updateSundial(currentState);
       });
   }
 
@@ -4836,6 +4983,118 @@ async function setSensitivity(val) {
   buildSettingsGrid(currentState.dimensions);
   updateCollapsedOrb(currentState.alignment);
   loadCockpitState();
+})();
+</script>
+
+<!-- ══ Sundial — Radial Progress Rays ══ -->
+<script>
+(function() {
+  var NUM_RAYS = 24;
+  var CX = 200, CY = 200;
+  var RAY_INNER = 72;
+  var RAY_OUTER = 170;
+  var RAY_BASE_W = 10;
+  var RAY_TIP_W = 3;
+  var GOLD_FILLED = '#FFD166';
+  var GOLD_DIM = 'rgba(255, 209, 102, 0.15)';
+  var GOLD_TRANSITION = 'rgba(255, 209, 102, 0.45)';
+
+  var raysGroup = document.getElementById('sundial-rays');
+  var scoreEl = document.getElementById('sundial-score');
+  var captionEl = document.getElementById('sundial-caption');
+  var tooltipText = document.getElementById('sundial-tooltip-text');
+  if (!raysGroup) return;
+
+  function buildRayPath(index) {
+    var angle = (index / NUM_RAYS) * Math.PI * 2 - Math.PI / 2;
+    var cosA = Math.cos(angle);
+    var sinA = Math.sin(angle);
+    var perpCos = Math.cos(angle + Math.PI / 2);
+    var perpSin = Math.sin(angle + Math.PI / 2);
+
+    var innerX = CX + cosA * RAY_INNER;
+    var innerY = CY + sinA * RAY_INNER;
+    var outerX = CX + cosA * RAY_OUTER;
+    var outerY = CY + sinA * RAY_OUTER;
+
+    var halfBase = RAY_BASE_W / 2;
+    var halfTip = RAY_TIP_W / 2;
+
+    var x1 = innerX - perpCos * halfBase;
+    var y1 = innerY - perpSin * halfBase;
+    var x2 = outerX - perpCos * halfTip;
+    var y2 = outerY - perpSin * halfTip;
+    var x3 = outerX + perpCos * halfTip;
+    var y3 = outerY + perpSin * halfTip;
+    var x4 = innerX + perpCos * halfBase;
+    var y4 = innerY + perpSin * halfBase;
+
+    return 'M' + x1.toFixed(2) + ',' + y1.toFixed(2) +
+           ' L' + x2.toFixed(2) + ',' + y2.toFixed(2) +
+           ' L' + x3.toFixed(2) + ',' + y3.toFixed(2) +
+           ' L' + x4.toFixed(2) + ',' + y4.toFixed(2) + ' Z';
+  }
+
+  function renderSundial(percentage, totalFed, totalTarget) {
+    var pct = Math.max(0, Math.min(100, percentage));
+    var filledCount = Math.round((pct / 100) * NUM_RAYS);
+
+    raysGroup.innerHTML = '';
+
+    for (var i = 0; i < NUM_RAYS; i++) {
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', buildRayPath(i));
+      path.setAttribute('class', 'sundial__ray');
+
+      var isFilled = i < filledCount;
+      var isTransition = i === filledCount && filledCount > 0 && filledCount < NUM_RAYS;
+
+      if (isFilled) {
+        path.setAttribute('fill', GOLD_FILLED);
+        path.setAttribute('opacity', '0.9');
+        path.setAttribute('filter', 'url(#sundial-glow)');
+      } else if (isTransition) {
+        path.setAttribute('fill', GOLD_TRANSITION);
+        path.setAttribute('opacity', '0.5');
+      } else {
+        path.setAttribute('fill', GOLD_DIM);
+        path.setAttribute('opacity', '1');
+      }
+
+      var delay = i * 0.04;
+      path.style.animationDelay = delay.toFixed(2) + 's';
+
+      raysGroup.appendChild(path);
+    }
+
+    if (scoreEl) scoreEl.textContent = Math.round(pct);
+    if (captionEl) {
+      var fedDisplay = typeof totalFed === 'number' ? totalFed.toFixed(0) : '—';
+      var targetDisplay = typeof totalTarget === 'number' ? totalTarget.toFixed(0) : '—';
+      captionEl.innerHTML = 'Current: <strong>' + fedDisplay + '</strong> / Target: <strong>' + targetDisplay + '</strong>';
+    }
+    if (tooltipText) {
+      tooltipText.textContent = Math.round(pct) + '% alignment — ' + filledCount + ' of ' + NUM_RAYS + ' rays lit';
+    }
+  }
+
+  function updateFromState(state) {
+    if (!state || !state.dimensions) return;
+    var totalFed = 0;
+    var totalTarget = 0;
+    for (var i = 0; i < state.dimensions.length; i++) {
+      totalFed += state.dimensions[i].fed || 0;
+      totalTarget += state.dimensions[i].target || 0;
+    }
+    var pct = totalTarget > 0 ? (totalFed / totalTarget) * 100 : 0;
+    pct = Math.min(100, pct);
+    renderSundial(state.alignment || pct, totalFed, totalTarget);
+  }
+
+  window.__updateSundial = updateFromState;
+
+  /* Render initial state with fallback */
+  renderSundial(50, 180, 360);
 })();
 </script>
 
