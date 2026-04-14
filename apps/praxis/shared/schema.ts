@@ -80,3 +80,27 @@ export const insertTensionSchema = createInsertSchema(tensions).omit({
 
 export type InsertTension = z.infer<typeof insertTensionSchema>;
 export type Tension = typeof tensions.$inferSelect;
+
+// ─── Decisions ─────────────────────────────────────────────────────────────
+
+export const decisions = sqliteTable("decisions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id").notNull().default("1"),
+  timestamp: text("timestamp").notNull(),
+  decisionText: text("decision_text").notNull(),
+  impactVec: text("impact_vec").notNull(), // JSON string of {focus: -50..50, ...}
+  targetArchetype: text("target_archetype"),
+  verdict: text("verdict"), // "do" | "skip" | "neutral"
+  alignmentBefore: integer("alignment_before"),
+  alignmentAfter: integer("alignment_after"),
+  createdAt: integer("created_at").notNull(),
+});
+
+export const insertDecisionSchema = createInsertSchema(decisions).omit({
+  id: true,
+  createdAt: true,
+  userId: true,
+});
+
+export type InsertDecision = z.infer<typeof insertDecisionSchema>;
+export type Decision = typeof decisions.$inferSelect;

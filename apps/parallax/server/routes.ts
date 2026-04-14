@@ -4076,6 +4076,80 @@ Return ONLY valid JSON:
     return true;
   }
 
+  // GET /api/internal/archetype-state — returns selfVec, dataVec, topArchetype for a user
+  // Used by Praxis to feed the decision engine
+  app.get("/api/internal/archetype-state", async (req, res) => {
+    if (!requireInternalToken(req, res)) return;
+
+    const userId = (req.query.userId as string) || "1";
+    const allCheckins = storage.getCheckins(userId);
+
+    if (allCheckins.length === 0) {
+      return res.json({ hasData: false, selfVec: null, dataVec: null, topArchetype: null });
+    }
+
+    // selfVec: recency-weighted last 5 days (same logic as /api/holistic)
+    const now = new Date();
+    const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString();
+    const recentWindow = allCheckins.filter((c: any) => {
+      try { return c.timestamp >= fiveDaysAgo; } catch { return false; }
+    });
+    const windowCheckins = recentWindow.length >= 2 ? recentWindow : allCheckins.slice(0, 5);
+
+    const selfDims: Record<string, number> = {};
+    let selfWeight = 0;
+    const decay = 0.75;
+
+    for (let i = 0; i < windowCheckins.length; i++) {
+      const c = windowCheckins[i];
+      const weight = Math.pow(decay, i);
+      if (c.self_vec) {
+        try {
+          const sv = JSON.parse(c.self_vec);
+          for (const dim of DIMENSIONS) {
+            selfDims[dim] = (selfDims[dim] || 0) + (sv[dim] || 50) * weight;
+          }
+          selfWeight += weight;
+        } catch {}
+      }
+    }
+
+    // dataVec: recency-weighted last 10 data vecs
+    const recentForData = allCheckins.slice(0, 10);
+    const dataDims: Record<string, number> = {};
+    let dataWeight = 0;
+
+    for (let i = 0; i < recentForData.length; i++) {
+      const c = recentForData[i];
+      const weight = Math.pow(decay, i);
+      if (c.data_vec) {
+        try {
+          const dv = JSON.parse(c.data_vec);
+          for (const dim of DIMENSIONS) {
+            dataDims[dim] = (dataDims[dim] || 0) + (dv[dim] || 50) * weight;
+          }
+          dataWeight += weight;
+        } catch {}
+      }
+    }
+
+    const selfVec: Record<string, number> = {};
+    const dataVec: Record<string, number> = {};
+    for (const dim of DIMENSIONS) {
+      selfVec[dim] = selfWeight > 0 ? Math.round((selfDims[dim] || 0) / selfWeight) : 50;
+      dataVec[dim] = dataWeight > 0 ? Math.round((dataDims[dim] || 0) / dataWeight) : 50;
+    }
+
+    const topArchetype = allCheckins[0]?.self_archetype || null;
+
+    return res.json({
+      hasData: true,
+      selfVec,
+      dataVec: dataWeight > 0 ? dataVec : null,
+      topArchetype,
+    });
+  });
+
   // POST /api/internal/link-user — Lumen calls after login to set lumen_user_id
   // Finds or creates a Parallax user by username, then links the Lumen userId.
   app.post("/api/internal/link-user", async (req, res) => {

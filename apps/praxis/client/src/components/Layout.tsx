@@ -4,6 +4,7 @@ import { Link, useLocation } from "wouter";
 import { useTheme } from "@/components/ThemeProvider";
 import { cn } from "@/lib/utils";
 import { Sun, Moon, FlaskConical, BookOpen, GitFork, LayoutDashboard, Plus, Gem } from "lucide-react";
+import { Sun, Moon, FlaskConical, BookOpen, GitFork, LayoutDashboard, Plus, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
@@ -12,6 +13,7 @@ const navItems = [
   { href: "/refractions", label: "Refractions", icon: Gem },
   { href: "/doctrines", label: "Emerging Doctrines", icon: BookOpen },
   { href: "/tensions", label: "Core Tensions", icon: GitFork },
+  { href: "/decision-experiments", label: "Decision Experiments", icon: Scale },
 ];
 
 function PraxisLogo() {

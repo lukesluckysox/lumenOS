@@ -5,6 +5,7 @@ import { requireAuth, getUserId, verifyLumenToken } from "./auth";
 import { insertExperimentSchema, insertDoctrineSchema, insertTensionSchema } from "@shared/schema";
 import { z } from "zod";
 import { emitExperimentCompleted, emitDoctrineCrystallized, emitTensionDiscovered } from "./lumenEmitter";
+import Anthropic from "@anthropic-ai/sdk";
 
 export function registerRoutes(httpServer: Server, app: Express) {
   // ── Auth endpoints ──────────────────────────────────────────────────────
@@ -588,6 +589,108 @@ export function registerRoutes(httpServer: Server, app: Express) {
       return res.json(data);
     } catch {
       return res.json({ recovery: null });
+  // ── Decisions ──────────────────────────────────────────────────────────
+
+  app.post("/api/analyze-decision", async (req: any, res: any) => {
+    try {
+      const { decision, currentState } = req.body;
+      if (!decision || typeof decision !== "string") {
+        return res.status(400).json({ error: "decision is required" });
+      }
+
+      // Fetch archetype state from Parallax if no currentState provided
+      let stateForPrompt = currentState;
+      if (!stateForPrompt) {
+        const PARALLAX_API_URL = process.env.PARALLAX_API_URL;
+        const TOKEN = process.env.LUMEN_INTERNAL_TOKEN;
+        const userId = getUserId(req);
+        if (PARALLAX_API_URL && TOKEN) {
+          try {
+            const r = await fetch(`${PARALLAX_API_URL}/api/internal/archetype-state?userId=${userId}`, {
+              headers: { 'x-lumen-internal-token': TOKEN },
+            });
+            if (r.ok) {
+              const data = await r.json() as Record<string, unknown>;
+              stateForPrompt = data.selfVec || null;
+            }
+          } catch (e) {
+            console.error('[praxis/analyze-decision] Failed to fetch archetype state from Parallax:', e);
+          }
+        }
+      }
+
+      const stateStr = stateForPrompt ? `\nCurrent state: ${JSON.stringify(stateForPrompt)}` : "";
+
+      const anthropic = new Anthropic();
+      const message = await anthropic.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1024,
+        messages: [{
+          role: "user",
+          content: `You are a decision-analysis coach for the Parallax identity system. A user is considering:
+
+"${decision}"${stateStr}
+
+The 5 meta-archetypes are: observer (understanding patterns), builder (creating structure), explorer (novelty and expression), dissenter (autonomy and resistance), seeker (meaning and transformation).
+
+Estimate the impact on 8 dimensions (each -50 to +50, where positive means the dimension increases):
+focus, calm, agency, vitality, social, creativity, exploration, drive.
+
+Also provide:
+- reasoning: 2-3 sentences explaining the decision's impact
+- quick_take: 1 sentence summary
+- predicted_shift: which archetype the user is currently closest to ("from"), which they'd move toward after this decision ("to"), and confidence (0-1)
+- risk_factors: array of 2-4 short risk phrases
+- potential_gains: array of 2-4 short gain phrases
+- narrative: A short narrative sentence framing this as identity progression (e.g. "This decision moves you from observation into active exploration — trading certainty for discovery.")
+
+Respond ONLY with valid JSON:
+{"impacts":{"focus":N,"calm":N,"agency":N,"vitality":N,"social":N,"creativity":N,"exploration":N,"drive":N},"reasoning":"...","quick_take":"...","predicted_shift":{"from":"archetype","to":"archetype","confidence":0.0},"risk_factors":["..."],"potential_gains":["..."],"narrative":"..."}`
+        }],
+      });
+
+      const responseText = message.content[0].type === "text" ? message.content[0].text : "";
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        return res.status(500).json({ error: "Could not process the response. Please try again." });
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      return res.json(parsed);
+    } catch (err: any) {
+      console.error("Analyze decision error:", err);
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get("/api/decisions", (req: any, res: any) => {
+    try {
+      const userId = getUserId(req);
+      return res.json(storage.getDecisions(userId));
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/api/decisions", (req: any, res: any) => {
+    try {
+      const userId = getUserId(req);
+      const decision = storage.createDecision(req.body, userId);
+      return res.json(decision);
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete("/api/decisions/:id", (req: any, res: any) => {
+    try {
+      const userId = getUserId(req);
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid id" });
+      storage.deleteDecision(id, userId);
+      return res.json({ success: true });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
     }
   });
 

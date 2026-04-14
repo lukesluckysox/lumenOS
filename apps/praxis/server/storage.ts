@@ -7,12 +7,15 @@ import {
   experiments,
   doctrines,
   tensions,
+  decisions,
   type Experiment,
   type InsertExperiment,
   type Doctrine,
   type InsertDoctrine,
   type Tension,
   type InsertTension,
+  type Decision,
+  type InsertDecision,
 } from "@shared/schema";
 
 const dbPath = process.env.RAILWAY_VOLUME_MOUNT_PATH
@@ -71,6 +74,19 @@ sqlite.exec(`
     strength INTEGER NOT NULL DEFAULT 5,
     created_at INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS decisions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL DEFAULT '1',
+    timestamp TEXT NOT NULL,
+    decision_text TEXT NOT NULL,
+    impact_vec TEXT NOT NULL,
+    target_archetype TEXT,
+    verdict TEXT,
+    alignment_before INTEGER,
+    alignment_after INTEGER,
+    created_at INTEGER NOT NULL
+  );
 `);
 
 // Add user_id columns to existing tables (no-op if already added)
@@ -120,6 +136,11 @@ export interface IStorage {
   createTension(data: InsertTension, userId: string): Tension;
   updateTension(id: number, data: Partial<InsertTension>, userId: string): Tension | undefined;
   deleteTension(id: number, userId: string): void;
+
+  // Decisions
+  getDecisions(userId: string): Decision[];
+  createDecision(data: InsertDecision, userId: string): Decision;
+  deleteDecision(id: number, userId: string): void;
 }
 
 class Storage implements IStorage {
@@ -249,6 +270,22 @@ class Storage implements IStorage {
     if (!user) return false;
     sqlite.prepare(`UPDATE praxis_users SET plan = ? WHERE id = ?`).run(plan, user.id);
     return true;
+  // ── Decisions ───────────────────────────────────────────────────────────
+
+  getDecisions(userId: string): Decision[] {
+    return db.select().from(decisions).where(eq(decisions.userId, userId)).orderBy(desc(decisions.createdAt)).all();
+  }
+
+  createDecision(data: InsertDecision, userId: string): Decision {
+    return db.insert(decisions).values({
+      ...data,
+      userId,
+      createdAt: Date.now(),
+    }).returning().get();
+  }
+
+  deleteDecision(id: number, userId: string): void {
+    db.delete(decisions).where(and(eq(decisions.id, id), eq(decisions.userId, userId))).run();
   }
 }
 
