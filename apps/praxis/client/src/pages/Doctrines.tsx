@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, BookOpen, Pencil, Trash2, Save, X, Check } from "lucide-react";
+import { Plus, BookOpen, Pencil, Trash2, Save, X, Check, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -85,6 +85,18 @@ export default function Doctrines() {
       queryClient.invalidateQueries({ queryKey: ["/api/doctrines"] });
       queryClient.invalidateQueries({ queryKey: ["/api/summary"] });
     },
+  });
+
+  const proposeMutation = useMutation({
+    mutationFn: async (doctrineId: number) => {
+      const res = await apiRequest("POST", "/api/propose-to-axiom", { doctrineId });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/doctrines"] });
+      toast({ title: "Proposed to Axiom." });
+    },
+    onError: () => toast({ title: "Failed to propose.", variant: "destructive" }),
   });
 
   const cycleStatus = (doc: Doctrine) => {
@@ -232,7 +244,7 @@ export default function Doctrines() {
                 Established
               </h3>
               <div className="space-y-2">
-                {established.map(doc => <DoctrineCard key={doc.id} doc={doc} onCycleStatus={cycleStatus} onDelete={() => deleteMutation.mutate(doc.id)} />)}
+                {established.map(doc => <DoctrineCard key={doc.id} doc={doc} onCycleStatus={cycleStatus} onDelete={() => deleteMutation.mutate(doc.id)} onPropose={() => proposeMutation.mutate(doc.id)} isProposing={proposeMutation.isPending && proposeMutation.variables === doc.id} />)}
               </div>
             </section>
           )}
@@ -242,7 +254,7 @@ export default function Doctrines() {
                 Emerging
               </h3>
               <div className="space-y-2">
-                {emerging.map(doc => <DoctrineCard key={doc.id} doc={doc} onCycleStatus={cycleStatus} onDelete={() => deleteMutation.mutate(doc.id)} />)}
+                {emerging.map(doc => <DoctrineCard key={doc.id} doc={doc} onCycleStatus={cycleStatus} onDelete={() => deleteMutation.mutate(doc.id)} onPropose={() => proposeMutation.mutate(doc.id)} isProposing={proposeMutation.isPending && proposeMutation.variables === doc.id} />)}
               </div>
             </section>
           )}
@@ -252,7 +264,7 @@ export default function Doctrines() {
                 Superseded
               </h3>
               <div className="space-y-2">
-                {superseded.map(doc => <DoctrineCard key={doc.id} doc={doc} onCycleStatus={cycleStatus} onDelete={() => deleteMutation.mutate(doc.id)} />)}
+                {superseded.map(doc => <DoctrineCard key={doc.id} doc={doc} onCycleStatus={cycleStatus} onDelete={() => deleteMutation.mutate(doc.id)} onPropose={() => proposeMutation.mutate(doc.id)} isProposing={proposeMutation.isPending && proposeMutation.variables === doc.id} />)}
               </div>
             </section>
           )}
@@ -266,10 +278,14 @@ function DoctrineCard({
   doc,
   onCycleStatus,
   onDelete,
+  onPropose,
+  isProposing,
 }: {
   doc: Doctrine;
   onCycleStatus: (doc: Doctrine) => void;
   onDelete: () => void;
+  onPropose: () => void;
+  isProposing: boolean;
 }) {
   return (
     <div
@@ -284,6 +300,17 @@ function DoctrineCard({
           "{doc.statement}"
         </p>
         <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0">
+          {!doc.proposedToAxiom && doc.status !== "superseded" && (
+            <button
+              data-testid={`button-propose-${doc.id}`}
+              onClick={onPropose}
+              disabled={isProposing}
+              title="Propose to Axiom"
+              className="text-muted-foreground/50 hover:text-amber-500 p-2 min-h-[44px] min-w-[44px] md:p-1 md:min-h-0 md:min-w-0 flex items-center justify-center rounded transition-colors disabled:opacity-40"
+            >
+              <ArrowUpRight size={13} />
+            </button>
+          )}
           <button
             data-testid={`button-cycle-${doc.id}`}
             onClick={() => onCycleStatus(doc)}
@@ -310,6 +337,11 @@ function DoctrineCard({
         )}>
           {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
         </span>
+        {doc.proposedToAxiom && (
+          <span className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded-full" style={{ color: '#c4943e', border: '1px solid rgba(196,148,62,0.25)', background: 'rgba(196,148,62,0.06)' }}>
+            In Axiom
+          </span>
+        )}
         <span className="text-xs text-muted-foreground/50">{formatDate(doc.createdAt)}</span>
         {doc.notes && (
           <p className="text-xs text-muted-foreground/60 italic truncate">{doc.notes}</p>

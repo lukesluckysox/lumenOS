@@ -285,6 +285,55 @@ export function registerRoutes(httpServer: Server, app: Express) {
     res.status(204).end();
   });
 
+  // ── Propose Doctrine to Axiom ──────────────────────────────────────────
+
+  app.post("/api/propose-to-axiom", async (req: any, res: any) => {
+    const { doctrineId } = req.body as { doctrineId: number };
+    if (!doctrineId) return res.status(400).json({ error: "doctrineId is required" });
+
+    const userId = getUserId(req);
+    const doctrine = storage.getDoctrine(doctrineId, userId);
+    if (!doctrine) return res.status(404).json({ error: "Doctrine not found" });
+
+    const AXIOM_URL = process.env.AXIOM_TOOL_URL;
+    const TOKEN = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET;
+    if (!AXIOM_URL || !TOKEN) {
+      return res.status(503).json({ error: "Axiom integration not configured" });
+    }
+
+    try {
+      const axiomRes = await fetch(`${AXIOM_URL}/api/internal/from-lumen`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-lumen-internal-token": TOKEN,
+        },
+        body: JSON.stringify({
+          truthClaim: doctrine.statement,
+          title: doctrine.statement.slice(0, 200),
+          source: "praxis",
+          praxisCount: 1,
+          userId,
+        }),
+      });
+
+      if (!axiomRes.ok) {
+        const errBody = await axiomRes.text();
+        console.error("[praxis/propose-to-axiom] Axiom returned error:", axiomRes.status, errBody);
+        return res.status(502).json({ error: "Axiom rejected the proposal" });
+      }
+
+      // Mark doctrine as proposed
+      storage.updateDoctrine(doctrineId, { proposedToAxiom: true } as any, userId);
+
+      const result = await axiomRes.json();
+      return res.json({ ok: true, axiom: result });
+    } catch (err: any) {
+      console.error("[praxis/propose-to-axiom]", err);
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
   // ── Tensions ───────────────────────────────────────────────────────────
 
   app.get("/api/tensions", (req: any, res: any) => {

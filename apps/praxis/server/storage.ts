@@ -63,6 +63,9 @@ try { sqlite.exec("ALTER TABLE tensions ADD COLUMN user_id TEXT NOT NULL DEFAULT
 // Add source_description column (no-op if already added)
 try { sqlite.exec("ALTER TABLE experiments ADD COLUMN source_description TEXT"); } catch {}
 
+// Add proposed_to_axiom column for doctrine graduation tracking
+try { sqlite.exec("ALTER TABLE doctrines ADD COLUMN proposed_to_axiom INTEGER NOT NULL DEFAULT 0"); } catch {}
+
 // User table for SSO
 sqlite.exec(`
   CREATE TABLE IF NOT EXISTS praxis_users (
