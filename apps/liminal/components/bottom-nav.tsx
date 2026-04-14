@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, BookOpen, Sparkles, User } from 'lucide-react';
+import { Home, Users, BookOpen, Sparkles, User, CircleDot } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Home', Icon: Home },
@@ -11,6 +11,8 @@ const NAV_ITEMS = [
   { href: '/archive', label: 'Archive', Icon: BookOpen },
   { href: '/account', label: 'Account', Icon: User },
 ] as const;
+
+const LUMEN_HUB_URL = 'https://lumen-os.up.railway.app';
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -42,6 +44,39 @@ export function BottomNav() {
           alignItems: 'stretch',
         }}
       >
+        <a
+          href={LUMEN_HUB_URL}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.25rem',
+            padding: '0.625rem 0.5rem',
+            minHeight: '48px',
+            textDecoration: 'none',
+            color: 'rgb(var(--color-text-faint))',
+            opacity: 0.55,
+            transition: 'opacity 0.15s ease, color 0.15s ease',
+            flex: 1,
+            justifyContent: 'center',
+          }}
+        >
+          <CircleDot
+            style={{ width: '20px', height: '20px', flexShrink: 0 }}
+            strokeWidth={1.5}
+          />
+          <span
+            style={{
+              fontSize: '10px',
+              fontFamily: 'var(--font-body), system-ui, sans-serif',
+              letterSpacing: '0.04em',
+              lineHeight: 1,
+              fontWeight: 400,
+            }}
+          >
+            Lumen
+          </span>
+        </a>
         {NAV_ITEMS.map(({ href, label, Icon }) => {
           const isActive =
             href === '/' ? pathname === '/' : pathname.startsWith(href);
@@ -54,7 +89,7 @@ export function BottomNav() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: '0.25rem',
-                padding: '0.625rem 0.75rem',
+                padding: '0.625rem 0.5rem',
                 minHeight: '48px',
                 textDecoration: 'none',
                 color: isActive
