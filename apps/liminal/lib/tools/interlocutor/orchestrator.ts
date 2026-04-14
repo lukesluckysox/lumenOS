@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { z } from 'zod';
 
 const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514';
 const TIMEOUT_MS = 45_000;
@@ -21,6 +22,25 @@ export interface InterlocutorOutput {
   better_formulations: string[];
   unanswered_questions: string[];
 }
+
+const AssumptionSchema = z.object({
+  assumption: z.string(),
+  examination: z.string(),
+});
+
+const ObjectionSchema = z.object({
+  objection: z.string(),
+  weight: z.string(),
+});
+
+const InterlocutorOutputSchema = z.object({
+  clarified_thesis: z.string(),
+  exposed_assumptions: z.array(AssumptionSchema),
+  strong_objections: z.array(ObjectionSchema),
+  weak_spots: z.array(z.string()),
+  better_formulations: z.array(z.string()),
+  unanswered_questions: z.array(z.string()),
+});
 
 const SYSTEM_PROMPT = `You are The Interlocutor — a Socratic sparring partner for ideas, arguments, and theses.
 
@@ -57,15 +77,24 @@ Your output is always valid JSON in this exact structure:
 Return ONLY valid JSON. No preamble. No explanation.`;
 
 function parseOutput(text: string): InterlocutorOutput {
+  let raw: unknown;
   try {
-    return JSON.parse(text) as InterlocutorOutput;
+    raw = JSON.parse(text);
   } catch {
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
-      return JSON.parse(match[0]) as InterlocutorOutput;
+      raw = JSON.parse(match[0]);
+    } else {
+      throw new Error('Could not parse Interlocutor output as JSON');
     }
-    throw new Error('Could not parse Interlocutor output as JSON');
   }
+
+  const result = InterlocutorOutputSchema.safeParse(raw);
+  if (!result.success) {
+    const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ');
+    throw new Error(`Interlocutor output validation failed: ${issues}`);
+  }
+  return result.data;
 }
 
 export async function runInterlocutor(

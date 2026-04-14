@@ -46,9 +46,9 @@ export async function checkAndIncrementUsage(user: AuthUser): Promise<{
   }
 
   const plan = row.plan as AuthUser['plan'];
-  const limit = plan === 'cabinet' || plan === 'trialing' || plan === 'grandfathered'
-    ? PLAN_LIMITS.cabinet.monthlySessionLimit
-    : PLAN_LIMITS.open.monthlySessionLimit;
+  const limit = plan === 'fellow' || plan === 'trialing' || plan === 'grandfathered'
+    ? PLAN_LIMITS.fellow.monthlySessionLimit
+    : PLAN_LIMITS.aspirant.monthlySessionLimit;
 
   if (!canCreateSession(plan, count)) {
     return { allowed: false, remaining: 0, limit };

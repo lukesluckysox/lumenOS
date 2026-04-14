@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { z } from 'zod';
 
 const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514';
 const TIMEOUT_MS = 45_000;
@@ -12,6 +13,16 @@ export interface StoicsLedgerOutput {
   maxim: string;
   act_of_repair: string;
 }
+
+const StoicsLedgerOutputSchema = z.object({
+  conduct_review: z.string(),
+  duties_met: z.array(z.string()),
+  duties_neglected: z.array(z.string()),
+  avoidances_named: z.array(z.string()),
+  excuses_detected: z.array(z.string()),
+  maxim: z.string(),
+  act_of_repair: z.string(),
+});
 
 const SYSTEM_PROMPT = `You are The Stoic's Ledger — a daily accountability practice in the tradition of Marcus Aurelius, Epictetus, and the Stoic evening review.
 
@@ -45,15 +56,24 @@ Your output is always valid JSON in this exact structure:
 Return ONLY valid JSON. No preamble. No explanation.`;
 
 function parseOutput(text: string): StoicsLedgerOutput {
+  let raw: unknown;
   try {
-    return JSON.parse(text) as StoicsLedgerOutput;
+    raw = JSON.parse(text);
   } catch {
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
-      return JSON.parse(match[0]) as StoicsLedgerOutput;
+      raw = JSON.parse(match[0]);
+    } else {
+      throw new Error('Could not parse Stoic Ledger output as JSON');
     }
-    throw new Error('Could not parse Stoic Ledger output as JSON');
   }
+
+  const result = StoicsLedgerOutputSchema.safeParse(raw);
+  if (!result.success) {
+    const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ');
+    throw new Error(`Stoic's Ledger output validation failed: ${issues}`);
+  }
+  return result.data;
 }
 
 export async function runStoicsLedger(

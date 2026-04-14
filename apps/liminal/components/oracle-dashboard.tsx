@@ -89,7 +89,7 @@ export function OracleDashboardClient() {
   }, [tab]);
 
   const handlePlanToggle = useCallback(async (userId: string, currentPlan: string) => {
-    const newPlan = currentPlan === 'cabinet' ? 'open' : 'cabinet';
+    const newPlan = currentPlan === 'fellow' ? 'aspirant' : 'fellow';
     setToggling(userId);
     try {
       const res = await fetch('/api/oracle/users', {
@@ -204,8 +204,8 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
 }
 
 function OverviewTab({ stats }: { stats: Stats }) {
-  const paid = stats.planBreakdown.find((p) => p.plan === 'cabinet')?.count ?? 0;
-  const free = stats.planBreakdown.find((p) => p.plan === 'open')?.count ?? 0;
+  const paid = stats.planBreakdown.find((p) => p.plan === 'fellow')?.count ?? 0;
+  const free = stats.planBreakdown.find((p) => p.plan === 'aspirant')?.count ?? 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -331,7 +331,7 @@ function OverviewTab({ stats }: { stats: Stats }) {
                   fontWeight: 600,
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
-                  color: u.plan === 'cabinet' ? 'rgb(var(--color-gold))' : 'rgb(var(--color-text-faint))',
+                  color: u.plan === 'fellow' ? 'rgb(var(--color-gold))' : 'rgb(var(--color-text-faint))',
                   flexShrink: 0,
                 }}
               >
@@ -460,7 +460,7 @@ function UsersTab({
                     fontWeight: 600,
                     letterSpacing: '0.08em',
                     textTransform: 'uppercase',
-                    color: u.plan === 'cabinet' ? 'rgb(var(--color-gold))' : 'rgb(var(--color-text-faint))',
+                    color: u.plan === 'fellow' ? 'rgb(var(--color-gold))' : 'rgb(var(--color-text-faint))',
                   }}
                 >
                   {u.plan}
@@ -500,9 +500,9 @@ function UsersTab({
                 >
                   {toggling === u.id
                     ? '...'
-                    : u.plan === 'cabinet'
-                    ? 'Set Open'
-                    : 'Set Cabinet'}
+                    : u.plan === 'fellow'
+                    ? 'Set Aspirant'
+                    : 'Set Fellow'}
                 </button>
               </td>
             </tr>

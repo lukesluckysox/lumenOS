@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TensionCardSkeleton } from "@/components/Skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -252,15 +252,16 @@ export default function Tensions() {
         <ErrorCard message="Could not load tensions." onRetry={() => window.location.reload()} />
       ) : isLoading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 w-full rounded-md" />)}
+          <TensionCardSkeleton />
+          <TensionCardSkeleton />
+          <TensionCardSkeleton />
         </div>
       ) : tensions?.length === 0 ? (
         <div className="border border-dashed border-border rounded-md py-16 text-center">
           <GitFork size={24} className="mx-auto mb-3 text-muted-foreground/40" />
           <p className="text-sm text-muted-foreground mb-1">No tensions mapped yet.</p>
           <p className="text-xs text-muted-foreground/60 max-w-sm mx-auto">
-            Points of productive contradiction will surface as your experiments reveal
-            the gravitational poles shaping your decisions.
+            As my experiments reveal competing truths, productive contradictions will surface here — the gravitational poles shaping my decisions.
           </p>
         </div>
       ) : (

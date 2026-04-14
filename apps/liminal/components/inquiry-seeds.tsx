@@ -57,6 +57,17 @@ export function InquirySeeds({ onSelectSeed }: { onSelectSeed?: (text: string) =
       .finally(() => setLoading(false));
   }, []);
 
+  function dismissSeed(e: React.MouseEvent, seedId: string) {
+    e.stopPropagation();
+    setSeeds(prev => prev.filter(s => s.id !== seedId));
+    fetch(`/api/internal/inquiry-seeds?id=${seedId}`, { method: 'DELETE' }).catch(() => {});
+  }
+
+  function clearAll() {
+    setSeeds([]);
+    fetch('/api/internal/inquiry-seeds', { method: 'DELETE' }).catch(() => {});
+  }
+
   if (loading || seeds.length === 0) return null;
 
   const COLLAPSE_THRESHOLD = 3;
@@ -76,29 +87,51 @@ export function InquirySeeds({ onSelectSeed }: { onSelectSeed?: (text: string) =
 
   return (
     <div className="mb-8">
-      <div style={{ marginBottom: '1rem' }}>
-        <h3
-          style={{
-            fontSize: 'clamp(0.625rem, 0.58rem + 0.15vw, 0.6875rem)',
-            fontWeight: 600,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'rgb(var(--color-text-faint))',
-            marginBottom: '0.25rem',
-          }}
-        >
-          The Loop Returns
-        </h3>
-        <p
-          style={{
-            fontSize: 'clamp(0.8rem, 0.75rem + 0.15vw, 0.85rem)',
-            color: 'rgb(var(--color-text-faint))',
-            fontStyle: 'italic',
-            fontFamily: 'var(--font-display), Georgia, serif',
-          }}
-        >
-          Your reflections have been evolving.
-        </p>
+      <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h3
+            style={{
+              fontSize: 'clamp(0.625rem, 0.58rem + 0.15vw, 0.6875rem)',
+              fontWeight: 600,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: 'rgb(var(--color-text-faint))',
+              marginBottom: '0.25rem',
+            }}
+          >
+            The Loop Returns
+          </h3>
+          <p
+            style={{
+              fontSize: 'clamp(0.8rem, 0.75rem + 0.15vw, 0.85rem)',
+              color: 'rgb(var(--color-text-faint))',
+              fontStyle: 'italic',
+              fontFamily: 'var(--font-display), Georgia, serif',
+            }}
+          >
+            Your reflections have been evolving.
+          </p>
+        </div>
+        {seeds.length > 1 && (
+          <button
+            onClick={clearAll}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 'clamp(0.65rem, 0.6rem + 0.12vw, 0.7rem)',
+              color: 'rgb(var(--color-text-faint))',
+              letterSpacing: '0.04em',
+              padding: '0.25rem 0',
+              opacity: 0.6,
+              transition: 'opacity 140ms ease',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.6'; }}
+          >
+            Clear all
+          </button>
+        )}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
@@ -126,6 +159,33 @@ export function InquirySeeds({ onSelectSeed }: { onSelectSeed?: (text: string) =
               }}
               className="seed-card"
             >
+              {/* Dismiss button */}
+              <span
+                role="button"
+                aria-label="Dismiss"
+                onClick={(e) => dismissSeed(e, seed.id)}
+                style={{
+                  position: 'absolute',
+                  top: '0.5rem',
+                  right: '0.5rem',
+                  width: '1.25rem',
+                  height: '1.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.875rem',
+                  lineHeight: 1,
+                  color: 'rgb(var(--color-text-faint))',
+                  opacity: 0,
+                  cursor: 'pointer',
+                  transition: 'opacity 140ms ease, color 140ms ease',
+                  borderRadius: '50%',
+                }}
+                className="seed-dismiss"
+              >
+                ×
+              </span>
+
               {/* Source + provocation line */}
               <div
                 style={{

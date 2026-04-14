@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { z } from 'zod';
 
 const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514';
 const TIMEOUT_MS = 45_000;
@@ -12,6 +13,16 @@ export interface FoolOutput {
   second_order_effects: string[];
   rival_interpretation: string;
 }
+
+const FoolOutputSchema = z.object({
+  core_claim: z.string(),
+  why_wrong: z.string(),
+  blind_spots: z.array(z.string()),
+  risks: z.array(z.string()),
+  reputational_danger: z.string(),
+  second_order_effects: z.array(z.string()),
+  rival_interpretation: z.string(),
+});
 
 const SYSTEM_PROMPT = `You are The Fool — the one voice at court permitted, even required, to say what no one else will.
 
@@ -41,15 +52,24 @@ Your output is always valid JSON in this exact structure:
 Return ONLY valid JSON. No preamble. No explanation.`;
 
 function parseOutput(text: string): FoolOutput {
+  let raw: unknown;
   try {
-    return JSON.parse(text) as FoolOutput;
+    raw = JSON.parse(text);
   } catch {
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
-      return JSON.parse(match[0]) as FoolOutput;
+      raw = JSON.parse(match[0]);
+    } else {
+      throw new Error('Could not parse Fool output as JSON');
     }
-    throw new Error('Could not parse Fool output as JSON');
   }
+
+  const result = FoolOutputSchema.safeParse(raw);
+  if (!result.success) {
+    const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ');
+    throw new Error(`Fool output validation failed: ${issues}`);
+  }
+  return result.data;
 }
 
 export async function runFool(position: string): Promise<FoolOutput> {

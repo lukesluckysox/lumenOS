@@ -16,3 +16,8 @@ All require their own server deployment (Railway recommended — configs include
 3. `railway up`
 
 Once deployed, update the card URLs in `/index.html` (search for `TOOL_URL_LIMINAL` etc).
+
+## Development
+
+All sub-apps live under `apps/`. This monorepo is the single source of truth.
+Future development should happen here, not in the standalone repos.

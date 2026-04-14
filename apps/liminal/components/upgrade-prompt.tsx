@@ -12,11 +12,11 @@ import Link from 'next/link';
 const FEATURE_COPY: Record<string, { heading: string; body: string }> = {
   archive: {
     heading: 'Return to prior inquiries',
-    body: 'The Cabinet keeps your full archive — every session, every instrument, as far back as you need. The examined life requires more than a week of memory.',
+    body: 'The Fellow tier keeps your full archive — every session, every instrument, as far back as you need. The examined life requires more than a week of memory.',
   },
   compare: {
     heading: 'Compare how your thinking changes',
-    body: 'Place two sessions side by side and watch your reasoning evolve. What shifted? What held firm? The Cabinet makes this visible.',
+    body: 'Place two sessions side by side and watch your reasoning evolve. What shifted? What held firm? The Fellow tier makes this visible.',
   },
   export: {
     heading: 'Save what is worth keeping',
@@ -24,7 +24,7 @@ const FEATURE_COPY: Record<string, { heading: string; body: string }> = {
   },
   sessions: {
     heading: 'Keep a private cabinet of thought',
-    body: 'You have used your free sessions for the month. The Cabinet offers unlimited access to all six instruments — as many inquiries as the examined life demands.',
+    body: 'You have used your free sessions for the month. The Fellow tier offers unlimited access to all six instruments — as many inquiries as the examined life demands.',
   },
 };
 
@@ -103,7 +103,7 @@ export function UpgradePrompt({ feature, message }: UpgradePromptProps) {
           transition: 'background 160ms ease',
         }}
       >
-        Upgrade to Cabinet
+        Upgrade to Fellow
       </Link>
     </div>
   );

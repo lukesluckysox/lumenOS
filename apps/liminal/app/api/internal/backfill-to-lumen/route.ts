@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { classifyEntrySignal } from '@/lib/lumenEmitter';
 
-const LUMEN_API_URL = process.env.LUMEN_API_URL;
+const LUMEN_API_URL = (process.env.LUMEN_API_URL || '').replace(/\/+$/, '');  // strip trailing slash
 const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN;
 const BATCH_SIZE = 50;
 

@@ -61,11 +61,20 @@ const ADVISORS: CouncilAdvisor[] = [
   },
 ];
 
-function buildAdvisorPrompt(
+// ─── Structured content for prompt caching ──────────────────────────────────
+// The advisor identity + personality is static and expensive to re-process
+// across 5 advisors × 2 rounds = 10 calls. We mark it ephemeral so Anthropic
+// caches it within the session.
+
+type ContentBlock =
+  | { type: 'text'; text: string; cache_control?: { type: 'ephemeral' } }
+  ;
+
+function buildAdvisorContent(
   advisor: CouncilAdvisor,
   question: string,
   previousTurns: CouncilTurn[]
-): string {
+): ContentBlock[] {
   const context =
     previousTurns.length > 0
       ? `\n\nThe council has already spoken in round one:\n\n${previousTurns
@@ -73,15 +82,19 @@ function buildAdvisorPrompt(
           .join('\n\n')}\n\nNow in round two, respond to your colleagues. You may agree, push back, add nuance, or sharpen your original position. Be direct and specific. Reference what others said.`
       : '\nThis is round one. Give your counsel without knowledge of what others will say. Be direct and specific. 2–4 paragraphs.';
 
-  return `You are ${advisor.name}, ${advisor.title} of the Small Council.
-
-${advisor.personality}
-
-The question before the council:
-"${question}"
-${context}
-
-Speak in first person. Stay in character. 2–4 paragraphs.`;
+  return [
+    // Static block: advisor identity — cacheable across calls with the same advisor
+    {
+      type: 'text',
+      text: `You are ${advisor.name}, ${advisor.title} of the Small Council.\n\n${advisor.personality}`,
+      cache_control: { type: 'ephemeral' },
+    },
+    // Dynamic block: question + round context — changes each call
+    {
+      type: 'text',
+      text: `\n\nThe question before the council:\n"${question}"\n${context}\n\nSpeak in first person. Stay in character. 2–4 paragraphs.`,
+    },
+  ];
 }
 
 async function callAdvisor(
@@ -96,9 +109,13 @@ async function callAdvisor(
     messages: [
       {
         role: 'user',
-        content: buildAdvisorPrompt(advisor, question, previousTurns),
+        content: buildAdvisorContent(advisor, question, previousTurns) as any,
       },
     ],
+  }, {
+    headers: {
+      'anthropic-beta': 'prompt-caching-2024-07-31',
+    },
   });
   const block = message.content[0];
   return block.type === 'text' ? block.text.trim() : '';

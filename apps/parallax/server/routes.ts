@@ -255,7 +255,7 @@ export async function registerRoutes(
   // POST /api/auth/register
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const { username, password, displayName, age, gender, location } = req.body;
+      const { username, password, displayName, email, age, gender, location } = req.body;
 
       // Validate username: 3+ chars, alphanumeric + underscore
       if (!username || typeof username !== "string" || username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username)) {
@@ -286,6 +286,7 @@ export async function registerRoutes(
         username,
         password_hash,
         display_name: displayName || null,
+        email: email || null,
         created_at: new Date().toISOString(),
         age: age || null,
         gender: gender || null,
@@ -316,7 +317,7 @@ export async function registerRoutes(
   // POST /api/auth/login
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { username, password } = req.body;
+      const { username, password, email } = req.body;
 
       if (!username || !password) {
         return res.status(400).json({ error: "Username and password are required" });
@@ -332,6 +333,11 @@ export async function registerRoutes(
         return res.status(401).json({ error: "Invalid username or password" });
       }
 
+      // If email provided and user doesn't have one yet, associate it
+      if (email && !(user as any).email) {
+        sqlite.prepare("UPDATE users SET email = ? WHERE id = ?").run(email.trim().toLowerCase(), user.id);
+      }
+
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "30d" });
       res.cookie("parallax_token", token, {
         httpOnly: true,
@@ -344,6 +350,7 @@ export async function registerRoutes(
         id: user.id,
         username: user.username,
         displayName: user.display_name,
+        email: (user as any).email || email || null,
         pro: !!(user as any).pro,
         token,
       });
@@ -3551,7 +3558,7 @@ Return ONLY valid JSON:
 
   // ===================== LUMEN INTERNAL ENDPOINTS =====================
 
-  const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN;
+  const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '';
 
   function requireInternalToken(req: any, res: any): boolean {
     const token = req.headers["x-lumen-internal-token"];
@@ -3567,7 +3574,7 @@ Return ONLY valid JSON:
   app.post("/api/internal/link-user", async (req, res) => {
     if (!requireInternalToken(req, res)) return;
 
-    const { username, lumenUserId } = req.body ?? {};
+    const { username, lumenUserId, plan, email } = req.body ?? {};
     if (!username || !lumenUserId) {
       return res.status(400).json({ error: "username and lumenUserId are required" });
     }
@@ -3583,11 +3590,23 @@ Return ONLY valid JSON:
           username,
           password_hash: randomHash,
           display_name: username,
+          email: email || null,
           created_at: new Date().toISOString(),
         });
       }
 
       storage.setLumenUserId(user.id, String(lumenUserId));
+
+      // Sync email from Lumen if we have it and Parallax doesn't
+      if (email && !user.email) {
+        sqlite.prepare("UPDATE users SET email = ? WHERE id = ?").run(email, user.id);
+      }
+
+      // Sync plan from Lumen: aspirant/free → pro=0, fellow/pro/founder → pro=1
+      if (plan && ['free', 'pro', 'founder', 'aspirant', 'fellow'].includes(plan)) {
+        const newPro = (plan === 'aspirant' || plan === 'free') ? 0 : 1;
+        sqlite.prepare("UPDATE users SET pro = ? WHERE id = ?").run(newPro, user.id);
+      }
 
       return res.json({ ok: true, parallaxUserId: user.id, linked: true });
     } catch (err) {
@@ -4170,6 +4189,83 @@ Return ONLY valid JSON:
     }
   });
 
+  // GET /api/internal/users — Oracle: list all registered users
+  app.get("/api/internal/users", (req, res) => {
+    if (!requireInternalToken(req, res)) return;
+    try {
+      const allUsers = storage.getAllUsers();
+      return res.json({
+        users: allUsers.map((u: any) => ({
+          username:   u.username,
+          email:      u.email || null,
+          plan:       u.pro ? 'fellow' : 'aspirant',
+          createdAt:  u.created_at,
+        })),
+      });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  // POST /api/internal/sync-plan — Lumen Oracle: sync plan change
+  // Maps Lumen canonical plan → Parallax pro field: aspirant/free → 0, fellow/pro/founder → 1
+  app.post("/api/internal/sync-plan", (req, res) => {
+    if (!requireInternalToken(req, res)) return;
+    try {
+      const { username, email, plan } = req.body ?? {};
+      if (!plan || !['free', 'pro', 'founder', 'aspirant', 'fellow'].includes(plan)) {
+        return res.status(400).json({ error: "Invalid plan" });
+      }
+      if (!username && !email) {
+        return res.status(400).json({ error: "username or email required" });
+      }
+
+      // Find user by username (primary key in Parallax)
+      let user: any = null;
+      if (username) user = storage.getUserByUsername(username);
+      // Fallback: search all users by lumen_user_id is not straightforward,
+      // so username is the canonical lookup for Parallax
+
+      if (!user) {
+        return res.status(404).json({ ok: false, reason: "User not found in Parallax" });
+      }
+
+      const newPro = (plan === 'aspirant' || plan === 'free') ? 0 : 1;
+      sqlite.prepare("UPDATE users SET pro = ? WHERE id = ?").run(newPro, user.id);
+
+      console.log(`[sync-plan] Updated Parallax user ${user.username} to pro=${newPro} (from Lumen plan=${plan})`);
+      return res.json({ ok: true, pro: !!newPro });
+    } catch (err: any) {
+      console.error("[sync-plan]", err);
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  // POST /api/internal/delete-user — Lumen Oracle: delete user cascade
+  app.post("/api/internal/delete-user", (req, res) => {
+    if (!requireInternalToken(req, res)) return;
+    try {
+      const { username, email } = req.body ?? {};
+      if (!username && !email) {
+        return res.status(400).json({ error: "username or email required" });
+      }
+
+      let user: any = null;
+      if (username) user = storage.getUserByUsername(username);
+
+      if (!user) {
+        return res.status(404).json({ ok: false, reason: "User not found in Parallax" });
+      }
+
+      storage.deleteUserAndData(user.id);
+      console.log(`[delete-user] Deleted Parallax user ${user.username} (id=${user.id})`);
+      return res.json({ ok: true });
+    } catch (err: any) {
+      console.error("[delete-user]", err);
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
   // GET /api/loop-status — authenticated user: loop activity summary
   app.get("/api/loop-status", async (req, res) => {
     const userId = getUserId(req);
@@ -4197,6 +4293,26 @@ Return ONLY valid JSON:
       });
     } catch (err: any) {
       return res.status(500).json({ error: err.message });
+    }
+  });
+
+  // GET /api/loop/recent-inbound — recent Liminal sessions ingested in last hour
+  app.get("/api/loop/recent-inbound", async (req, res) => {
+    const userId = getUserId(req);
+    if (!userId) return res.status(401).json({ events: [] });
+
+    try {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const sessions = storage.getLiminalSessions(userId, 50);
+      const recent = sessions.filter((s: any) => s.created_at >= oneHourAgo);
+
+      const events = recent.length > 0
+        ? [{ source: "liminal", type: "session", count: recent.length, latestAt: recent[0].created_at }]
+        : [];
+
+      return res.json({ events });
+    } catch (err: any) {
+      return res.status(500).json({ events: [] });
     }
   });
 

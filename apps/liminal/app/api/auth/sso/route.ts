@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         `INSERT INTO users (email, password_hash, role, plan)
          VALUES ($1, $2, $3, $4)
          RETURNING id`,
-        [ssoEmail, randomHash, 'user', 'open']
+        [ssoEmail, randomHash, 'user', 'aspirant']
       );
     }
 
@@ -72,11 +72,11 @@ export async function GET(request: NextRequest) {
       throw new Error('Failed to find or create SSO user');
     }
 
-    // Persist the Lumen userId so epistemic events can reference it
+    // Persist the Lumen userId and username so epistemic events can reference them
     if (payload.userId) {
       await execute(
-        `UPDATE users SET lumen_user_id = $1 WHERE id = $2`,
-        [String(payload.userId), user.id]
+        `UPDATE users SET lumen_user_id = $1, username = $2 WHERE id = $3`,
+        [String(payload.userId), payload.username ?? null, user.id]
       );
     }
 

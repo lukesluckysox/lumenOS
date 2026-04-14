@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     // Auto-assign oracle role for designated admin email
     const ORACLE_EMAIL = 'thebestpolicyis@gmail.com';
     const assignedRole = lowerEmail === ORACLE_EMAIL ? 'oracle' : 'user';
-    const assignedPlan = lowerEmail === ORACLE_EMAIL ? 'cabinet' : 'open';
+    const assignedPlan = lowerEmail === ORACLE_EMAIL ? 'fellow' : 'aspirant';
 
     // Create user
     const user = await queryOne<{ id: string }>(

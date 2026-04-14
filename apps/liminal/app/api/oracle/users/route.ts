@@ -51,8 +51,8 @@ export async function GET() {
 }
 
 /**
- * PATCH /api/oracle/users — Toggle a user's plan (Open <-> Cabinet).
- * Body: { userId: string, plan: 'open' | 'cabinet' }
+ * PATCH /api/oracle/users — Toggle a user's plan (Aspirant <-> Fellow).
+ * Body: { userId: string, plan: 'aspirant' | 'fellow' }
  */
 export async function PATCH(request: NextRequest) {
   try {
@@ -64,7 +64,7 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { userId, plan } = body;
 
-    if (!userId || !['open', 'cabinet'].includes(plan)) {
+    if (!userId || !['aspirant', 'fellow'].includes(plan)) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 

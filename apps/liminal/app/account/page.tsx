@@ -29,7 +29,7 @@ export default async function AccountPage() {
 
   const paid = isPaidPlan(user.plan);
   const remaining = sessionsRemaining(user.plan, details?.monthly_session_count ?? 0);
-  const limit = paid ? Infinity : PLAN_LIMITS.open.monthlySessionLimit;
+  const limit = paid ? Infinity : PLAN_LIMITS.aspirant.monthlySessionLimit;
 
   return (
     <>
@@ -145,7 +145,7 @@ export default async function AccountPage() {
             <hr className="page-rule" style={{ margin: '0 0 2rem' }} />
             <section>
               <p className="eyebrow" style={{ marginBottom: '1rem' }}>
-                Cabinet Includes
+                Fellow Includes
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {[

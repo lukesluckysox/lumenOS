@@ -5,7 +5,7 @@ import type { Axiom } from "@shared/schema";
 import ConfidenceBadge from "@/components/ConfidenceBadge";
 import SourceTags, { SourceLegend } from "@/components/SourceTags";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonLine, SkeletonCard } from "@/components/Skeleton";
 
 const CONFIDENCE_ORDER = ["high", "medium-high", "medium", "medium-low", "low"];
 
@@ -210,19 +210,25 @@ export default function TruthClaims() {
     queryFn: () => fetch("/api/axioms?stage=proving_ground").then(r => r.json()),
   });
 
-  // Toast: once per session if lumen_push axioms are present
+  // Toast: once per session if recent inbound truth claims exist
   useEffect(() => {
-    if (!axioms || axioms.length === 0) return;
     const sessionKey = 'axiom_loop_toast_shown';
     if (sessionStorage.getItem(sessionKey)) return;
-    const lumenCount = axioms.filter((a) => (a as any).source === 'lumen_push').length;
-    if (lumenCount > 0) {
-      sessionStorage.setItem(sessionKey, '1');
-      toast({
-        description: `The Loop has delivered ${lumenCount} new proposition${lumenCount !== 1 ? 's' : ''} for examination.`,
-      });
-    }
-  }, [axioms]);
+    fetch('/api/loop/recent-inbound')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.events?.length) return;
+        const count = data.events[0].count;
+        if (count <= 0) return;
+        sessionStorage.setItem(sessionKey, '1');
+        const msg = count === 1
+          ? 'A truth claim surfaced for examination.'
+          : `${count} truth claims surfaced for examination.`;
+        const { dismiss } = toast({ description: msg });
+        setTimeout(dismiss, 4000);
+      })
+      .catch(() => {});
+  }, []);
 
   const sorted = (axioms ?? []).slice().sort((a, b) => {
     const ai = CONFIDENCE_ORDER.indexOf(a.confidence);
@@ -296,17 +302,26 @@ export default function TruthClaims() {
         <LoopDeliveryOnboarding axioms={axioms} />
       )}
       {isLoading ? (
-        <div className="px-4 md:px-8 py-6 space-y-4">
+        <div className="px-4 md:px-8 py-6 space-y-5">
+          {/* Filter pill skeletons */}
+          <div className="flex items-center gap-2">
+            {[16, 12, 20, 14, 18, 10].map((w, i) => (
+              <SkeletonLine key={i} className="h-6 rounded-sm" style={{ width: `${w * 4}px` }} />
+            ))}
+          </div>
+          {/* Card skeletons */}
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-start gap-5 py-5 border-b border-border/50">
-              <Skeleton className="h-4 w-8 flex-shrink-0" />
-              <div className="flex-1 space-y-3">
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-3 w-32" />
+            <SkeletonCard key={i}>
+              <div className="flex items-start gap-5">
+                <SkeletonLine className="h-4 w-8 flex-shrink-0" />
+                <div className="flex-1 space-y-3">
+                  <SkeletonLine className="w-24" />
+                  <SkeletonLine className="h-5 w-3/4" />
+                  <SkeletonLine className="h-4 w-full" />
+                  <SkeletonLine className="w-32" />
+                </div>
               </div>
-            </div>
+            </SkeletonCard>
           ))}
         </div>
       ) : isError ? (
@@ -329,11 +344,11 @@ export default function TruthClaims() {
       ) : filtered.length === 0 ? (
         <div className="px-4 md:px-8 py-16 text-center">
           <div className="font-serif text-xl text-muted-foreground/40 mb-3">
-            {filter === "all" ? "Proposals will appear here as patterns crystallize across your reflections." : `No ${filter} confidence proposals.`}
+            {filter === "all" ? "No proposals yet. As I explore beliefs in Liminal, track patterns in Parallax, and test hypotheses in Praxis, truth claims will surface here for my examination." : `No ${filter} confidence proposals.`}
           </div>
           {filter === "all" && (
             <p className="text-sm text-muted-foreground/40 leading-relaxed mb-4 max-w-sm mx-auto">
-              As you explore beliefs in Liminal, track patterns in Parallax, and run experiments in Praxis, proposals will surface here for your examination.
+              Each proposal carries a confidence level. I examine the evidence, then decide: deepen it through synthesis, or promote it to the Constitution if the truth is self-evident.
             </p>
           )}
         </div>

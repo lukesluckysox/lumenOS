@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { Revision } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonLine, SkeletonCard } from "@/components/Skeleton";
 
 const SIGNIFICANCE = {
   major: { label: "MAJOR", class: "text-amber-600/80 dark:text-amber-500/70" },
@@ -247,15 +247,28 @@ export default function Revisions() {
       {isLoading ? (
         <div className="px-4 md:px-8 py-6 space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="py-6 border-b border-border/50">
+            <SkeletonCard key={i}>
+              {/* Date + significance */}
               <div className="flex items-center gap-3 mb-3">
-                <Skeleton className="h-3 w-32" />
-                <Skeleton className="h-3 w-6" />
-                <Skeleton className="h-3 w-28" />
+                <SkeletonLine className="w-32" />
+                <SkeletonLine className="w-6" />
+                <SkeletonLine className="w-28" />
               </div>
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
+              {/* Timeline node: previous */}
+              <div className="flex items-start gap-3 mb-3">
+                <div className="flex-shrink-0 mt-1">
+                  <div className="w-1.5 h-1.5 rounded-full animate-pulse bg-muted/40" />
+                </div>
+                <SkeletonLine className="h-4 w-full" />
+              </div>
+              {/* Timeline node: revised */}
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-1">
+                  <div className="w-1.5 h-1.5 rounded-full animate-pulse bg-muted/40" />
+                </div>
+                <SkeletonLine className="h-4 w-3/4" />
+              </div>
+            </SkeletonCard>
           ))}
         </div>
       ) : isError ? (

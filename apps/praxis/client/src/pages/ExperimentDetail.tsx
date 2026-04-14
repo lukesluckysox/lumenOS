@@ -3,7 +3,7 @@ import { useLocation, useParams } from "wouter";
 import { ArrowLeft, CheckCircle2, Archive, Pencil, Save, X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ExperimentDetailTitleSkeleton, PhaseSectionSkeleton } from "@/components/Skeleton";
 import { StatusBadge, SourceTag, PhaseProgress } from "@/components/ExperimentComponents";
 import type { Experiment } from "@shared/schema";
 import { formatDate } from "@/lib/utils";
@@ -152,11 +152,17 @@ export default function ExperimentDetail() {
 
   if (isLoading) {
     return (
-      <div className="p-4 md:p-8 max-w-2xl space-y-6">
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-8 w-80" />
-        <Skeleton className="h-40 w-full rounded-md" />
-        <Skeleton className="h-40 w-full rounded-md" />
+      <div className="p-4 md:p-8 max-w-2xl">
+        <div className="mb-6">
+          <div className="animate-pulse bg-muted/30 rounded h-4 w-28" />
+        </div>
+        <ExperimentDetailTitleSkeleton />
+        <div className="space-y-5">
+          <PhaseSectionSkeleton />
+          <PhaseSectionSkeleton />
+          <PhaseSectionSkeleton />
+          <PhaseSectionSkeleton />
+        </div>
       </div>
     );
   }

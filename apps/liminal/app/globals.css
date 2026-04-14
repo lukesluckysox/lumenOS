@@ -437,10 +437,22 @@ ul[role='list'], ol[role='list'] { list-style: none; }
   opacity: 1 !important;
 }
 
-/* Show explore hint on touch devices (no hover) */
+.seed-card:hover .seed-dismiss {
+  opacity: 0.5 !important;
+}
+
+.seed-dismiss:hover {
+  opacity: 1 !important;
+  color: rgb(var(--color-text)) !important;
+}
+
+/* Show explore hint and dismiss on touch devices (no hover) */
 @media (hover: none) {
   .seed-card .seed-card-explore {
     opacity: 0.7 !important;
+  }
+  .seed-card .seed-dismiss {
+    opacity: 0.5 !important;
   }
 }
 

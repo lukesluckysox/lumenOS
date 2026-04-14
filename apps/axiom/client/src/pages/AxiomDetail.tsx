@@ -7,7 +7,7 @@ import ConfidenceBadge, { ConfidenceBar } from "@/components/ConfidenceBadge";
 import SourceTags from "@/components/SourceTags";
 import { useToast } from "@/hooks/use-toast";
 import ConstitutionalMoment from "@/components/ConstitutionalMoment";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonLine, SkeletonCard } from "@/components/Skeleton";
 
 function SynthesisSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -49,7 +49,10 @@ export default function AxiomDetail({ params }: { params: { id: string } }) {
   });
 
   const enrichMutation = useMutation({
-    mutationFn: () => apiRequest("POST", `/api/axioms/${id}/enrich`, {}),
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/axioms/${id}/enrich`, {});
+      return await res.json();
+    },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/axioms", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/axioms"] });
@@ -103,18 +106,36 @@ export default function AxiomDetail({ params }: { params: { id: string } }) {
   if (isLoading) {
     return (
       <div className="max-w-3xl mx-auto px-4 md:px-8 pt-10 pb-16">
-        <Skeleton className="h-3 w-28 mb-8" />
+        {/* Back link */}
+        <SkeletonLine className="w-16 mb-8" />
+        {/* Title + meta */}
         <div className="mb-8">
-          <Skeleton className="h-7 w-3/4 mb-4" />
+          <SkeletonLine className="h-7 w-3/4 mb-4" />
           <div className="flex items-center gap-6 pl-8">
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-32" />
+            <SkeletonLine className="h-4 w-20" />
+            <SkeletonLine className="h-4 w-32" />
           </div>
-          <div className="mt-3 pl-8"><Skeleton className="h-1 w-full" /></div>
+          <div className="mt-3 pl-8">
+            <SkeletonLine className="h-1 w-full" />
+          </div>
         </div>
-        <Skeleton className="h-32 w-full mb-6" />
-        <Skeleton className="h-24 w-full mb-6" />
-        <Skeleton className="h-24 w-full" />
+        {/* Truth claim block */}
+        <SkeletonCard className="mb-6">
+          <SkeletonLine className="w-24 mb-3" />
+          <SkeletonLine className="h-6 w-full mb-2" />
+          <SkeletonLine className="h-6 w-2/3" />
+        </SkeletonCard>
+        {/* Evidence cards */}
+        <SkeletonCard className="mb-6">
+          <SkeletonLine className="w-32 mb-3" />
+          <SkeletonLine className="h-4 w-full mb-2" />
+          <SkeletonLine className="h-4 w-5/6" />
+        </SkeletonCard>
+        {/* Action buttons */}
+        <div className="flex items-center gap-3">
+          <SkeletonLine className="h-8 w-36 rounded-sm" />
+          <SkeletonLine className="h-8 w-44 rounded-sm" />
+        </div>
       </div>
     );
   }

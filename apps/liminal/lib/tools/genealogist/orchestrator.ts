@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { z } from 'zod';
 
 const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514';
 const TIMEOUT_MS = 45_000;
@@ -17,6 +18,21 @@ export interface GenealogyOutput {
   belief_map: string;
   unresolved_questions: string[];
 }
+
+const LineageSchema = z.object({
+  source: z.string(),
+  description: z.string(),
+});
+
+const GenealogyOutputSchema = z.object({
+  belief_statement: z.string(),
+  lineages: z.array(LineageSchema),
+  inherited_vs_chosen: z.string(),
+  hidden_function: z.string(),
+  tensions: z.array(z.string()),
+  belief_map: z.string(),
+  unresolved_questions: z.array(z.string()),
+});
 
 const SYSTEM_PROMPT = `You are The Genealogist. Your work is intellectual archaeology — tracing a belief, conviction, or habit-of-thought to its buried origins.
 
@@ -45,17 +61,24 @@ Your output is always valid JSON in this exact structure:
 Return ONLY valid JSON. No preamble. No explanation.`;
 
 function parseOutput(text: string): GenealogyOutput {
-  // Try direct parse first
+  let raw: unknown;
   try {
-    return JSON.parse(text) as GenealogyOutput;
+    raw = JSON.parse(text);
   } catch {
-    // Extract JSON from within the response
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
-      return JSON.parse(match[0]) as GenealogyOutput;
+      raw = JSON.parse(match[0]);
+    } else {
+      throw new Error('Could not parse Genealogist output as JSON');
     }
-    throw new Error('Could not parse Genealogist output as JSON');
   }
+
+  const result = GenealogyOutputSchema.safeParse(raw);
+  if (!result.success) {
+    const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ');
+    throw new Error(`Genealogist output validation failed: ${issues}`);
+  }
+  return result.data;
 }
 
 export async function runGenealogist(belief: string): Promise<GenealogyOutput> {

@@ -77,8 +77,8 @@ ALTER TABLE tool_sessions ADD COLUMN IF NOT EXISTS feedback TEXT;
 -- ── Monetization schema additions ──────────────────────────────────────────
 -- Role: 'user' (default) or 'oracle' (admin)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'user';
--- Plan: 'open' (free) or 'cabinet' (paid). Extensible to 'trialing', 'canceled', 'grandfathered'.
-ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'open';
+-- Plan: 'aspirant' (free) or 'fellow' (paid). Extensible to 'trialing', 'canceled', 'grandfathered'.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'aspirant';
 -- Monthly usage tracking
 ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_session_count INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS monthly_session_reset TIMESTAMPTZ DEFAULT NOW();
@@ -89,8 +89,11 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_changed_at TIMESTAMPTZ;
 -- Lumen SSO: store the Lumen-side userId for epistemic event emission
 ALTER TABLE users ADD COLUMN IF NOT EXISTS lumen_user_id TEXT;
 
--- Ensure oracle role for the designated admin email
-UPDATE users SET role = 'oracle', plan = 'cabinet' WHERE email = 'thebestpolicyis@gmail.com';
+-- Username: display name synced from Lumen
+ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT;
+
+-- Oracle role is seeded via: npm run seed:oracle (reads ORACLE_EMAIL env var)
+-- See scripts/seedOracle.ts
 
 -- Audit log for plan changes and admin actions
 CREATE TABLE IF NOT EXISTS audit_log (

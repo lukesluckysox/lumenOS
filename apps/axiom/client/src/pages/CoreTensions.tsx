@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { Tension } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonLine, SkeletonCard } from "@/components/Skeleton";
 
 function TensionCard({ tension, onDelete }: { tension: Tension; onDelete: (id: number) => void }) {
   const [expanded, setExpanded] = useState(false);
@@ -239,15 +239,15 @@ export default function CoreTensions() {
       {isLoading ? (
         <div className="px-4 md:px-8 py-6 space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="py-6 border-b border-border/50">
+            <SkeletonCard key={i}>
               <div className="flex items-center gap-4 mb-3">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-6" />
-                <Skeleton className="h-4 w-24" />
+                <SkeletonLine className="h-4 w-24" />
+                <SkeletonLine className="h-3 w-6" />
+                <SkeletonLine className="h-4 w-24" />
               </div>
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4 mt-2" />
-            </div>
+              <SkeletonLine className="h-4 w-full" />
+              <SkeletonLine className="h-4 w-3/4 mt-2" />
+            </SkeletonCard>
           ))}
         </div>
       ) : isError ? (

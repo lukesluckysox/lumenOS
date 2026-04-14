@@ -39,7 +39,7 @@ function mostUsedTool(sessions: ToolSession[]): string | null {
 
 export default async function ArchivePage() {
   const user = await getSession();
-  const plan = user!.plan ?? 'open';
+  const plan = user!.plan ?? 'aspirant';
   const limits = archiveLimits(plan);
   const paid = isPaidPlan(plan);
 
@@ -227,7 +227,7 @@ export default async function ArchivePage() {
         {!paid && hiddenCount > 0 && (
           <UpgradePrompt
             feature="archive"
-            message={`${hiddenCount} earlier session${hiddenCount !== 1 ? 's' : ''} beyond the last ${limits.days} days. Upgrade to Cabinet to return to all prior inquiries.`}
+            message={`${hiddenCount} earlier session${hiddenCount !== 1 ? 's' : ''} beyond the last ${limits.days} days. Upgrade to Fellow to return to all prior inquiries.`}
           />
         )}
 

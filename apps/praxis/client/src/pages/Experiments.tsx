@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Plus, CheckCircle2, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { FilterPillsSkeleton, ExperimentCardSkeleton } from "@/components/Skeleton";
 import { StatusBadge, PhaseDot, PhaseProgress, SourceTag } from "@/components/ExperimentComponents";
 import type { Experiment } from "@shared/schema";
 import { formatDateShort } from "@/lib/utils";
@@ -72,18 +72,24 @@ export default function Experiments() {
     queryKey: ["/api/experiments"],
   });
 
-  // ── Toast: show once per session when proposed experiments exist ──────────
+  // ── Loop toast: show once per session when recent inbound experiments exist ──
   useEffect(() => {
-    if (!experiments) return;
-    const proposed = experiments.filter(e => e.status === "proposed");
-    if (proposed.length === 0) return;
     const key = "praxis_loop_toast_shown";
     if (sessionStorage.getItem(key)) return;
-    sessionStorage.setItem(key, "1");
-    toast({
-      title: `The Loop has ${proposed.length} proposed experiment${proposed.length === 1 ? "" : "s"} for you.`,
-    });
-  }, [experiments, toast]);
+    fetch("/api/loop/recent-inbound")
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { events: { count: number }[] } | null) => {
+        if (!data?.events?.length) return;
+        const count = data.events[0].count;
+        if (count <= 0) return;
+        sessionStorage.setItem(key, "1");
+        const msg = count === 1
+          ? "A hypothesis arrived from the Loop for testing."
+          : `${count} hypotheses arrived from the Loop for testing.`;
+        toast({ title: msg, duration: 4000 });
+      })
+      .catch(() => {});
+  }, [toast]);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
 
@@ -240,48 +246,54 @@ export default function Experiments() {
       )}
 
       {/* Filters */}
-      <div className="flex items-center gap-1 mb-6 flex-wrap">
-        {filters.map(f => (
-          <button
-            key={f.key}
-            data-testid={`filter-${f.key}`}
-            onClick={() => setActiveFilter(f.key)}
-            className={cn(
-              "px-3 py-1 text-xs rounded font-medium transition-colors",
-              activeFilter === f.key
-                ? "bg-accent text-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
-            )}
-          >
-            {f.label}
-            {f.key !== "all" && experiments && (
-              <span className="ml-1.5 text-muted-foreground/60">
-                {experiments.filter(e => e.status === f.key).length}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      {isLoading ? (
+        <FilterPillsSkeleton />
+      ) : (
+        <div className="flex items-center gap-1 mb-6 flex-wrap">
+          {filters.map(f => (
+            <button
+              key={f.key}
+              data-testid={`filter-${f.key}`}
+              onClick={() => setActiveFilter(f.key)}
+              className={cn(
+                "px-3 py-1 text-xs rounded font-medium transition-colors",
+                activeFilter === f.key
+                  ? "bg-accent text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
+              )}
+            >
+              {f.label}
+              {f.key !== "all" && experiments && (
+                <span className="ml-1.5 text-muted-foreground/60">
+                  {experiments.filter(e => e.status === f.key).length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* List */}
       {isError ? (
         <ErrorCard message="Could not load experiments." onRetry={() => window.location.reload()} />
       ) : isLoading ? (
         <div className="space-y-3">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 w-full rounded-md" />)}
+          <ExperimentCardSkeleton />
+          <ExperimentCardSkeleton />
+          <ExperimentCardSkeleton />
         </div>
       ) : filtered.length === 0 ? (
         <div className="border border-dashed border-border rounded-md py-16 text-center">
           <p className="text-sm text-muted-foreground mb-4">
             {activeFilter === "all"
-              ? "No experiments yet. The laboratory awaits."
+              ? "No experiments yet. Design a test for a belief, observe what happens, and let the results inform what I hold true."
               : `No ${activeFilter} experiments.`}
           </p>
           {activeFilter === "all" && (
             <Link href="/experiments/new">
               <Button size="sm" variant="outline" className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10">
                 <Plus size={13} />
-                Begin first experiment
+                Design my first experiment
               </Button>
             </Link>
           )}

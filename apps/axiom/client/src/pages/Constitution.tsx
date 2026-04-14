@@ -5,7 +5,7 @@ import ConfidenceBadge from "@/components/ConfidenceBadge";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonLine, SkeletonCard } from "@/components/Skeleton";
 
 function Section({ label, children, note }: { label: string; children: React.ReactNode; note?: string }) {
   return (
@@ -251,15 +251,41 @@ export default function Constitution() {
 
   if (isLoading) return (
     <div className="max-w-2xl mx-auto px-4 md:px-8 pt-10 pb-20">
-      <Skeleton className="h-3 w-24 mb-2" />
-      <Skeleton className="h-8 w-64 mb-3" />
-      <Skeleton className="h-3 w-48 mb-8" />
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="py-5 border-b border-border/40">
-            <Skeleton className="h-4 w-full mb-2" />
-            <Skeleton className="h-4 w-3/4 mb-2" />
-            <Skeleton className="h-3 w-32" />
+      {/* Header */}
+      <SkeletonLine className="w-24 mb-2" />
+      <SkeletonLine className="h-8 w-64 mb-3" />
+      <SkeletonLine className="w-48 mb-8" />
+      {/* Preamble text block */}
+      <SkeletonCard className="mb-10">
+        <SkeletonLine className="w-20 mb-3" />
+        <SkeletonLine className="h-4 w-full mb-2" />
+        <SkeletonLine className="h-4 w-5/6 mb-2" />
+        <SkeletonLine className="h-4 w-2/3" />
+      </SkeletonCard>
+      {/* Principle cards */}
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="py-5 border-b border-border/40">
+          <div className="flex items-start gap-4">
+            <SkeletonLine className="h-4 w-8 flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <SkeletonLine className="h-4 w-full" />
+              <SkeletonLine className="h-4 w-3/4" />
+              <SkeletonLine className="w-32" />
+            </div>
+          </div>
+        </div>
+      ))}
+      {/* Tension cards */}
+      <div className="mt-8">
+        <SkeletonLine className="w-28 mb-4" />
+        {[1, 2].map((i) => (
+          <div key={i} className="py-4 border-b border-border/40">
+            <div className="flex items-center gap-3 mb-2">
+              <SkeletonLine className="h-4 w-20" />
+              <SkeletonLine className="h-3 w-4" />
+              <SkeletonLine className="h-4 w-20" />
+            </div>
+            <SkeletonLine className="h-4 w-full" />
           </div>
         ))}
       </div>
@@ -291,9 +317,9 @@ export default function Constitution() {
 
       {isEmpty ? (
         <div className="text-center py-12">
-          <div className="font-serif text-xl text-muted-foreground/40 mb-4">Your living constitution will form here as principles are examined and adopted.</div>
+          <div className="font-serif text-xl text-muted-foreground/40 mb-4">My living constitution forms here as I examine and adopt principles.</div>
           <p className="text-sm text-muted-foreground/50 leading-relaxed mb-6 max-w-sm mx-auto">
-            Examine and approve proposals from the Proving Ground to establish your first governing principles.
+            When I promote a proposal from the Proving Ground, it becomes a governing principle — a truth I’ve tested and chosen to live by. Tensions between principles are tracked as amendments.
           </p>
           <Link href="/">
             <button className="text-xs font-mono tracking-wider text-primary hover:text-primary/80 transition-colors">

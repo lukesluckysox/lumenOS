@@ -1,12 +1,19 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  StatSkeleton,
+  ExperimentCardSkeleton,
+  PrimaryTensionSkeleton,
+  DoctrineDashboardSkeleton,
+} from "@/components/Skeleton";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowRight } from "lucide-react";
 import type { Experiment, Doctrine, Tension } from "@shared/schema";
 import { StatusBadge, PhaseDot } from "@/components/ExperimentComponents";
 import { ErrorCard } from "@/components/ErrorCard";
 import { formatDate, getTensionLabel } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface Summary {
   experiments: { total: number; active: number; observing: number; completed: number };
@@ -15,6 +22,7 @@ interface Summary {
 }
 
 export default function Dashboard() {
+  const { toast } = useToast();
   const { data: summary, isLoading: summaryLoading, isError: summaryError } = useQuery<Summary>({
     queryKey: ["/api/summary"],
   });
@@ -27,6 +35,25 @@ export default function Dashboard() {
   const { data: tensions, isLoading: tensionLoading, isError: tensionError } = useQuery<Tension[]>({
     queryKey: ["/api/tensions"],
   });
+
+  // ── Loop toast: show once per session when recent inbound experiments exist ──
+  useEffect(() => {
+    const key = "praxis_loop_toast_shown";
+    if (sessionStorage.getItem(key)) return;
+    fetch("/api/loop/recent-inbound")
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { events: { count: number }[] } | null) => {
+        if (!data?.events?.length) return;
+        const count = data.events[0].count;
+        if (count <= 0) return;
+        sessionStorage.setItem(key, "1");
+        const msg = count === 1
+          ? "A hypothesis arrived from the Loop for testing."
+          : `${count} hypotheses arrived from the Loop for testing.`;
+        toast({ title: msg, duration: 4000 });
+      })
+      .catch(() => {});
+  }, [toast]);
 
   if (summaryError && expError && docError && tensionError) {
     return (
@@ -54,20 +81,26 @@ export default function Dashboard() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-        {[
+        {summaryLoading ? (
+          <>
+            <StatSkeleton />
+            <StatSkeleton />
+            <StatSkeleton />
+          </>
+        ) : [
           {
             label: "Active Trials",
-            value: summaryLoading ? null : (summary?.experiments.active ?? 0) + (summary?.experiments.observing ?? 0),
+            value: (summary?.experiments.active ?? 0) + (summary?.experiments.observing ?? 0),
             sub: "in progress",
           },
           {
             label: "Working Doctrines",
-            value: summaryLoading ? null : summary?.doctrines.total ?? 0,
+            value: summary?.doctrines.total ?? 0,
             sub: "principles extracted",
           },
           {
             label: "Core Tensions",
-            value: summaryLoading ? null : summary?.tensions.total ?? 0,
+            value: summary?.tensions.total ?? 0,
             sub: "life axes identified",
           },
         ].map(stat => (
@@ -75,13 +108,9 @@ export default function Dashboard() {
             key={stat.label}
             className="bg-card border border-border rounded-md p-5"
           >
-            {stat.value === null ? (
-              <Skeleton className="h-7 w-12 mb-1" />
-            ) : (
-              <p className="font-display text-xl font-semibold text-foreground tabular-nums">
-                {stat.value}
-              </p>
-            )}
+            <p className="font-display text-xl font-semibold text-foreground tabular-nums">
+              {stat.value}
+            </p>
             <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
             <p className="text-xs text-muted-foreground/60 mt-0.5">{stat.sub}</p>
           </div>
@@ -95,7 +124,7 @@ export default function Dashboard() {
             Primary Tension
           </h3>
           {tensionLoading ? (
-            <Skeleton className="h-20 w-full rounded-md" />
+            <PrimaryTensionSkeleton />
           ) : primaryTension ? (
             <Link href="/tensions">
               <div
@@ -139,11 +168,12 @@ export default function Dashboard() {
 
           {expLoading ? (
             <div className="space-y-2">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full rounded-md" />)}
+              <ExperimentCardSkeleton />
+              <ExperimentCardSkeleton />
             </div>
           ) : activeExperiments.length === 0 ? (
             <div className="border border-dashed border-border rounded-md p-6 text-center">
-              <p className="text-sm text-muted-foreground mb-3">No active experiments.</p>
+              <p className="text-sm text-muted-foreground mb-3">No active experiments. Start one to test a belief — results flow into Axiom as proposals for governing principles.</p>
               <Link href="/experiments/new">
                 <Button size="sm" variant="outline" className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10">
                   <Plus size={13} />
@@ -192,7 +222,8 @@ export default function Dashboard() {
 
           {docLoading ? (
             <div className="space-y-2">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-md" />)}
+              <DoctrineDashboardSkeleton />
+              <DoctrineDashboardSkeleton />
             </div>
           ) : recentDoctrines.length === 0 ? (
             <div className="border border-dashed border-border rounded-md p-6 text-center">

@@ -60,6 +60,49 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// DELETE — dismiss/delete a seed by id
+export async function DELETE(request: NextRequest) {
+  const cookieHeader = request.headers.get('cookie') || '';
+  const tokenMatch = cookieHeader.match(/liminal_session=([^;]+)/);
+  if (!tokenMatch) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    await execute(SEED_TABLE_SQL);
+
+    const sessions = await query<{ user_id: string }>(
+      'SELECT user_id FROM auth_sessions WHERE token = $1 AND expires_at > NOW()',
+      [tokenMatch[1]]
+    );
+    if (!sessions[0]) {
+      return NextResponse.json({ error: 'Session expired' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const seedId = searchParams.get('id');
+
+    if (seedId) {
+      // Delete a single seed
+      await execute(
+        'DELETE FROM inquiry_seeds WHERE id = $1 AND user_id = $2',
+        [seedId, sessions[0].user_id]
+      );
+    } else {
+      // Delete all pending seeds for this user
+      await execute(
+        `DELETE FROM inquiry_seeds WHERE user_id = $1 AND status = 'pending'`,
+        [sessions[0].user_id]
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error('[inquiry-seeds] Delete error:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
 // GET — fetch pending seeds for the authenticated user
 export async function GET(request: NextRequest) {
   // This is user-facing, so check session cookie

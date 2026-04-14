@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { z } from 'zod';
 
 const MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-20250514';
 const TIMEOUT_MS = 45_000;
@@ -15,6 +16,19 @@ export interface InterpreterOutput {
   tensions: string;
   questions_to_sit_with: string[];
 }
+
+const InterpretiveLensSchema = z.object({
+  name: z.string(),
+  notices: z.string(),
+  misses: z.string(),
+});
+
+const InterpreterOutputSchema = z.object({
+  symbol_named: z.string(),
+  lenses: z.array(InterpretiveLensSchema),
+  tensions: z.string(),
+  questions_to_sit_with: z.array(z.string()),
+});
 
 const SYSTEM_PROMPT = `You are The Interpreter — a multi-lens analyst of dreams, symbols, and recurring patterns.
 
@@ -68,15 +82,24 @@ Your output is always valid JSON in this exact structure:
 Return ONLY valid JSON. No preamble. No explanation.`;
 
 function parseOutput(text: string): InterpreterOutput {
+  let raw: unknown;
   try {
-    return JSON.parse(text) as InterpreterOutput;
+    raw = JSON.parse(text);
   } catch {
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
-      return JSON.parse(match[0]) as InterpreterOutput;
+      raw = JSON.parse(match[0]);
+    } else {
+      throw new Error('Could not parse Interpreter output as JSON');
     }
-    throw new Error('Could not parse Interpreter output as JSON');
   }
+
+  const result = InterpreterOutputSchema.safeParse(raw);
+  if (!result.success) {
+    const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ');
+    throw new Error(`Interpreter output validation failed: ${issues}`);
+  }
+  return result.data;
 }
 
 export async function runInterpreter(

@@ -14,7 +14,7 @@ import { Pool } from 'pg';
 
 // ── Config ──────────────────────────────────────────────────────────────────
 const DATABASE_URL = process.env.DATABASE_URL;
-const LUMEN_API_URL = process.env.LUMEN_API_URL;
+const LUMEN_API_URL = (process.env.LUMEN_API_URL || '').replace(/\/+$/, '');  // strip trailing slash
 const LUMEN_INTERNAL_TOKEN = process.env.LUMEN_INTERNAL_TOKEN;
 const BATCH_SIZE = 50;
 

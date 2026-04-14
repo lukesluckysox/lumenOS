@@ -4,7 +4,7 @@ import { Plus, BookOpen, Pencil, Trash2, Save, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DoctrineCardSkeleton } from "@/components/Skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
@@ -211,7 +211,9 @@ export default function Doctrines() {
         <ErrorCard message="Could not load doctrines." onRetry={() => window.location.reload()} />
       ) : isLoading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 w-full rounded-md" />)}
+          <DoctrineCardSkeleton />
+          <DoctrineCardSkeleton />
+          <DoctrineCardSkeleton />
         </div>
       ) : doctrines?.length === 0 ? (
         <div className="border border-dashed border-border rounded-md py-16 text-center">
@@ -220,8 +222,7 @@ export default function Doctrines() {
             No doctrines yet.
           </p>
           <p className="text-xs text-muted-foreground/60 max-w-sm mx-auto">
-            Principles you've validated through experimentation will be collected here.
-            You can also record one directly from your own understanding.
+            When I validate a belief through experimentation, the resulting principle lands here. I can also record one directly from my own understanding.
           </p>
         </div>
       ) : (

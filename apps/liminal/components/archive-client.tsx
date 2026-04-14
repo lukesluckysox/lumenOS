@@ -669,8 +669,7 @@ export function EmptyArchive() {
           fontStyle: 'italic',
         }}
       >
-        Nothing recorded yet. The archive collects sessions across all six
-        instruments — each inquiry saved for future reading.
+        Nothing recorded yet. Each session I complete with any of the six instruments — Interpreter, Interlocutor, Genealogist, Fool, Stoic’s Ledger, Small Council — is saved here for future reading and comparison.
       </p>
 
       <p className="eyebrow" style={{ marginBottom: '1.25rem' }}>

@@ -12,7 +12,7 @@ import type { UserPlan } from '@/lib/auth/session';
 // ── Quotas ─────────────────────────────────────────────────────────────────────
 
 export const PLAN_LIMITS = {
-  open: {
+  aspirant: {
     /** Monthly session cap for free users */
     monthlySessionLimit: 8,
     /** Archive: only show sessions from the last N days */
@@ -24,7 +24,7 @@ export const PLAN_LIMITS = {
     /** Can export / copy as markdown? */
     canExport: false,
   },
-  cabinet: {
+  fellow: {
     monthlySessionLimit: Infinity,
     archiveDays: Infinity,
     archiveMaxSessions: Infinity,
@@ -33,13 +33,13 @@ export const PLAN_LIMITS = {
   },
 } as const;
 
-type PlanKey = 'open' | 'cabinet';
+type PlanKey = 'aspirant' | 'fellow';
 
 function limitsFor(plan: UserPlan) {
-  if (plan === 'cabinet' || plan === 'trialing' || plan === 'grandfathered') {
-    return PLAN_LIMITS.cabinet;
+  if (plan === 'fellow' || plan === 'trialing' || plan === 'grandfathered') {
+    return PLAN_LIMITS.fellow;
   }
-  return PLAN_LIMITS.open;
+  return PLAN_LIMITS.aspirant;
 }
 
 // ── Feature checks ─────────────────────────────────────────────────────────────
@@ -80,18 +80,18 @@ export function isOracle(role: string): boolean {
 }
 
 export function isPaidPlan(plan: UserPlan): boolean {
-  return plan === 'cabinet' || plan === 'trialing' || plan === 'grandfathered';
+  return plan === 'fellow' || plan === 'trialing' || plan === 'grandfathered';
 }
 
 /** Human-readable plan name */
 export function planLabel(plan: UserPlan): string {
   switch (plan) {
-    case 'open': return 'Open';
-    case 'cabinet': return 'Cabinet';
-    case 'trialing': return 'Cabinet (Trial)';
-    case 'canceled': return 'Open (Canceled)';
-    case 'grandfathered': return 'Cabinet (Legacy)';
-    default: return 'Open';
+    case 'aspirant': return 'Aspirant';
+    case 'fellow': return 'Fellow';
+    case 'trialing': return 'Fellow (Trial)';
+    case 'canceled': return 'Aspirant (Canceled)';
+    case 'grandfathered': return 'Fellow (Legacy)';
+    default: return 'Aspirant';
   }
 }
 
