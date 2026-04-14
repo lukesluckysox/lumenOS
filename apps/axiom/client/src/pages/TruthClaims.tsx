@@ -74,7 +74,7 @@ function SourceOriginBadge({ source }: { source?: string }) {
         className="font-mono text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-full"
         style={{ color: '#c4943e', border: '1px solid rgba(196,148,62,0.25)', background: 'rgba(196,148,62,0.06)' }}
       >
-        From Praxis
+        From experiments
       </span>
     );
   }

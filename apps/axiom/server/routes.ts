@@ -253,6 +253,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       parallaxCount = 0,
       praxisCount = 0,
       inputDescriptions = '[]',
+      source: incomingSource,
       userId = '1',
     } = req.body as Record<string, any>;
 
@@ -262,6 +263,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
     // Sanitize incoming claim text to prevent raw labels rendering as claims
     const sanitizedClaim = sanitizeClaimText(truthClaim);
+    // Accept "praxis" as a valid source; default to "lumen_push"
+    const validSources = ['lumen_push', 'praxis'];
+    const resolvedSource = validSources.includes(incomingSource) ? incomingSource : 'lumen_push';
 
     try {
       // Idempotent upsert: if an axiom with same title + source already exists, update it
@@ -269,6 +273,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       const existing = existingAxioms.find(a =>
         a.title === (title || sanitizedClaim.slice(0, 200)) &&
         a.source === 'lumen_push'
+        a.title === (title || truthClaim.slice(0, 200)) &&
+        a.source === resolvedSource
       );
 
       if (existing) {
@@ -284,9 +290,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           revisionNote: existing.revisionNote || revisionNote,
           liminalCount: Number(liminalCount),
           parallaxCount: Number(parallaxCount),
-          praxisCount: Number(praxisCount),
+          praxisCount: resolvedSource === 'praxis' ? Math.max(Number(praxisCount), (existing.praxisCount || 0) + 1) : Number(praxisCount),
           inputDescriptions: typeof inputDescriptions === 'string' ? inputDescriptions : JSON.stringify(inputDescriptions),
-          source: 'lumen_push',
+          source: resolvedSource,
         } as any, String(userId));
         return res.json({ axiom: updated, action: 'updated' });
       }
@@ -306,9 +312,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
           revisionHistory,
           liminalCount: Number(liminalCount),
           parallaxCount: Number(parallaxCount),
-          praxisCount: Number(praxisCount),
+          praxisCount: resolvedSource === 'praxis' ? Math.max(Number(praxisCount), 1) : Number(praxisCount),
           inputDescriptions,
-          source: 'lumen_push',
+          source: resolvedSource,
         } as any,
         String(userId)
       );

@@ -431,6 +431,11 @@ export default function AxiomDetail({ params }: { params: { id: string } }) {
             Pre-loaded example — not from your data.
           </p>
         )}
+        {(axiom as any).source === 'praxis' && (
+          <p className="text-xs text-muted-foreground/50 leading-relaxed mb-4 italic">
+            Graduated from a Praxis experiment — a truth derived from lived experience.
+          </p>
+        )}
 
         {/* Source count badges */}
         {(axiom.liminalCount > 0 || axiom.parallaxCount > 0 || axiom.praxisCount > 0) && (

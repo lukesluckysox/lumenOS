@@ -44,6 +44,7 @@ export const doctrines = sqliteTable("doctrines", {
   status: text("status").notNull().default("emerging"),
   sourceExperimentIds: text("source_experiment_ids").notNull().default("[]"), // JSON number[]
   notes: text("notes").notNull().default(""),
+  proposedToAxiom: integer("proposed_to_axiom", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at").notNull(),
   userId: text("user_id").notNull().default("1"),
 });
