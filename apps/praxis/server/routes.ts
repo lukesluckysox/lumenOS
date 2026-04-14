@@ -280,6 +280,31 @@ export function registerRoutes(httpServer: Server, app: Express) {
       ? [{ source: "loop", type: "proposed_experiment", count: rows.count, latestAt: rows.latestAt }]
       : [];
     res.json({ events });
+  // ─── Proxy: fetch tensions from Axiom (canonical source) ──────────────────
+  app.get('/api/axiom-tensions', async (req: any, res: any) => {
+    const AXIOM_URL = process.env.AXIOM_TOOL_URL || process.env.AXIOM_API_URL;
+    const TOKEN = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    const userId = getUserId(req);
+
+    if (!AXIOM_URL) {
+      // Fallback to local tensions if Axiom URL is not configured
+      return res.json(storage.getTensions(userId));
+    }
+
+    try {
+      const r = await fetch(`${AXIOM_URL}/api/internal/tensions?userId=${encodeURIComponent(userId)}`, {
+        headers: { 'x-lumen-internal-token': TOKEN },
+      });
+      if (!r.ok) {
+        console.error(`[praxis/axiom-tensions] Axiom returned ${r.status}`);
+        return res.json(storage.getTensions(userId));
+      }
+      const data = await r.json();
+      return res.json(data);
+    } catch (err: any) {
+      console.error('[praxis/axiom-tensions]', err.message);
+      return res.json(storage.getTensions(userId));
+    }
   });
 
   // ── Experiments ────────────────────────────────────────────────────────

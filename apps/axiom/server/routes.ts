@@ -613,6 +613,21 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
       return res.json({ ok: true, plan });
     } catch (err: any) {
       console.error('[axiom/internal/sync-plan]', err);
+  // ─── Internal: all tensions for cross-app consumption ────────────────────
+  app.get('/api/internal/tensions', (req: any, res: any) => {
+    const token = req.headers['x-lumen-internal-token'];
+    const expected = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    if (!token || token !== expected) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const userId = (req.query.userId as string) || '1';
+
+    try {
+      const tensions = storage.getTensions(userId);
+      return res.json(tensions);
+    } catch (err: any) {
+      console.error('[axiom/internal/tensions]', err);
       return res.status(500).json({ error: err.message });
     }
   });
