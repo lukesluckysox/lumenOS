@@ -188,6 +188,30 @@ export function registerRoutes(httpServer: Server, app: Express) {
     requireAuth(req, res, next);
   });
 
+  // ── Axiom Tensions proxy (read-only from Axiom's canonical source) ──────
+  app.get('/api/axiom-tensions', async (req: any, res: any) => {
+    const AXIOM_URL = process.env.AXIOM_TOOL_URL;
+    const TOKEN = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    if (!AXIOM_URL) {
+      return res.json([]);
+    }
+    try {
+      const userId = getUserId(req);
+      const r = await fetch(`${AXIOM_URL}/api/internal/tensions?userId=${encodeURIComponent(userId)}`, {
+        headers: { 'x-lumen-internal-token': TOKEN },
+      });
+      if (!r.ok) {
+        console.error(`[praxis/axiom-tensions] Axiom returned ${r.status}`);
+        return res.json([]);
+      }
+      const data = await r.json();
+      return res.json(data);
+    } catch (err: any) {
+      console.error('[praxis/axiom-tensions]', err);
+      return res.json([]);
+    }
+  });
+
   // ── Experiments ────────────────────────────────────────────────────────
 
   app.get("/api/experiments", (req: any, res: any) => {
