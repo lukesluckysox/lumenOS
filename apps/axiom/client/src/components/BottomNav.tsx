@@ -1,17 +1,18 @@
-import { Link } from "wouter";
-import { Home, CircleDot, Compass, FlaskConical, Zap, Ghost } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Home, FileText, Zap, RotateCcw, Shield, CircleDot } from "lucide-react";
 
 const LUMEN_HUB_URL = "https://lumen-os.up.railway.app";
-const CURRENT_APP = "axiom";
 
-const APP_NAV = [
-  { key: "parallax", href: "https://parallaxapp.up.railway.app/", icon: Compass, label: "Parallax" },
-  { key: "praxis", href: "https://praxis-app.up.railway.app/", icon: FlaskConical, label: "Praxis" },
-  { key: "axiom", href: "https://axiomtool-production.up.railway.app/#/", icon: Zap, label: "Axiom" },
-  { key: "liminal", href: "https://liminal-app.up.railway.app/", icon: Ghost, label: "Liminal" },
+const NAV_ITEMS = [
+  { href: "/", icon: FileText, label: "Claims" },
+  { href: "/tensions", icon: Zap, label: "Tensions" },
+  { href: "/revisions", icon: RotateCcw, label: "Revisions" },
+  { href: "/constitution", icon: Shield, label: "Constitution" },
 ];
 
 export default function BottomNav() {
+  const [location] = useLocation();
+
   return (
     <nav
       data-testid="nav-bottom"
@@ -39,27 +40,28 @@ export default function BottomNav() {
         </Link>
       </div>
 
-      {/* Bottom row: 4 sub-apps */}
+      {/* Bottom row: 4 internal pages */}
       <div className="flex items-center justify-around px-2 py-1">
-        {APP_NAV.map(({ key, href, icon: Icon, label }) => {
-          const isSelf = key === CURRENT_APP;
+        {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
+          const isActive = href === "/"
+            ? location === "/" || location === ""
+            : location.startsWith(href);
           return (
-            <a
-              key={key}
-              href={isSelf ? "/" : href}
-              data-testid={`nav-bottom-${key}`}
+            <Link
+              key={href}
+              href={href}
+              data-testid={`nav-bottom-${label.toLowerCase()}`}
               className={`relative flex flex-col items-center justify-center gap-0.5 px-2 rounded-lg transition-all min-h-[44px] min-w-[44px] ${
-                isSelf
+                isActive
                   ? "text-[hsl(var(--sidebar-primary))]"
                   : "text-sidebar-foreground/30 hover:text-sidebar-foreground/60"
               }`}
-              {...(!isSelf ? { target: "_self" } : {})}
             >
-              <Icon className="w-[18px] h-[18px]" strokeWidth={isSelf ? 2 : 1.5} />
-              <span className={`text-[10px] font-mono uppercase tracking-wider ${isSelf ? "text-[hsl(var(--sidebar-primary))]/80" : "text-sidebar-foreground/25"}`}>
+              <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2 : 1.5} />
+              <span className={`text-[10px] font-mono uppercase tracking-wider ${isActive ? "text-[hsl(var(--sidebar-primary))]/80" : "text-sidebar-foreground/25"}`}>
                 {label.toLowerCase()}
               </span>
-            </a>
+            </Link>
           );
         })}
       </div>

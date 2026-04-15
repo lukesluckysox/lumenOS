@@ -1,17 +1,18 @@
-import { Link } from "wouter";
-import { Home, CircleDot, Compass, FlaskConical, Zap, Ghost } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Home, FlaskConical, BookOpen, GitFork, Scale, CircleDot } from "lucide-react";
 
 const LUMEN_HUB_URL = "https://lumen-os.up.railway.app";
-const CURRENT_APP = "praxis";
 
-const APP_NAV = [
-  { key: "parallax", href: "https://parallaxapp.up.railway.app/", icon: Compass, label: "Parallax" },
-  { key: "praxis", href: "https://praxis-app.up.railway.app/", icon: FlaskConical, label: "Praxis" },
-  { key: "axiom", href: "https://axiomtool-production.up.railway.app/#/", icon: Zap, label: "Axiom" },
-  { key: "liminal", href: "https://liminal-app.up.railway.app/", icon: Ghost, label: "Liminal" },
+const NAV_ITEMS = [
+  { href: "/experiments", icon: FlaskConical, label: "Experiments" },
+  { href: "/doctrines", icon: BookOpen, label: "Doctrines" },
+  { href: "/tensions", icon: GitFork, label: "Tensions" },
+  { href: "/decision-experiments", icon: Scale, label: "Decisions" },
 ];
 
 export default function BottomNav() {
+  const [location] = useLocation();
+
   return (
     <nav
       data-testid="nav-bottom"
@@ -39,27 +40,28 @@ export default function BottomNav() {
         </Link>
       </div>
 
-      {/* Bottom row: 4 sub-apps */}
+      {/* Bottom row: 4 internal pages */}
       <div className="flex items-center justify-around px-2 py-1">
-        {APP_NAV.map(({ key, href, icon: Icon, label }) => {
-          const isSelf = key === CURRENT_APP;
+        {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
+          const isActive = href === "/"
+            ? location === "/" || location === ""
+            : location === href || location.startsWith(href + "/");
           return (
-            <a
-              key={key}
-              href={isSelf ? "/" : href}
-              data-testid={`nav-app-${key}`}
+            <Link
+              key={href}
+              href={href}
+              data-testid={`nav-${label.toLowerCase()}`}
               className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] px-2 py-2 rounded-lg transition-all ${
-                isSelf
+                isActive
                   ? "text-[#d4a03a]"
                   : "text-muted-foreground/40 hover:text-muted-foreground"
               }`}
-              {...(!isSelf ? { target: "_self" } : {})}
             >
-              <Icon className="w-[18px] h-[18px]" strokeWidth={isSelf ? 2 : 1.5} />
-              <span className={`text-[10px] font-mono leading-tight ${isSelf ? "text-[#d4a03a]/80" : "text-muted-foreground/30"}`}>
+              <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2 : 1.5} />
+              <span className={`text-[10px] font-mono leading-tight ${isActive ? "text-[#d4a03a]/80" : "text-muted-foreground/30"}`}>
                 {label.toLowerCase()}
               </span>
-            </a>
+            </Link>
           );
         })}
       </div>

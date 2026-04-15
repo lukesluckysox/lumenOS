@@ -1,19 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, CircleDot, Compass, FlaskConical, Zap, Ghost } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Home, Sparkles, Users, TreePine, BookOpen, CircleDot } from 'lucide-react';
 
 const LUMEN_HUB_URL = 'https://lumen-os.up.railway.app';
-const CURRENT_APP = 'liminal';
 
-const APP_NAV = [
-  { key: 'parallax', href: 'https://parallaxapp.up.railway.app/', icon: Compass, label: 'Parallax' },
-  { key: 'praxis', href: 'https://praxis-app.up.railway.app/', icon: FlaskConical, label: 'Praxis' },
-  { key: 'axiom', href: 'https://axiomtool-production.up.railway.app/#/', icon: Zap, label: 'Axiom' },
-  { key: 'liminal', href: 'https://liminal-app.up.railway.app/', icon: Ghost, label: 'Liminal' },
+const NAV_ITEMS = [
+  { href: '/tool/fool', label: 'Fool', Icon: Sparkles },
+  { href: '/tool/small-council', label: 'Council', Icon: Users },
+  { href: '/tool/genealogist', label: 'Genealogist', Icon: TreePine },
+  { href: '/archive', label: 'Archive', Icon: BookOpen },
 ] as const;
 
 export function BottomNav() {
+  const pathname = usePathname();
+
   return (
     <nav
       aria-label="Mobile navigation"
@@ -81,7 +83,7 @@ export function BottomNav() {
         </Link>
       </div>
 
-      {/* Bottom row: 4 sub-apps */}
+      {/* Bottom row: 4 internal pages */}
       <div
         style={{
           maxWidth: '640px',
@@ -92,12 +94,12 @@ export function BottomNav() {
           alignItems: 'stretch',
         }}
       >
-        {APP_NAV.map(({ key, href, icon: Icon, label }) => {
-          const isSelf = key === CURRENT_APP;
+        {NAV_ITEMS.map(({ href, label, Icon }) => {
+          const isActive = pathname === href || pathname.startsWith(href + '/');
           return (
-            <a
-              key={key}
-              href={isSelf ? '/' : href}
+            <Link
+              key={href}
+              href={href}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -106,10 +108,10 @@ export function BottomNav() {
                 padding: '0.625rem 0.5rem',
                 minHeight: '48px',
                 textDecoration: 'none',
-                color: isSelf
+                color: isActive
                   ? 'rgb(var(--color-gold))'
                   : 'rgb(var(--color-text-faint))',
-                opacity: isSelf ? 1 : 0.4,
+                opacity: isActive ? 1 : 0.4,
                 transition: 'opacity 0.15s ease, color 0.15s ease',
                 flex: 1,
                 justifyContent: 'center',
@@ -117,7 +119,7 @@ export function BottomNav() {
             >
               <Icon
                 style={{ width: '20px', height: '20px', flexShrink: 0 }}
-                strokeWidth={isSelf ? 2 : 1.5}
+                strokeWidth={isActive ? 2 : 1.5}
               />
               <span
                 style={{
@@ -125,12 +127,12 @@ export function BottomNav() {
                   fontFamily: 'var(--font-body), system-ui, sans-serif',
                   letterSpacing: '0.04em',
                   lineHeight: 1,
-                  fontWeight: isSelf ? 600 : 400,
+                  fontWeight: isActive ? 600 : 400,
                 }}
               >
                 {label}
               </span>
-            </a>
+            </Link>
           );
         })}
       </div>

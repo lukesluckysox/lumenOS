@@ -3103,6 +3103,25 @@
       width: 22px; height: 22px;
       flex-shrink: 0;
     }
+    .bottom-nav__top-row {
+      display: flex;
+      justify-content: center;
+      border-bottom: 1px solid rgba(255, 209, 102, 0.08);
+    }
+    .bottom-nav__home-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      padding: 0.5rem 1.5rem;
+      text-decoration: none;
+      color: rgba(255, 209, 102, 0.5);
+      transition: color 0.15s ease;
+    }
+    .bottom-nav__home-btn:hover,
+    .bottom-nav__home-btn:focus-visible {
+      color: rgba(255, 209, 102, 0.8);
+    }
     .bottom-nav__label {
       font-family: 'Satoshi', sans-serif;
       font-size: 10px;
@@ -5782,9 +5801,20 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <!-- ╔══════════════════════════════════════════
-     MOBILE BOTTOM NAV — Cross-app navigation
+     MOBILE BOTTOM NAV — Hub navigation
 ═══════════════════════════════════════════╗ -->
 <nav class="bottom-nav" aria-label="App navigation">
+  <!-- Top row: centered Home (Lumen IS the hub) -->
+  <div class="bottom-nav__top-row">
+    <a href="/" class="bottom-nav__home-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span class="bottom-nav__label">Home</span>
+    </a>
+  </div>
+
+  <!-- Bottom row: 4 sub-apps -->
   <div class="bottom-nav__inner">
 
     <a href="https://parallaxapp.up.railway.app/" class="bottom-nav__item" data-has-sso="true" data-nav-app="parallax">
