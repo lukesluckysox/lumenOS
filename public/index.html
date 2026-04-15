@@ -3065,10 +3065,10 @@
       position: fixed;
       bottom: 0; left: 0; right: 0;
       z-index: 9998;
-      background: rgba(25, 27, 42, 0.95);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-top: 1px solid rgba(255, 209, 102, 0.1);
+      background: rgba(25, 27, 42, 0.97);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(255, 209, 102, 0.18);
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     @media screen and (min-width: 769px) {
@@ -3087,46 +3087,49 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 0.2rem;
-      padding: 0.5rem 0.5rem;
-      min-height: 56px;
+      gap: 0.35rem;
+      padding: 0.6rem 0.5rem 0.5rem;
+      min-height: 60px;
       text-decoration: none;
-      color: rgba(255, 209, 102, 0.4);
+      color: rgba(255, 209, 102, 0.7);
       transition: color 0.15s ease, opacity 0.15s ease;
     }
     .bottom-nav__item:hover,
     .bottom-nav__item:focus-visible {
-      color: rgba(255, 209, 102, 0.7);
+      color: rgba(255, 209, 102, 0.95);
     }
     .bottom-nav__item svg {
-      width: 22px; height: 22px;
+      width: 26px; height: 26px;
       flex-shrink: 0;
     }
     .bottom-nav__top-row {
       display: flex;
       justify-content: center;
-      border-bottom: 1px solid rgba(255, 209, 102, 0.08);
+      border-bottom: 1px solid rgba(255, 209, 102, 0.12);
     }
     .bottom-nav__home-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.375rem;
-      padding: 0.5rem 1.5rem;
+      gap: 0.4rem;
+      padding: 0.55rem 1.5rem;
       text-decoration: none;
-      color: rgba(255, 209, 102, 0.5);
+      color: rgba(255, 209, 102, 0.75);
       transition: color 0.15s ease;
     }
     .bottom-nav__home-btn:hover,
     .bottom-nav__home-btn:focus-visible {
-      color: rgba(255, 209, 102, 0.8);
+      color: rgba(255, 209, 102, 1);
+    }
+    .bottom-nav__home-btn svg {
+      width: 16px; height: 16px;
     }
     .bottom-nav__label {
       font-family: 'Satoshi', sans-serif;
-      font-size: 10px;
-      letter-spacing: 0.04em;
+      font-size: 11px;
+      letter-spacing: 0.05em;
       line-height: 1;
-      font-weight: 400;
+      font-weight: 500;
     }
 
     /* ── Mobile body padding for bottom nav ── */
@@ -5811,7 +5814,7 @@ if ('serviceWorker' in navigator) {
   <!-- Top row: centered Home (Lumen IS the hub) -->
   <div class="bottom-nav__top-row">
     <a href="/" class="bottom-nav__home-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:14px;height:14px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
       <span class="bottom-nav__label">Home</span>
