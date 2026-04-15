@@ -2,7 +2,7 @@
 <html lang="en" data-theme="dark" style="background-color:#191b2a">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lumen — An Operating System for the Examined Life</title>
   <meta name="description" content="Lumen is a four-part philosophical operating system for questioning belief, revealing pattern, testing hypothesis, and distilling truth." />
   <meta property="og:title" content="Lumen" />
@@ -3061,9 +3061,10 @@
        MOBILE BOTTOM NAV
     ───────────────────────────────────────────── */
     .bottom-nav {
-      display: block;
       position: fixed;
-      bottom: 0; left: 0; right: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
       z-index: 9998;
       background: rgba(25, 27, 42, 0.97);
       backdrop-filter: blur(16px);
@@ -3134,7 +3135,7 @@
 
     /* ── Mobile body padding for bottom nav ── */
     @media screen and (max-width: 768px) {
-      body { padding-bottom: 5rem !important; }
+      body { padding-bottom: calc(5rem + env(safe-area-inset-bottom, 16px)) !important; }
     }
 
   </style>
@@ -5209,23 +5210,38 @@ async function setSensitivity(val) {
   loadCockpitState();
 })();
 </script>
-<!-- Service Worker: purge old cache-first SW, register network-first v2 -->
+<!-- Service Worker: purge old, register network-first, force PWA refresh -->
 <script>
-if ('serviceWorker' in navigator) {
-  // Unregister any existing SW and clear all caches, then re-register fresh
-  navigator.serviceWorker.getRegistrations().then(function(regs) {
-    var hadOld = false;
-    regs.forEach(function(r) { hadOld = true; r.unregister(); });
-    // Purge all SW caches (lumen-v1, etc.)
-    if (caches && caches.keys) {
-      caches.keys().then(function(keys) {
-        keys.forEach(function(k) { caches.delete(k); });
-      });
+(function() {
+  var APP_VERSION = 'v7';
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+      // Unregister all old SWs
+      var promises = regs.map(function(r) { return r.unregister(); });
+      return Promise.all(promises);
+    }).then(function() {
+      // Purge all caches
+      if (caches && caches.keys) {
+        return caches.keys().then(function(keys) {
+          return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+        });
+      }
+    }).then(function() {
+      // Register fresh SW
+      navigator.serviceWorker.register('/sw.js?v=' + APP_VERSION);
+    }).catch(function() {});
+  }
+  // PWA force-refresh: if cached version is stale, reload once
+  try {
+    var stored = localStorage.getItem('lumen-app-version');
+    if (stored && stored !== APP_VERSION) {
+      localStorage.setItem('lumen-app-version', APP_VERSION);
+      window.location.reload();
+    } else {
+      localStorage.setItem('lumen-app-version', APP_VERSION);
     }
-    // Re-register the new network-first SW
-    navigator.serviceWorker.register('/sw.js').catch(function() {});
-  });
-}
+  } catch(e) {}
+})();
 </script>
 
 <!-- ══ PWA Install Banner ══ -->
