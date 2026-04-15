@@ -3061,15 +3061,18 @@
        MOBILE BOTTOM NAV
     ───────────────────────────────────────────── */
     .bottom-nav {
-      display: none;
+      display: block;
       position: fixed;
       bottom: 0; left: 0; right: 0;
-      z-index: 200;
-      background: rgba(25, 27, 42, 0.92);
+      z-index: 9998;
+      background: rgba(25, 27, 42, 0.95);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-top: 1px solid rgba(255, 209, 102, 0.1);
       padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    @media screen and (min-width: 769px) {
+      .bottom-nav { display: none !important; }
     }
     .bottom-nav__inner {
       max-width: 480px;
@@ -3126,10 +3129,9 @@
       font-weight: 400;
     }
 
-    /* ── Mobile bottom nav visibility (last rule wins cascade) ── */
+    /* ── Mobile body padding for bottom nav ── */
     @media screen and (max-width: 768px) {
-      .bottom-nav { display: block !important; }
-      body { padding-bottom: 5rem; }
+      body { padding-bottom: 5rem !important; }
     }
 
   </style>

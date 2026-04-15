@@ -2,7 +2,7 @@
 // Network-first for all pages so deploys are always reflected immediately.
 // Cache is only an offline fallback.
 
-const CACHE_NAME = 'lumen-v3';
+const CACHE_NAME = 'lumen-v4';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
