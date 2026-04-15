@@ -633,9 +633,42 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
     try {
       const tensions = storage.getTensions(userId);
-      return res.json(tensions);
+      // Return with salience as float (stored as integer * 1000)
+      return res.json(tensions.map(t => ({
+        ...t,
+        salience: (t.salience || 0) / 1000,
+        sourceApps: t.sourceApps || '[]',
+      })));
     } catch (err: any) {
       console.error('[axiom/internal/tensions]', err);
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  // ─── Internal: add signal to tension (cross-app) ────────────────────────────
+  app.post('/api/internal/tensions/:id/signal', (req: any, res: any) => {
+    const token = req.headers['x-lumen-internal-token'];
+    const expected = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    if (!token || token !== expected) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const id = parseInt(req.params.id);
+    const { userId, sourceApp, sourceRecordId, signalType, poleAffected, content, confidence } = req.body;
+
+    if (!userId || !sourceApp || !signalType || !content) {
+      return res.status(400).json({ error: 'userId, sourceApp, signalType, and content are required' });
+    }
+
+    const tension = storage.getTension(id, String(userId));
+    if (!tension) return res.status(404).json({ error: 'Tension not found' });
+
+    try {
+      const signal = storage.addTensionSignal(id, String(userId), { sourceApp, sourceRecordId, signalType, poleAffected, content, confidence });
+      const updated = storage.getTension(id, String(userId));
+      return res.status(201).json({ signal, tension: updated ? { ...updated, salience: (updated.salience || 0) / 1000 } : null });
+    } catch (err: any) {
+      console.error('[axiom/internal/tensions/signal]', err);
       return res.status(500).json({ error: err.message });
     }
   });
@@ -1041,6 +1074,72 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     const deleted = storage.deleteTension(id, getUserId(req));
     if (!deleted) return res.status(404).json({ error: "Tension not found" });
     res.status(204).send();
+  });
+
+  // ─── Tension Signals & Lifecycle ──────────────────────────────────────────
+
+  app.post("/api/tensions/:id/signal", (req: any, res: any) => {
+    const id = parseInt(req.params.id);
+    const userId = getUserId(req);
+    const tension = storage.getTension(id, userId);
+    if (!tension) return res.status(404).json({ error: "Tension not found" });
+
+    const { sourceApp, sourceRecordId, signalType, poleAffected, content, confidence } = req.body as {
+      sourceApp: string; sourceRecordId?: string; signalType: string;
+      poleAffected?: string; content: string; confidence?: number;
+    };
+
+    if (!sourceApp || !signalType || !content) {
+      return res.status(400).json({ error: "sourceApp, signalType, and content are required" });
+    }
+
+    const validTypes = ['contradiction', 'corroboration', 'experiment_result', 'observation', 'reflection'];
+    if (!validTypes.includes(signalType)) {
+      return res.status(400).json({ error: `signalType must be one of: ${validTypes.join(', ')}` });
+    }
+
+    const signal = storage.addTensionSignal(id, userId, { sourceApp, sourceRecordId, signalType, poleAffected, content, confidence });
+    const updated = storage.getTension(id, userId);
+    res.status(201).json({ signal, tension: updated });
+  });
+
+  app.get("/api/tensions/:id/signals", (req: any, res: any) => {
+    const id = parseInt(req.params.id);
+    const userId = getUserId(req);
+    const tension = storage.getTension(id, userId);
+    if (!tension) return res.status(404).json({ error: "Tension not found" });
+    res.json(storage.getTensionSignals(id, userId));
+  });
+
+  app.post("/api/tensions/:id/resolve", (req: any, res: any) => {
+    const id = parseInt(req.params.id);
+    const userId = getUserId(req);
+    const tension = storage.getTension(id, userId);
+    if (!tension) return res.status(404).json({ error: "Tension not found" });
+
+    const { direction } = req.body as { direction: string };
+    if (!direction) return res.status(400).json({ error: "direction is required" });
+
+    const { sqlite: db } = require('./db');
+    db.prepare(
+      `UPDATE tensions SET status = 'resolved', resolution_direction = ? WHERE id = ? AND user_id = ?`
+    ).run(direction, id, userId);
+
+    res.json(storage.getTension(id, userId));
+  });
+
+  app.post("/api/tensions/:id/persist", (req: any, res: any) => {
+    const id = parseInt(req.params.id);
+    const userId = getUserId(req);
+    const tension = storage.getTension(id, userId);
+    if (!tension) return res.status(404).json({ error: "Tension not found" });
+
+    const { sqlite: db } = require('./db');
+    db.prepare(
+      `UPDATE tensions SET status = 'persistent' WHERE id = ? AND user_id = ?`
+    ).run(id, userId);
+
+    res.json(storage.getTension(id, userId));
   });
 
   // ─── Revisions ─────────────────────────────────────────────────────────────

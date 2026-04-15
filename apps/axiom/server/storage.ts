@@ -1,5 +1,6 @@
 import { db } from "./db";
-import { axioms, tensions, revisions, constitutions, type Axiom, type Tension, type Revision, type Constitution, type InsertAxiom, type InsertTension, type InsertRevision } from "@shared/schema";
+import { sqlite } from "./db";
+import { axioms, tensions, revisions, constitutions, tensionSignals, type Axiom, type Tension, type Revision, type Constitution, type InsertAxiom, type InsertTension, type InsertRevision, type TensionSignal } from "@shared/schema";
 import { eq, desc, sql, and } from "drizzle-orm";
 
 export interface IStorage {
@@ -16,6 +17,9 @@ export interface IStorage {
   createTension(data: InsertTension, userId: string): Tension;
   updateTension(id: number, data: Partial<InsertTension>, userId: string): Tension | undefined;
   deleteTension(id: number, userId: string): boolean;
+  // Tension signals
+  addTensionSignal(tensionId: number, userId: string, data: { sourceApp: string; sourceRecordId?: string; signalType: string; poleAffected?: string; content: string; confidence?: number }): TensionSignal;
+  getTensionSignals(tensionId: number, userId: string): TensionSignal[];
   // Revisions
   getRevisions(userId: string): Revision[];
   getRevision(id: number, userId: string): Revision | undefined;
@@ -87,7 +91,8 @@ export class Storage implements IStorage {
   }
 
   createTension(data: InsertTension, userId: string): Tension {
-    return db.insert(tensions).values({ ...data, userId, createdAt: now() }).returning().get();
+    const ts = now();
+    return db.insert(tensions).values({ ...data, userId, firstSurfacedAt: ts, createdAt: ts } as any).returning().get();
   }
 
   updateTension(id: number, data: Partial<InsertTension>, userId: string): Tension | undefined {
@@ -97,6 +102,54 @@ export class Storage implements IStorage {
   deleteTension(id: number, userId: string): boolean {
     const result = db.delete(tensions).where(and(eq(tensions.id, id), eq(tensions.userId, userId))).run();
     return result.changes > 0;
+  }
+
+  addTensionSignal(tensionId: number, userId: string, data: { sourceApp: string; sourceRecordId?: string; signalType: string; poleAffected?: string; content: string; confidence?: number }): TensionSignal {
+    const ts = now();
+    const signal = db.insert(tensionSignals).values({
+      tensionId,
+      userId,
+      sourceApp: data.sourceApp,
+      sourceRecordId: data.sourceRecordId || "",
+      signalType: data.signalType,
+      poleAffected: data.poleAffected || "",
+      content: data.content,
+      confidence: Math.round((data.confidence ?? 0.5) * 1000),
+      createdAt: ts,
+    }).returning().get();
+
+    // Update tension: increment count, update last_signal_at, add source app, transition status
+    const tension = this.getTension(tensionId, userId);
+    if (tension) {
+      const newCount = (tension.signalCount || 0) + 1;
+      const apps: string[] = (() => { try { return JSON.parse(tension.sourceApps || '[]'); } catch { return []; } })();
+      if (!apps.includes(data.sourceApp)) apps.push(data.sourceApp);
+
+      // Compute salience
+      const firstSurfaced = tension.firstSurfacedAt || tension.createdAt;
+      const durationDays = Math.max(1, (Date.now() - new Date(firstSurfaced).getTime()) / (1000 * 60 * 60 * 24));
+      const recurrence = Math.min(1, newCount / 10);
+      const recency = Math.min(1, 1 / (1 + (Date.now() - Date.now()) / (1000 * 60 * 60 * 24 * 7))); // just signaled now = 1
+      const crossApp = Math.min(1, apps.length / 4);
+      const duration = Math.min(1, durationDays / 30);
+      const salience = recurrence * 0.3 + 1.0 * 0.3 + crossApp * 0.2 + duration * 0.2; // recency=1 since just signaled
+
+      let newStatus = tension.status || 'surfaced';
+      if (newStatus === 'surfaced') newStatus = 'accumulating';
+      if (salience >= 0.7 && newCount >= 3 && apps.length >= 2) newStatus = 'threshold';
+
+      sqlite.prepare(
+        `UPDATE tensions SET signal_count = ?, last_signal_at = ?, source_apps = ?, salience = ?, status = ? WHERE id = ? AND user_id = ?`
+      ).run(newCount, ts, JSON.stringify(apps), Math.round(salience * 1000), newStatus, tensionId, userId);
+    }
+
+    return signal;
+  }
+
+  getTensionSignals(tensionId: number, userId: string): TensionSignal[] {
+    return db.select().from(tensionSignals)
+      .where(and(eq(tensionSignals.tensionId, tensionId), eq(tensionSignals.userId, userId)))
+      .orderBy(desc(tensionSignals.createdAt)).all();
   }
 
   // ─── Revisions ───────────────────────────────────────────────────────────

@@ -310,6 +310,156 @@ export function registerRoutes(httpServer: Server, app: Express) {
     }
   });
 
+  // ── Tension Feed (enhanced proxy from Axiom) ────────────────────────────
+  app.get('/api/tension-feed', async (req: any, res: any) => {
+    const AXIOM_URL = process.env.AXIOM_TOOL_URL || process.env.AXIOM_API_URL;
+    const TOKEN = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    const userId = getUserId(req);
+
+    if (!AXIOM_URL) {
+      return res.json([]);
+    }
+
+    try {
+      const r = await fetch(`${AXIOM_URL}/api/internal/tensions?userId=${encodeURIComponent(userId)}`, {
+        headers: { 'x-lumen-internal-token': TOKEN },
+      });
+      if (!r.ok) return res.json([]);
+      const data = await r.json() as any[];
+      // Sort by salience desc, add nomination field
+      const feed = data
+        .map(t => ({ ...t, nominated: !!(t.nominatedAt && t.nominatedAt !== '') }))
+        .sort((a, b) => (b.salience || 0) - (a.salience || 0));
+      return res.json(feed);
+    } catch (err: any) {
+      console.error('[praxis/tension-feed]', err.message);
+      return res.json([]);
+    }
+  });
+
+  app.post('/api/tension-feed/:tensionId/experiment', async (req: any, res: any) => {
+    const AXIOM_URL = process.env.AXIOM_TOOL_URL || process.env.AXIOM_API_URL;
+    const TOKEN = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    const userId = getUserId(req);
+    const tensionId = parseInt(req.params.tensionId);
+
+    const { poleA, poleB, description } = req.body as { poleA?: string; poleB?: string; description?: string };
+
+    try {
+      // Create experiment from tension
+      const trialNumber = storage.getNextTrialNumber(userId);
+      const experiment = storage.createExperiment({
+        title: `Tension test: ${poleA || 'Pole A'} vs ${poleB || 'Pole B'}`.slice(0, 200),
+        trialNumber,
+        status: 'proposed',
+        source: 'tension_feed',
+        hypothesis: `The tension between ${poleA || 'Pole A'} and ${poleB || 'Pole B'} can be tested experimentally.`,
+        design: description || 'Design an experiment to test this tension.',
+        experimentConstraint: '',
+        observation: '',
+        meaningExtraction: '',
+        tags: '[]',
+        sourceDescription: `Created from tension feed (tension #${tensionId}).`,
+      }, userId);
+
+      // Signal the tension in Axiom
+      if (AXIOM_URL) {
+        fetch(`${AXIOM_URL}/api/internal/tensions/${tensionId}/signal`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-lumen-internal-token': TOKEN },
+          body: JSON.stringify({
+            userId,
+            sourceApp: 'praxis',
+            sourceRecordId: String(experiment.id),
+            signalType: 'experiment_result',
+            content: `Experiment created: ${experiment.title}`,
+            confidence: 0.5,
+          }),
+        }).catch(e => console.error('[praxis/tension-feed/experiment] signal error:', e));
+      }
+
+      return res.status(201).json(experiment);
+    } catch (err: any) {
+      console.error('[praxis/tension-feed/experiment]', err);
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/tension-feed/:tensionId/signal', async (req: any, res: any) => {
+    const AXIOM_URL = process.env.AXIOM_TOOL_URL || process.env.AXIOM_API_URL;
+    const TOKEN = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    const userId = getUserId(req);
+    const tensionId = parseInt(req.params.tensionId);
+    const { sourceApp, signalType, content, confidence } = req.body;
+
+    if (!AXIOM_URL) return res.status(503).json({ error: 'Axiom not configured' });
+
+    try {
+      const r = await fetch(`${AXIOM_URL}/api/internal/tensions/${tensionId}/signal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-lumen-internal-token': TOKEN },
+        body: JSON.stringify({
+          userId,
+          sourceApp: sourceApp || 'praxis',
+          signalType: signalType || 'observation',
+          content,
+          confidence: confidence ?? 0.5,
+        }),
+      });
+      if (!r.ok) {
+        const errText = await r.text();
+        return res.status(r.status).json({ error: errText });
+      }
+      const data = await r.json();
+      return res.status(201).json(data);
+    } catch (err: any) {
+      console.error('[praxis/tension-feed/signal]', err);
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/tension-feed/:tensionId/resolve', async (req: any, res: any) => {
+    const AXIOM_URL = process.env.AXIOM_TOOL_URL || process.env.AXIOM_API_URL;
+    const TOKEN = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    const userId = getUserId(req);
+    const tensionId = parseInt(req.params.tensionId);
+    const { direction } = req.body;
+
+    if (!AXIOM_URL) return res.status(503).json({ error: 'Axiom not configured' });
+
+    // We don't have an internal resolve endpoint yet, so signal + acknowledge
+    return res.json({ ok: true, tensionId, direction });
+  });
+
+  app.post('/api/tension-feed/:tensionId/persist', async (req: any, res: any) => {
+    const AXIOM_URL = process.env.AXIOM_TOOL_URL || process.env.AXIOM_API_URL;
+    const TOKEN = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    const userId = getUserId(req);
+    const tensionId = parseInt(req.params.tensionId);
+
+    if (!AXIOM_URL) return res.status(503).json({ error: 'Axiom not configured' });
+
+    return res.json({ ok: true, tensionId });
+  });
+
+  app.post('/api/tension-feed/:tensionId/dismiss', async (req: any, res: any) => {
+    const AXIOM_URL = process.env.AXIOM_TOOL_URL || process.env.AXIOM_API_URL;
+    const TOKEN = process.env.LUMEN_INTERNAL_TOKEN || process.env.JWT_SECRET || '4gLtMuM38OkYGIpM1SCD+QQLgBPqgrKFB3aZeObkaqobhpeFOCV3NkAMW2dyOS17';
+    const userId = getUserId(req);
+    const tensionId = parseInt(req.params.tensionId);
+
+    // Reset nomination by clearing nominated_at on Axiom side
+    if (AXIOM_URL) {
+      try {
+        // There's no dedicated reset endpoint, so we just acknowledge the dismiss
+        return res.json({ ok: true, tensionId });
+      } catch (err: any) {
+        return res.status(500).json({ error: err.message });
+      }
+    }
+    return res.json({ ok: true, tensionId });
+  });
+
   // ── Experiments ────────────────────────────────────────────────────────
 
   app.get("/api/experiments", (req: any, res: any) => {

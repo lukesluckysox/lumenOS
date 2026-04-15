@@ -52,6 +52,14 @@ export const tensions = sqliteTable("tensions", {
   description: text("description").notNull(),
   evidence: text("evidence").notNull().default("[]"), // JSON: string[]
   relatedAxiomIds: text("related_axiom_ids").notNull().default("[]"), // JSON: number[]
+  status: text("status").notNull().default("surfaced"), // surfaced | accumulating | threshold | resolved | persistent
+  signalCount: integer("signal_count").notNull().default(0),
+  firstSurfacedAt: text("first_surfaced_at").notNull().default(""),
+  lastSignalAt: text("last_signal_at").notNull().default(""),
+  salience: integer("salience").notNull().default(0), // stored as real * 1000 for SQLite compat
+  resolutionDirection: text("resolution_direction").notNull().default(""),
+  nominatedAt: text("nominated_at").notNull().default(""),
+  sourceApps: text("source_apps").notNull().default("[]"), // JSON: string[]
   createdAt: text("created_at").notNull(),
 });
 
@@ -59,10 +67,34 @@ export const insertTensionSchema = createInsertSchema(tensions).omit({
   id: true,
   userId: true,
   createdAt: true,
+  status: true,
+  signalCount: true,
+  firstSurfacedAt: true,
+  lastSignalAt: true,
+  salience: true,
+  resolutionDirection: true,
+  nominatedAt: true,
+  sourceApps: true,
 });
 
 export type InsertTension = z.infer<typeof insertTensionSchema>;
 export type Tension = typeof tensions.$inferSelect;
+
+// ─── Tension Signals ────────────────────────────────────────────────────────
+export const tensionSignals = sqliteTable("tension_signals", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  tensionId: integer("tension_id").notNull(),
+  userId: text("user_id").notNull(),
+  sourceApp: text("source_app").notNull(),
+  sourceRecordId: text("source_record_id").notNull().default(""),
+  signalType: text("signal_type").notNull(), // contradiction | corroboration | experiment_result | observation | reflection
+  poleAffected: text("pole_affected").notNull().default(""),
+  content: text("content").notNull(),
+  confidence: integer("confidence").notNull().default(500), // stored as real * 1000
+  createdAt: text("created_at").notNull(),
+});
+
+export type TensionSignal = typeof tensionSignals.$inferSelect;
 
 // ─── Revisions (Worldview Revisions) ────────────────────────────────────────
 export const revisions = sqliteTable("revisions", {

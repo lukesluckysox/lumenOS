@@ -142,3 +142,31 @@ sqlite.exec(`
 try { sqlite.exec("ALTER TABLE axioms ADD COLUMN grounding_verdict TEXT NOT NULL DEFAULT ''"); } catch {}
 try { sqlite.exec("ALTER TABLE axioms ADD COLUMN falsification_conditions TEXT NOT NULL DEFAULT ''"); } catch {}
 try { sqlite.exec("ALTER TABLE axioms ADD COLUMN last_grounding_at TEXT NOT NULL DEFAULT ''"); } catch {}
+
+// ─── Tension lifecycle migrations ────────────────────────────────────────────
+try { sqlite.exec("ALTER TABLE tensions ADD COLUMN status TEXT NOT NULL DEFAULT 'surfaced'"); } catch {}
+try { sqlite.exec("ALTER TABLE tensions ADD COLUMN signal_count INTEGER NOT NULL DEFAULT 0"); } catch {}
+try { sqlite.exec("ALTER TABLE tensions ADD COLUMN first_surfaced_at TEXT NOT NULL DEFAULT ''"); } catch {}
+try { sqlite.exec("ALTER TABLE tensions ADD COLUMN last_signal_at TEXT NOT NULL DEFAULT ''"); } catch {}
+try { sqlite.exec("ALTER TABLE tensions ADD COLUMN salience INTEGER NOT NULL DEFAULT 0"); } catch {}
+try { sqlite.exec("ALTER TABLE tensions ADD COLUMN resolution_direction TEXT NOT NULL DEFAULT ''"); } catch {}
+try { sqlite.exec("ALTER TABLE tensions ADD COLUMN nominated_at TEXT NOT NULL DEFAULT ''"); } catch {}
+try { sqlite.exec("ALTER TABLE tensions ADD COLUMN source_apps TEXT NOT NULL DEFAULT '[]'"); } catch {}
+
+// Backfill first_surfaced_at from created_at for existing tensions
+try { sqlite.exec("UPDATE tensions SET first_surfaced_at = created_at WHERE first_surfaced_at = ''"); } catch {}
+
+sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS tension_signals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tension_id INTEGER NOT NULL,
+    user_id TEXT NOT NULL,
+    source_app TEXT NOT NULL,
+    source_record_id TEXT NOT NULL DEFAULT '',
+    signal_type TEXT NOT NULL,
+    pole_affected TEXT NOT NULL DEFAULT '',
+    content TEXT NOT NULL,
+    confidence INTEGER NOT NULL DEFAULT 500,
+    created_at TEXT NOT NULL
+  )
+`);
