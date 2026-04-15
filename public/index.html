@@ -2932,9 +2932,10 @@
     ───────────────────────────────────────────── */
     .sundial-compact {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: var(--sp-4);
+      gap: var(--sp-2);
       margin: 0 auto var(--sp-4);
       cursor: pointer;
     }
@@ -2968,29 +2969,30 @@
       animation: sundial-ray-in 0.5s ease forwards;
     }
     .sundial-compact__summary {
-      text-align: left;
+      text-align: center;
       min-width: 0;
     }
     .sundial-compact__pct {
-      font: 300 38px 'Cormorant', serif;
+      font: 400 14px 'Satoshi', sans-serif;
       color: #FFD166;
       line-height: 1;
+      display: inline;
     }
     .sundial-compact__pct-sign {
-      font-size: 22px;
+      font-size: 14px;
       opacity: 0.6;
     }
     .sundial-compact__label {
-      font: 500 9px 'Satoshi', sans-serif;
-      letter-spacing: 0.18em;
-      color: rgba(255,209,102,0.45);
-      text-transform: uppercase;
-      margin-top: 4px;
+      font: 400 14px 'Satoshi', sans-serif;
+      letter-spacing: 0.04em;
+      color: #FFD166;
+      display: inline;
+      margin-left: 2px;
     }
     .sundial-compact__tally {
-      font: 400 12px 'Satoshi', sans-serif;
-      color: var(--muted);
-      margin-top: 6px;
+      font: 400 14px 'Satoshi', sans-serif;
+      color: #FFD166;
+      margin-top: 4px;
       letter-spacing: .04em;
     }
     .sundial-compact__tally strong {
@@ -3050,13 +3052,8 @@
       .sundial-compact__orb-pulse { animation: none; opacity: .85; }
       .sundial-compact__ray { animation: none; opacity: 1; }
     }
-    /* Mobile: stack sundial vertically */
+    /* Mobile: sundial detail grid single column */
     @media (max-width: 640px) {
-      .sundial-compact {
-        flex-direction: column;
-        text-align: center;
-      }
-      .sundial-compact__summary { text-align: center; }
       .sundial-detail__grid { grid-template-columns: 1fr; }
     }
 
@@ -3425,8 +3422,7 @@
           </svg>
         </div>
         <div class="sundial-compact__summary">
-          <div class="sundial-compact__pct"><span id="sundial-pct-val">50</span><span class="sundial-compact__pct-sign">%</span></div>
-          <div class="sundial-compact__label">Alignment</div>
+          <div class="sundial-compact__alignment-line"><span class="sundial-compact__pct"><span id="sundial-pct-val">50</span><span class="sundial-compact__pct-sign">%</span></span><span class="sundial-compact__label">Alignment</span></div>
           <div class="sundial-compact__tally" id="sundial-tally">Current: <strong>180</strong> / Target: <strong>360</strong></div>
         </div>
       </div>
