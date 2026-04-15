@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -30,6 +30,134 @@ function RevisionHistoryItem({ entry }: { entry: { date: string; change: string;
         </span>
       </div>
       <p className="text-sm text-foreground/70 leading-relaxed">{entry.change}</p>
+    </div>
+  );
+}
+
+const STRONG_VALUES = ['substantive', 'persistent', 'stress-tested', 'lived-validated', 'aligned', 'articulated', 'low risk'];
+
+function GroundingSection({ axiomId }: { axiomId: number }) {
+  const queryClient = useQueryClient();
+  const [falsification, setFalsification] = useState('');
+  const [dirty, setDirty] = useState(false);
+
+  const { data: grounding, isLoading } = useQuery<{ verdict: string; axes: { axis: string; value: string }[] }>({
+    queryKey: ["/api/axioms", axiomId, "grounding"],
+    queryFn: () => fetch(`/api/axioms/${axiomId}/grounding`).then(r => r.json()),
+  });
+
+  const { data: axiomData } = useQuery<Axiom>({
+    queryKey: ["/api/axioms", axiomId],
+  });
+
+  useEffect(() => {
+    if (axiomData && (axiomData as any).falsificationConditions && !dirty) {
+      setFalsification((axiomData as any).falsificationConditions);
+    }
+  }, [axiomData, dirty]);
+
+  const groundMutation = useMutation({
+    mutationFn: () => apiRequest("POST", `/api/axioms/${axiomId}/ground`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/axioms", axiomId, "grounding"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/axioms", axiomId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/axioms"] });
+    },
+  });
+
+  const saveFalsification = useMutation({
+    mutationFn: () => apiRequest("PATCH", `/api/axioms/${axiomId}`, { falsificationConditions: falsification }),
+    onSuccess: () => {
+      setDirty(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/axioms", axiomId] });
+    },
+  });
+
+  const formatAxis = (axis: string) => axis.replace(/_/g, ' ');
+
+  return (
+    <div className="bg-card border border-card-border rounded-sm px-6 py-5 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="font-mono text-[10px] tracking-widest-constitutional uppercase text-muted-foreground/50">
+          Grounding Assessment
+        </div>
+        {grounding?.verdict && (
+          <span
+            className="font-mono text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-sm"
+            style={{
+              color: grounding.verdict === 'well-grounded' ? '#FFD166' : grounding.verdict === 'under-grounded' ? '#9ca3af' : '#c4943e',
+              border: `1px solid ${grounding.verdict === 'well-grounded' ? 'rgba(255,209,102,0.3)' : grounding.verdict === 'under-grounded' ? 'rgba(156,163,175,0.3)' : 'rgba(196,148,62,0.3)'}`,
+              background: grounding.verdict === 'well-grounded' ? 'rgba(255,209,102,0.06)' : grounding.verdict === 'under-grounded' ? 'rgba(156,163,175,0.06)' : 'rgba(196,148,62,0.06)',
+            }}
+          >
+            {grounding.verdict}
+          </span>
+        )}
+      </div>
+
+      {/* Axis badges */}
+      {grounding?.axes && grounding.axes.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {grounding.axes.map((a) => {
+            const isStrong = STRONG_VALUES.includes(a.value);
+            return (
+              <span
+                key={a.axis}
+                className="font-mono text-[9px] tracking-wider px-2 py-1 rounded-sm"
+                style={{
+                  color: isStrong ? '#FFD166' : '#6b6545',
+                  background: isStrong ? 'rgba(255,209,102,0.08)' : 'rgba(58,53,32,0.4)',
+                  border: `1px solid ${isStrong ? 'rgba(255,209,102,0.2)' : 'rgba(58,53,32,0.6)'}`,
+                }}
+              >
+                {formatAxis(a.axis)}: {a.value}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {isLoading && (
+        <p className="text-xs text-muted-foreground/40 mb-4">Loading grounding data...</p>
+      )}
+
+      {!isLoading && (!grounding?.axes || grounding.axes.length === 0) && (
+        <p className="text-xs text-muted-foreground/40 mb-4">
+          Not yet evaluated. Run a grounding assessment to calibrate this axiom.
+        </p>
+      )}
+
+      {/* Falsification textarea */}
+      <div className="mb-4">
+        <label className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground/40 block mb-2">
+          What would falsify this?
+        </label>
+        <textarea
+          value={falsification}
+          onChange={e => { setFalsification(e.target.value); setDirty(true); }}
+          placeholder="Describe what evidence or experience would disprove this axiom..."
+          className="w-full bg-background border border-border rounded-sm px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-primary/50 resize-none leading-relaxed"
+          rows={2}
+        />
+        {dirty && (
+          <button
+            onClick={() => saveFalsification.mutate()}
+            disabled={saveFalsification.isPending}
+            className="mt-1.5 text-[10px] font-mono uppercase tracking-wider text-primary hover:text-primary/80 transition-colors"
+          >
+            {saveFalsification.isPending ? 'Saving...' : 'Save'}
+          </button>
+        )}
+      </div>
+
+      {/* Re-evaluate button */}
+      <button
+        onClick={() => groundMutation.mutate()}
+        disabled={groundMutation.isPending}
+        className="text-[10px] font-mono uppercase tracking-wider px-3 py-1.5 border border-primary/30 text-primary hover:bg-primary/10 rounded-sm transition-colors disabled:opacity-40"
+      >
+        {groundMutation.isPending ? 'Evaluating...' : 'Re-evaluate'}
+      </button>
     </div>
   );
 }
@@ -298,6 +426,9 @@ export default function AxiomDetail({ params }: { params: { id: string } }) {
           </div>
         )}
       </div>
+
+      {/* Grounding Assessment */}
+      <GroundingSection axiomId={id} />
 
       {/* Synthesis Chain */}
       <div data-testid="synthesis-chain">

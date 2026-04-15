@@ -898,6 +898,107 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }).catch(() => { /* swallow — emitter logs internally */ });
   });
 
+  // ─── Grounding / Calibration ────────────────────────────────────────────────
+  app.post('/api/axioms/:id/ground', (req: any, res: any) => {
+    const id = parseInt(req.params.id);
+    const userId = getUserId(req);
+    const axiom = storage.getAxiom(id, userId);
+    if (!axiom) return res.status(404).json({ error: 'Axiom not found' });
+
+    const { sqlite } = require('./db');
+    const now = new Date().toISOString();
+
+    // Compute 7 grounding axes from local data
+    let inputDescs: string[] = [];
+    try { inputDescs = JSON.parse(axiom.inputDescriptions || '[]'); } catch {}
+    const evidenceCount = axiom.liminalCount + axiom.parallaxCount + axiom.praxisCount + inputDescs.length;
+
+    // 1. evidence_strength
+    const evidenceStrength = evidenceCount >= 4 ? 'substantive' : evidenceCount >= 2 ? 'partial' : 'thin';
+
+    // 2. recurrence
+    const recurrence = inputDescs.length >= 4 ? 'persistent' : inputDescs.length >= 2 ? 'recurring' : 'one-off';
+
+    // 3. contradiction_exposure
+    const tensions = storage.getTensions(userId);
+    const hasTension = tensions.some(t => {
+      try {
+        const related: number[] = JSON.parse(t.relatedAxiomIds || '[]');
+        return related.includes(id);
+      } catch { return false; }
+    });
+    const hasCounterevidence = !!(axiom.counterevidence && axiom.counterevidence.length > 10);
+    const contradictionExposure = (hasCounterevidence && hasTension) ? 'stress-tested'
+      : (hasCounterevidence || hasTension) ? 'challenged' : 'untested';
+
+    // 4. emotional_distortion_risk
+    const emotionalDistortionRisk = 'low risk';
+
+    // 5. praxis_confirmation
+    const praxisConfirmation = axiom.praxisCount >= 3 ? 'lived-validated'
+      : axiom.praxisCount >= 1 ? 'partially confirmed' : 'unvalidated';
+
+    // 6. confidence_support_mismatch
+    const confMismatch = (axiom.confidenceScore > 70 && evidenceCount < 3) ? 'over-confident'
+      : (axiom.confidenceScore < 30 && evidenceCount > 3) ? 'under-claimed' : 'aligned';
+
+    // 7. falsifiability
+    const falsifiability = (axiom as any).falsificationConditions ? 'articulated' : 'not specified';
+
+    const axes = [
+      { axis: 'evidence_strength', value: evidenceStrength },
+      { axis: 'recurrence', value: recurrence },
+      { axis: 'contradiction_exposure', value: contradictionExposure },
+      { axis: 'emotional_distortion_risk', value: emotionalDistortionRisk },
+      { axis: 'praxis_confirmation', value: praxisConfirmation },
+      { axis: 'confidence_support_mismatch', value: confMismatch },
+      { axis: 'falsifiability', value: falsifiability },
+    ];
+
+    // Upsert each axis into grounding_signals
+    const upsertStmt = sqlite.prepare(
+      `INSERT INTO grounding_signals (axiom_id, user_id, axis, value, updated_at)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(axiom_id, axis) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
+    );
+    for (const a of axes) {
+      upsertStmt.run(id, userId, a.axis, a.value, now);
+    }
+
+    // Compute verdict
+    const strongValues = ['substantive', 'persistent', 'stress-tested', 'lived-validated', 'aligned', 'articulated', 'low risk'];
+    const weakValues = ['thin', 'one-off', 'untested', 'unvalidated', 'over-confident', 'not specified'];
+    const strongCount = axes.filter(a => strongValues.includes(a.value)).length;
+    const weakCount = axes.filter(a => weakValues.includes(a.value)).length;
+    const verdict = strongCount >= 5 ? 'well-grounded'
+      : weakCount >= 5 ? 'under-grounded'
+      : 'provisionally grounded';
+
+    // Update axiom
+    sqlite.prepare(
+      `UPDATE axioms SET grounding_verdict = ?, last_grounding_at = ?, updated_at = ? WHERE id = ? AND user_id = ?`
+    ).run(verdict, now, now, id, userId);
+
+    return res.json({ verdict, axes });
+  });
+
+  app.get('/api/axioms/:id/grounding', (req: any, res: any) => {
+    const id = parseInt(req.params.id);
+    const userId = getUserId(req);
+    const axiom = storage.getAxiom(id, userId);
+    if (!axiom) return res.status(404).json({ error: 'Axiom not found' });
+
+    const { sqlite } = require('./db');
+    const signals = sqlite.prepare(
+      `SELECT axis, value, detail, updated_at FROM grounding_signals WHERE axiom_id = ? AND user_id = ? ORDER BY axis`
+    ).all(id, userId) as { axis: string; value: string; detail: string; updated_at: string }[];
+
+    return res.json({
+      verdict: (axiom as any).groundingVerdict || '',
+      axes: signals,
+    });
+  });
+
   // ─── Tensions ──────────────────────────────────────────────────────────────
   app.get("/api/tensions", (req: any, res: any) => {
     res.json(storage.getTensions(getUserId(req)));

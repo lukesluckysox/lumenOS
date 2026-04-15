@@ -122,3 +122,23 @@ sqlite.exec(`
 
 // Additive migration: plan column (no-op if already exists)
 try { sqlite.exec("ALTER TABLE axiom_users ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'"); } catch {}
+
+// ─── Grounding / calibration migrations ──────────────────────────────────────
+sqlite.exec(`
+  CREATE TABLE IF NOT EXISTS grounding_signals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    axiom_id INTEGER NOT NULL,
+    user_id TEXT NOT NULL DEFAULT '1',
+    axis TEXT NOT NULL,
+    value TEXT NOT NULL,
+    detail TEXT NOT NULL DEFAULT '',
+    source_app TEXT NOT NULL DEFAULT '',
+    source_record_id TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL,
+    UNIQUE(axiom_id, axis)
+  )
+`);
+
+try { sqlite.exec("ALTER TABLE axioms ADD COLUMN grounding_verdict TEXT NOT NULL DEFAULT ''"); } catch {}
+try { sqlite.exec("ALTER TABLE axioms ADD COLUMN falsification_conditions TEXT NOT NULL DEFAULT ''"); } catch {}
+try { sqlite.exec("ALTER TABLE axioms ADD COLUMN last_grounding_at TEXT NOT NULL DEFAULT ''"); } catch {}

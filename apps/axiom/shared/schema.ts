@@ -28,6 +28,10 @@ export const axioms = sqliteTable("axioms", {
   counterevidence: text("counterevidence").notNull().default(""),
   revisionNote: text("revision_note").notNull().default(""),
   revisionHistory: text("revision_history").notNull().default("[]"), // JSON: { date, change, previousConfidence }[]
+  // Grounding / calibration
+  groundingVerdict: text("grounding_verdict").notNull().default(""),
+  falsificationConditions: text("falsification_conditions").notNull().default(""),
+  lastGroundingAt: text("last_grounding_at").notNull().default(""),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
@@ -91,3 +95,18 @@ export const constitutions = sqliteTable("constitutions", {
 });
 
 export type Constitution = typeof constitutions.$inferSelect;
+
+// ─── Grounding Signals (Calibration axes per axiom) ─────────────────────────
+export const groundingSignals = sqliteTable("grounding_signals", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  axiomId: integer("axiom_id").notNull(),
+  userId: text("user_id").notNull().default("1"),
+  axis: text("axis").notNull(),
+  value: text("value").notNull(),
+  detail: text("detail").notNull().default(""),
+  sourceApp: text("source_app").notNull().default(""),
+  sourceRecordId: text("source_record_id").notNull().default(""),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export type GroundingSignal = typeof groundingSignals.$inferSelect;

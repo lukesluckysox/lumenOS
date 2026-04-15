@@ -168,6 +168,19 @@ function AxiomRow({ axiom }: { axiom: Axiom }) {
           {/* Title */}
           <h3 className="font-serif text-base leading-snug text-foreground group-hover:text-foreground/90 transition-colors mb-1.5">
             {axiom.title}
+            {(axiom as any).groundingVerdict && (
+              <span
+                className="ml-2 font-mono text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm align-middle"
+                style={{
+                  color: (axiom as any).groundingVerdict === 'well-grounded' ? '#FFD166'
+                    : (axiom as any).groundingVerdict === 'under-grounded' ? '#9ca3af' : '#c4943e',
+                  border: `1px solid ${(axiom as any).groundingVerdict === 'well-grounded' ? 'rgba(255,209,102,0.25)' : (axiom as any).groundingVerdict === 'under-grounded' ? 'rgba(156,163,175,0.25)' : 'rgba(196,148,62,0.25)'}`,
+                  background: (axiom as any).groundingVerdict === 'well-grounded' ? 'rgba(255,209,102,0.06)' : (axiom as any).groundingVerdict === 'under-grounded' ? 'rgba(156,163,175,0.06)' : 'rgba(196,148,62,0.06)',
+                }}
+              >
+                {(axiom as any).groundingVerdict}
+              </span>
+            )}
           </h3>
 
           {/* Quoted truth claim */}
