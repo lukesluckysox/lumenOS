@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { RegisterSW } from '@/components/register-sw';
 import { MobileNavWrapper } from '@/components/mobile-nav-wrapper';
+import { SidebarWrapper } from '@/components/sidebar-wrapper';
 
 export const metadata: Metadata = {
   title: 'Liminal — A Cabinet of Instruments for Thought',
@@ -62,7 +63,12 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-icon" />
       </head>
       <body>
-        {children}
+        <div className="app-shell">
+          <SidebarWrapper />
+          <main className="app-main">
+            {children}
+          </main>
+        </div>
         <MobileNavWrapper />
         <RegisterSW />
       </body>
