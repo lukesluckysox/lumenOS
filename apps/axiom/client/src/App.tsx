@@ -62,7 +62,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <Router hook={useHashLocation}>
             <div className="flex h-screen bg-background overflow-hidden">
-              <div className="hidden md:block">
+              <div className="hidden md:flex">
                 <AppSidebar />
               </div>
               <main className="flex-1 overflow-y-auto pb-24 md:pb-0" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}>
