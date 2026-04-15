@@ -8,6 +8,7 @@ import SourceTags from "@/components/SourceTags";
 import { useToast } from "@/hooks/use-toast";
 import ConstitutionalMoment from "@/components/ConstitutionalMoment";
 import { SkeletonLine, SkeletonCard } from "@/components/Skeleton";
+import { ExternalLink } from "lucide-react";
 
 function SynthesisSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -521,6 +522,26 @@ export default function AxiomDetail({ params }: { params: { id: string } }) {
             <p className="text-sm text-foreground/70 leading-relaxed italic">{axiom.revisionNote}</p>
           </SynthesisSection>
         )}
+
+        {/* Cross-app handoff */}
+        <div className="py-5 border-b border-border/50 flex flex-wrap gap-2">
+          <a
+            href={`https://praxis-app.up.railway.app/experiments?claim=${encodeURIComponent(axiom.truthClaim)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[11px] font-mono tracking-wider border border-border/50 rounded-sm px-2.5 py-1 text-muted-foreground/60 hover:text-[hsl(var(--primary))] hover:border-[hsl(var(--primary))]/40 transition-colors"
+          >
+            <ExternalLink size={10} /> Test in Praxis
+          </a>
+          <a
+            href={`https://liminal-app.up.railway.app/tool/interlocutor?claim=${encodeURIComponent(axiom.truthClaim)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[11px] font-mono tracking-wider border border-border/50 rounded-sm px-2.5 py-1 text-muted-foreground/60 hover:text-[hsl(var(--primary))] hover:border-[hsl(var(--primary))]/40 transition-colors"
+          >
+            <ExternalLink size={10} /> Interrogate in Liminal
+          </a>
+        </div>
 
         {/* Revision History */}
         {revisionHistory.length > 0 && (

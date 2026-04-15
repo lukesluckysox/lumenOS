@@ -284,6 +284,26 @@ function TensionCard({ tension }: { tension: TensionFeedItem }) {
             </div>
           )}
 
+          {/* Cross-app handoff */}
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={`https://axiomtool-production.up.railway.app/#/submit?claim=${encodeURIComponent(`${tension.poleA} vs ${tension.poleB}: ${tension.description}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-[11px] font-mono tracking-wider border border-border/50 rounded-sm px-2.5 py-1 text-muted-foreground/60 hover:text-primary hover:border-primary/40 transition-colors"
+            >
+              <ExternalLink size={10} /> Ground in Axiom
+            </a>
+            <a
+              href={`https://liminal-app.up.railway.app/tool/genealogist?claim=${encodeURIComponent(`${tension.poleA} vs ${tension.poleB}: ${tension.description}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-[11px] font-mono tracking-wider border border-border/50 rounded-sm px-2.5 py-1 text-muted-foreground/60 hover:text-primary hover:border-primary/40 transition-colors"
+            >
+              <ExternalLink size={10} /> Explore origins in Liminal
+            </a>
+          </div>
+
           {/* Footer */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <p className="text-xs text-muted-foreground/40">

@@ -12,6 +12,7 @@ import { getSession } from '@/lib/auth/session';
 import { queryOne } from '@/lib/db';
 import { TOOL_LABELS, TOOL_ACCENTS, TOOL_SLUGS } from '@/lib/tools/constants';
 import { canExport } from '@/lib/permissions';
+import { InquiryHandoff } from '@/components/inquiry-handoff';
 
 interface ToolSession {
   id: string;
@@ -300,6 +301,7 @@ export default async function SessionPage({ params }: PageProps) {
               Review your evolving principles →
             </a>
           </div>
+          <InquiryHandoff claim={session.input_text || session.title} />
         </section>
 
         {/* Other instruments */}
