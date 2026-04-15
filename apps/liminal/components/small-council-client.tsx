@@ -14,18 +14,19 @@ interface AdvisorTurn {
   content: string;
 }
 
-type Phase = 'idle' | 'streaming' | 'done' | 'error';
+type Phase = 'idle' | 'streaming_round1' | 'showing_deliberation' | 'streaming_round2' | 'done' | 'error';
 
 // ── SSE stream reader ──────────────────────────────────────────────────────────
 
 async function readSSEStream(
   response: Response,
   handlers: {
-    advisor:       (d: AdvisorTurn) => void;
-    round_complete:(d: { round: number }) => void;
-    synthesis:     (d: { content: string }) => void;
-    complete:      (d: { sessionId: string; downstream?: DownstreamItem[] }) => void;
-    error:         (d: { message: string }) => void;
+    advisor:        (d: AdvisorTurn) => void;
+    round_complete: (d: { round: number }) => void;
+    round1_done?:   (d: { turns: AdvisorTurn[] }) => void;
+    synthesis?:     (d: { content: string }) => void;
+    complete?:      (d: { sessionId: string; downstream?: DownstreamItem[] }) => void;
+    error:          (d: { message: string }) => void;
   }
 ) {
   const reader = response.body!.getReader();
@@ -185,12 +186,17 @@ export function SmallCouncilClient() {
   const [sessionId, setSessionId] = useState('');
   const [downstream, setDownstream] = useState<DownstreamItem[]>([]);
 
+  // Pause state: round 1 turns from server + user clarification
+  const [serverRound1Turns, setServerRound1Turns] = useState<AdvisorTurn[]>([]);
+  const [clarification, setClarification] = useState('');
+
   // Track which turns are "new" (just arrived) for fade-in animation
   const newTurnsRef = useRef<Set<string>>(new Set());
 
   const MIN_LEN = 30;
   const isReady = input.trim().length >= MIN_LEN;
 
+  // ── Round 1 submit ──────────────────────────────────────────────────────────
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!isReady) {
@@ -199,13 +205,15 @@ export function SmallCouncilClient() {
     }
 
     setFormError('');
-    setPhase('streaming');
+    setPhase('streaming_round1');
     setRound1Turns([]);
     setRound2Turns([]);
     setRound1Complete(false);
     setRound2Complete(false);
     setSynthesis('');
     setStreamError('');
+    setServerRound1Turns([]);
+    setClarification('');
     newTurnsRef.current = new Set();
 
     try {
@@ -226,18 +234,62 @@ export function SmallCouncilClient() {
         advisor: (turn) => {
           const key = `${turn.round}-${turn.advisor}`;
           newTurnsRef.current.add(key);
-          if (turn.round === 1) {
-            setRound1Turns((prev) => [...prev, turn]);
-          } else {
-            setRound2Turns((prev) => [...prev, turn]);
-          }
-          // Remove from "new" set after animation completes
-          setTimeout(() => {
-            newTurnsRef.current.delete(key);
-          }, 500);
+          setRound1Turns((prev) => [...prev, turn]);
+          setTimeout(() => { newTurnsRef.current.delete(key); }, 500);
         },
         round_complete: ({ round }) => {
           if (round === 1) setRound1Complete(true);
+        },
+        round1_done: ({ turns }) => {
+          setServerRound1Turns(turns);
+          setPhase('showing_deliberation');
+        },
+        error: ({ message }) => {
+          setStreamError(message);
+          setPhase('error');
+        },
+      });
+    } catch {
+      setStreamError('A network error occurred. Please check your connection.');
+      setPhase('error');
+    }
+  }
+
+  // ── Round 2 continue ────────────────────────────────────────────────────────
+  async function handleContinueToSynthesis() {
+    setPhase('streaming_round2');
+    newTurnsRef.current = new Set();
+
+    try {
+      const body: Record<string, unknown> = {
+        question: input.trim(),
+        round1Turns: serverRound1Turns,
+      };
+      if (clarification.trim()) {
+        body.clarification = clarification.trim();
+      }
+
+      const res = await fetch('/api/tools/small-council/round2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok || !res.body) {
+        const data = await res.json().catch(() => ({}));
+        setStreamError((data as { error?: string }).error ?? 'Something went wrong. Please try again.');
+        setPhase('error');
+        return;
+      }
+
+      await readSSEStream(res, {
+        advisor: (turn) => {
+          const key = `${turn.round}-${turn.advisor}`;
+          newTurnsRef.current.add(key);
+          setRound2Turns((prev) => [...prev, turn]);
+          setTimeout(() => { newTurnsRef.current.delete(key); }, 500);
+        },
+        round_complete: ({ round }) => {
           if (round === 2) setRound2Complete(true);
         },
         synthesis: ({ content }) => {
@@ -495,7 +547,7 @@ export function SmallCouncilClient() {
       )}
 
       {/* ── Streaming panel ──────────────────────────────────────────────────── */}
-      {(phase === 'streaming' || phase === 'done') && (
+      {phase !== 'idle' && phase !== 'error' && (
         <div aria-live="polite" aria-label="Council deliberation">
           {/* Question recap */}
           <div
@@ -554,7 +606,7 @@ export function SmallCouncilClient() {
           )}
 
           {/* Round I waiting (no turns yet) */}
-          {round1Turns.length === 0 && (
+          {phase === 'streaming_round1' && round1Turns.length === 0 && (
             <div
               style={{
                 display: 'flex',
@@ -571,9 +623,120 @@ export function SmallCouncilClient() {
             </div>
           )}
 
+          {/* ── Pause state: clarification input ──────────────────────────── */}
+          {phase === 'showing_deliberation' && (
+            <div
+              style={{
+                marginTop: '2rem',
+                padding: '1.25rem 1.5rem',
+                background: 'rgb(var(--color-surface-2))',
+                borderRadius: '6px',
+                border: `1px solid rgb(${ACCENT} / 0.12)`,
+                animation: 'fadeSlideUp 0.35s cubic-bezier(0.16,1,0.3,1) both',
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 'clamp(0.8rem, 0.75rem + 0.2vw, 0.875rem)',
+                  color: 'rgb(var(--color-text-muted))',
+                  lineHeight: 1.6,
+                  marginBottom: '1rem',
+                  fontStyle: 'italic',
+                  fontFamily: 'var(--font-display), Georgia, serif',
+                }}
+              >
+                The council has given initial counsel. You may clarify or redirect before they cross-examine.
+              </p>
+
+              <textarea
+                value={clarification}
+                onChange={(e) => setClarification(e.target.value)}
+                placeholder="Clarify or redirect the council..."
+                rows={3}
+                className="liminal-input"
+                style={{
+                  resize: 'vertical',
+                  minHeight: '80px',
+                  marginBottom: '1rem',
+                }}
+              />
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <button
+                  onClick={handleContinueToSynthesis}
+                  className="btn-primary"
+                  style={{ padding: '0.6rem 1.75rem' }}
+                >
+                  Continue to synthesis →
+                </button>
+
+                <button
+                  onClick={() => {
+                    setPhase('idle');
+                    setRound1Turns([]);
+                    setRound1Complete(false);
+                    setServerRound1Turns([]);
+                    setClarification('');
+                  }}
+                  className="btn-ghost"
+                  style={{
+                    fontSize: 'clamp(0.75rem, 0.7rem + 0.15vw, 0.8125rem)',
+                  }}
+                >
+                  Start over
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Round II */}
-          {round1Complete && (
+          {(phase === 'streaming_round2' || phase === 'done') && round1Complete && (
             <>
+              {/* Show clarification if provided */}
+              {clarification.trim() && (
+                <div
+                  style={{
+                    marginTop: '1.5rem',
+                    padding: '0.75rem 1.125rem',
+                    borderLeft: `2px solid rgb(${ACCENT} / 0.4)`,
+                    background: 'rgb(var(--color-surface-2))',
+                    borderRadius: '0 4px 4px 0',
+                    animation: 'fadeSlideUp 0.3s ease both',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'block',
+                      fontSize: 'clamp(0.65rem, 0.6rem + 0.15vw, 0.7rem)',
+                      fontWeight: 700,
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: `rgb(${ACCENT} / 0.6)`,
+                      marginBottom: '0.375rem',
+                    }}
+                  >
+                    Your clarification
+                  </span>
+                  <p
+                    style={{
+                      fontSize: 'clamp(0.8rem, 0.75rem + 0.2vw, 0.875rem)',
+                      color: 'rgb(var(--color-text-muted))',
+                      fontStyle: 'italic',
+                      lineHeight: 1.55,
+                    }}
+                  >
+                    {clarification.trim()}
+                  </p>
+                </div>
+              )}
+
               <RoundHeader label="Round II — Cross-examination" />
               {round2Turns.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
@@ -604,7 +767,7 @@ export function SmallCouncilClient() {
                 </div>
               )}
 
-              {round2Complete && round2Turns.length < 5 && (
+              {!round2Complete && round2Turns.length > 0 && round2Turns.length < 5 && (
                 <div
                   style={{
                     display: 'flex',

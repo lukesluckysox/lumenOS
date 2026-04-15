@@ -20,6 +20,7 @@ export interface CouncilOutput {
   turns: CouncilTurn[];
   synthesis: string;
   summary: string;
+  clarification?: string;
 }
 
 export interface StreamingCallbacks {
@@ -73,14 +74,21 @@ type ContentBlock =
 function buildAdvisorContent(
   advisor: CouncilAdvisor,
   question: string,
-  previousTurns: CouncilTurn[]
+  previousTurns: CouncilTurn[],
+  clarification?: string
 ): ContentBlock[] {
-  const context =
-    previousTurns.length > 0
-      ? `\n\nThe council has already spoken in round one:\n\n${previousTurns
-          .map((t) => `**${t.advisor}:** ${t.content}`)
-          .join('\n\n')}\n\nNow in round two, respond to your colleagues. You may agree, push back, add nuance, or sharpen your original position. Be direct and specific. Reference what others said.`
-      : '\nThis is round one. Give your counsel without knowledge of what others will say. Be direct and specific. 2–4 paragraphs.';
+  let context: string;
+  if (previousTurns.length > 0) {
+    const transcript = previousTurns
+      .map((t) => `**${t.advisor}:** ${t.content}`)
+      .join('\n\n');
+    const clarificationNote = clarification
+      ? `\n\nBefore round two, the questioner offered this clarification:\n"${clarification}"\n\nFactor this into your response.`
+      : '';
+    context = `\n\nThe council has already spoken in round one:\n\n${transcript}${clarificationNote}\n\nNow in round two, respond to your colleagues. You may agree, push back, add nuance, or sharpen your original position. Be direct and specific. Reference what others said.`;
+  } else {
+    context = '\nThis is round one. Give your counsel without knowledge of what others will say. Be direct and specific. 2–4 paragraphs.';
+  }
 
   return [
     // Static block: advisor identity — cacheable across calls with the same advisor
@@ -101,7 +109,8 @@ async function callAdvisor(
   client: Anthropic,
   advisor: CouncilAdvisor,
   question: string,
-  previousTurns: CouncilTurn[]
+  previousTurns: CouncilTurn[],
+  clarification?: string
 ): Promise<string> {
   const message = await client.messages.create({
     model: MODEL,
@@ -109,7 +118,7 @@ async function callAdvisor(
     messages: [
       {
         role: 'user',
-        content: buildAdvisorContent(advisor, question, previousTurns) as any,
+        content: buildAdvisorContent(advisor, question, previousTurns, clarification) as any,
       },
     ],
   }, {
@@ -124,7 +133,8 @@ async function callAdvisor(
 async function callSynthesis(
   client: Anthropic,
   question: string,
-  allTurns: CouncilTurn[]
+  allTurns: CouncilTurn[],
+  clarification?: string
 ): Promise<string> {
   const transcript = allTurns
     .map(
@@ -132,6 +142,10 @@ async function callSynthesis(
         `[Round ${t.round}] ${t.advisor}:\n${t.content}`
     )
     .join('\n\n---\n\n');
+
+  const clarificationBlock = clarification
+    ? `\n\nBetween rounds, the questioner offered this clarification:\n"${clarification}"\n`
+    : '';
 
   const message = await client.messages.create({
     model: MODEL,
@@ -142,7 +156,7 @@ async function callSynthesis(
         content: `You are the chronicler of the Small Council. Below is the full transcript of the council's deliberation on this question:
 
 "${question}"
-
+${clarificationBlock}
 TRANSCRIPT:
 ${transcript}
 
@@ -219,6 +233,72 @@ export async function runSmallCouncilStreaming(
     turns: allTurns,
     synthesis,
     summary: buildSummary(synthesis),
+  };
+}
+
+/**
+ * Streaming round 1 only — emits each advisor response, then stops.
+ * Returns the round 1 turns for use in a subsequent round 2 call.
+ */
+export async function runRound1Streaming(
+  question: string,
+  callbacks: Pick<StreamingCallbacks, 'onAdvisorResponse' | 'onRoundComplete'>
+): Promise<CouncilTurn[]> {
+  const client = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    timeout: TIMEOUT_MS,
+  });
+
+  const round1Results: CouncilTurn[] = [];
+  await Promise.all(
+    ADVISORS.map(async (advisor) => {
+      const content = await callAdvisor(client, advisor, question, []);
+      const turn: CouncilTurn = { advisor: advisor.name, round: 1, content };
+      round1Results.push(turn);
+      callbacks.onAdvisorResponse(turn);
+    })
+  );
+  callbacks.onRoundComplete(1);
+
+  return round1Results;
+}
+
+/**
+ * Streaming round 2 + synthesis — uses round 1 turns and optional clarification.
+ * Returns the full CouncilOutput (all turns from both rounds).
+ */
+export async function runRound2Streaming(
+  question: string,
+  round1Turns: CouncilTurn[],
+  callbacks: StreamingCallbacks,
+  clarification?: string
+): Promise<CouncilOutput> {
+  const client = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    timeout: TIMEOUT_MS,
+  });
+
+  const round2Results: CouncilTurn[] = [];
+  await Promise.all(
+    ADVISORS.map(async (advisor) => {
+      const content = await callAdvisor(client, advisor, question, round1Turns, clarification);
+      const turn: CouncilTurn = { advisor: advisor.name, round: 2, content };
+      round2Results.push(turn);
+      callbacks.onAdvisorResponse(turn);
+    })
+  );
+  callbacks.onRoundComplete(2);
+
+  const allTurns = [...round1Turns, ...round2Results];
+  const synthesis = await callSynthesis(client, question, allTurns, clarification);
+  callbacks.onSynthesis(synthesis);
+
+  return {
+    question,
+    turns: allTurns,
+    synthesis,
+    summary: buildSummary(synthesis),
+    ...(clarification ? { clarification } : {}),
   };
 }
 

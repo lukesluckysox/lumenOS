@@ -1,11 +1,8 @@
 import { type NextRequest } from 'next/server';
 import { z } from 'zod';
 import { getSession } from '@/lib/auth/session';
-import { queryOne } from '@/lib/db';
-import { runSmallCouncilStreaming } from '@/lib/tools/small-council/orchestrator';
+import { runRound1Streaming } from '@/lib/tools/small-council/orchestrator';
 import { checkAndIncrementUsage } from '@/lib/usage';
-import { emitToParallax, emitToAxiom, emitToPraxis } from '@/lib/parallaxEmitter';
-import { emitForSession } from '@/lib/lumenEmitter';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 90;
@@ -59,63 +56,17 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const output = await runSmallCouncilStreaming(question, {
+        const round1Turns = await runRound1Streaming(question, {
           onAdvisorResponse: (turn) => {
             controller.enqueue(sseEvent('advisor', turn));
           },
           onRoundComplete: (round) => {
             controller.enqueue(sseEvent('round_complete', { round }));
           },
-          onSynthesis: (synthesis) => {
-            controller.enqueue(sseEvent('synthesis', { content: synthesis }));
-          },
         });
 
-        const title =
-          question.length > 80 ? question.slice(0, 80) + '…' : question;
-
-        const session = await queryOne<{ id: string }>(
-          `INSERT INTO tool_sessions
-             (user_id, tool_slug, title, input_text, structured_output, summary)
-           VALUES ($1, $2, $3, $4, $5, $6)
-           RETURNING id`,
-          [
-            user.id,
-            'small-council',
-            title,
-            question,
-            JSON.stringify(output),
-            output.summary,
-          ]
-        );
-
-        // Fire-and-forget: emit base + enriched epistemic events to Lumen
-        if (user.lumen_user_id && session) {
-          emitForSession({ lumenUserId: user.lumen_user_id, sessionId: session.id, toolSlug: 'small-council', inputText: question, summary: output.summary });
-        }
-
-        // Collect downstream
-        const downstream: { destination: string; description: string }[] = [];
-        if (user.lumen_user_id && session) {
-          const emitPayload = {
-            lumenUserId: user.lumen_user_id,
-            sessionId: session.id,
-            toolSlug: 'small-council',
-            inputText: question,
-            structuredOutput: output,
-            summary: output.summary || '',
-          };
-          const [parallaxResult, axiomResult, praxisResult] = await Promise.all([
-            emitToParallax(emitPayload),
-            emitToAxiom(emitPayload),
-            emitToPraxis(emitPayload),
-          ]);
-          if (parallaxResult.sent) downstream.push({ destination: parallaxResult.destination, description: parallaxResult.description });
-          if (axiomResult.sent) downstream.push({ destination: axiomResult.destination, description: axiomResult.description });
-          if (praxisResult.sent) downstream.push({ destination: praxisResult.destination, description: praxisResult.description });
-        }
-
-        controller.enqueue(sseEvent('complete', { sessionId: session!.id, downstream }));
+        // Send round 1 turns back so the client can pass them to round 2
+        controller.enqueue(sseEvent('round1_done', { turns: round1Turns }));
       } catch (err) {
         console.error('[small-council-stream]', err);
         controller.enqueue(

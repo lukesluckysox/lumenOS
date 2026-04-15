@@ -164,6 +164,35 @@ function SmallCouncilOutput({ output }: { output: CouncilOutput }) {
         </div>
       </Section>
 
+      {output.clarification && (
+        <div
+          style={{
+            paddingLeft: '1.25rem',
+            borderLeft: `1.5px solid rgb(${ac} / 0.35)`,
+          }}
+        >
+          <div
+            style={{
+              ...labelCss,
+              color: `rgb(${ac} / 0.6)`,
+              marginBottom: '0.5rem',
+            }}
+          >
+            Clarification
+          </div>
+          <p
+            style={{
+              fontSize: 'clamp(0.875rem, 0.8rem + 0.25vw, 0.9375rem)',
+              color: 'rgb(var(--color-text-muted))',
+              fontStyle: 'italic',
+              lineHeight: 1.65,
+            }}
+          >
+            {output.clarification}
+          </p>
+        </div>
+      )}
+
       <Section label="Round II — Response" accent={ac}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {round2.map((turn, i) => (
