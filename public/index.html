@@ -905,6 +905,7 @@
       color: var(--faint);
     }
     .card__hd { display: flex; flex-direction: column; gap: var(--sp-1); }
+    .card__hd-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 
     .card__name {
       font-family: var(--font-display);
@@ -928,11 +929,7 @@
       max-width: 46ch;
     }
     .card__foot {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: var(--sp-3);
-      border-top: 1px solid var(--divider);
+      display: none;
     }
     .card__status {
       font-size: var(--text-xs);
@@ -3572,68 +3569,64 @@
     <article class="card card--liminal up" id="card-liminal" role="listitem">
       <p class="card__idx">01</p>
       <div class="card__hd">
-        <h3 class="card__name">Liminal</h3>
+        <div class="card__hd-row">
+          <h3 class="card__name">Liminal</h3>
+          <a href="https://liminal-app.up.railway.app/" target="_blank" rel="noopener noreferrer" class="card__cta card__cta--live" data-has-sso="true" aria-label="Enter Liminal">
+            Enter
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
         <span class="card__fn">Questions belief</span>
       </div>
       <p class="card__desc">Six instruments for questioning what you believe.</p>
-      <div class="card__foot">
-        <span class="card__status card__status--live">Live</span>
-        <a href="https://liminal-app.up.railway.app/" target="_blank" rel="noopener noreferrer" class="card__cta card__cta--live" data-has-sso="true" aria-label="Enter Liminal">
-          Enter
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-      </div>
     </article>
 
     <!-- Parallax -->
     <article class="card card--parallax up d1" id="card-parallax" role="listitem">
       <p class="card__idx">02</p>
       <div class="card__hd">
-        <h3 class="card__name">Parallax</h3>
+        <div class="card__hd-row">
+          <h3 class="card__name">Parallax</h3>
+          <a href="https://parallaxapp.up.railway.app/" target="_blank" rel="noopener noreferrer" class="card__cta card__cta--live" data-has-sso="true" aria-label="Enter Parallax">
+            Enter
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
         <span class="card__fn">Reveals pattern</span>
       </div>
       <p class="card__desc">Your patterns — what's stable, shifting, and recurring.</p>
-      <div class="card__foot">
-        <span class="card__status card__status--live">Live</span>
-        <a href="https://parallaxapp.up.railway.app/" target="_blank" rel="noopener noreferrer" class="card__cta card__cta--live" data-has-sso="true" aria-label="Enter Parallax">
-          Enter
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-      </div>
     </article>
 
     <!-- Praxis -->
     <article class="card card--praxis up d2" id="card-praxis" role="listitem">
       <p class="card__idx">03</p>
       <div class="card__hd">
-        <h3 class="card__name">Praxis</h3>
+        <div class="card__hd-row">
+          <h3 class="card__name">Praxis</h3>
+          <a href="https://praxis-app.up.railway.app/" target="_blank" rel="noopener noreferrer" class="card__cta card__cta--live" data-has-sso="true" aria-label="Enter Praxis">
+            Enter
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
         <span class="card__fn">Tests hypothesis</span>
       </div>
       <p class="card__desc">Design experiments. Test what you think you've learned.</p>
-      <div class="card__foot">
-        <span class="card__status card__status--live">Live</span>
-        <a href="https://praxis-app.up.railway.app/" target="_blank" rel="noopener noreferrer" class="card__cta card__cta--live" data-has-sso="true" aria-label="Enter Praxis">
-          Enter
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-      </div>
     </article>
 
     <!-- Axiom -->
     <article class="card card--axiom up d3" id="card-axiom" role="listitem">
       <p class="card__idx">04</p>
       <div class="card__hd">
-        <h3 class="card__name">Axiom</h3>
+        <div class="card__hd-row">
+          <h3 class="card__name">Axiom</h3>
+          <a href="https://axiomtool-production.up.railway.app/#/" target="_blank" rel="noopener noreferrer" class="card__cta card__cta--live" data-has-sso="true" aria-label="Enter Axiom">
+            Enter
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
         <span class="card__fn">Distills truth</span>
       </div>
       <p class="card__desc">Distill tested insights into governing principles.</p>
-      <div class="card__foot">
-        <span class="card__status card__status--live">Live</span>
-        <a href="https://axiomtool-production.up.railway.app/#/" target="_blank" rel="noopener noreferrer" class="card__cta card__cta--live" data-has-sso="true" aria-label="Enter Axiom">
-          Enter
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </a>
-      </div>
     </article>
 
   </div>
