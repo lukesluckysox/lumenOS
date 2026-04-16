@@ -3062,10 +3062,10 @@
       left: 0 !important;
       right: 0 !important;
       z-index: 9998 !important;
-      background: rgba(25, 27, 42, 0.97);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-top: 1px solid rgba(255, 209, 102, 0.18);
+      background: rgba(25, 27, 42, 0.90);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
       padding-bottom: env(safe-area-inset-bottom, 0px);
       display: block !important;
       visibility: visible !important;
@@ -3073,13 +3073,11 @@
       transform: none !important;
       pointer-events: auto !important;
     }
-    /* Bottom nav always visible — no desktop hide */
     .bottom-nav__inner {
-      max-width: 480px;
-      margin: 0 auto;
       display: flex;
+      align-items: center;
       justify-content: space-around;
-      align-items: stretch;
+      padding: 0.25rem 0.5rem;
     }
     .bottom-nav__item {
       flex: 1;
@@ -3087,24 +3085,25 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 0.25rem;
-      padding: 0.5rem 0.5rem 0.4rem;
-      min-height: 52px;
+      gap: 2px;
+      padding: 0.5rem;
+      min-height: 44px;
       text-decoration: none;
-      color: rgba(255, 209, 102, 0.45);
-      transition: color 0.15s ease, opacity 0.15s ease;
+      color: rgba(255, 209, 102, 0.40);
+      transition: color 0.15s ease;
+      border-radius: 8px;
     }
     .bottom-nav__item:hover,
     .bottom-nav__item:focus-visible {
       color: rgba(255, 209, 102, 0.95);
     }
     .bottom-nav__item svg {
-      width: 24px; height: 24px;
+      width: 18px; height: 18px;
       flex-shrink: 0;
     }
     .bottom-nav__label {
-      font-family: 'Satoshi', sans-serif;
-      font-size: 11px;
+      font-family: 'Satoshi', ui-monospace, monospace;
+      font-size: 10px;
       letter-spacing: 0.04em;
       line-height: 1;
       font-weight: 500;
