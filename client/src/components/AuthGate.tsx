@@ -4,7 +4,6 @@ interface AuthGateProps {
   onAuth: (username: string) => void;
 }
 
-/* ── Plan Card Data ── */
 const PLANS = [
   {
     id: "aspirant",
@@ -34,57 +33,21 @@ function PlanCard({ plan }: { plan: (typeof PLANS)[0] }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div
-      className={`overflow-hidden rounded-md border text-left transition-colors ${
-        plan.fellow
-          ? "border-[var(--gold)]/18"
-          : "border-border/30"
-      }`}
-      style={{
-        background: plan.fellow
-          ? "linear-gradient(135deg, var(--surface) 0%, rgba(255,209,102,.03) 100%)"
-          : "var(--surface)",
-      }}
-    >
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between px-4 py-2.5 hover:bg-[rgba(141,153,174,.04)] transition-colors select-none"
-        aria-expanded={open}
-      >
-        <span className="flex items-baseline gap-2">
-          <span className={`font-serif text-sm ${plan.fellow ? "text-[var(--gold)]" : "text-foreground"}`}>
-            {plan.name}
-          </span>
-          <span className="text-[10px] text-muted-foreground/40 tracking-wide">{plan.price}</span>
+    <div className={`plan-card ${plan.fellow ? "plan-card--fellow" : ""} ${open ? "plan-card--open" : ""}`}>
+      <div className="plan-card__header" onClick={() => setOpen(!open)} role="button" tabIndex={0} aria-expanded={open}>
+        <span className="plan-card__header-left">
+          <p className="plan-card__name">{plan.name}</p>
+          <p className="plan-card__price">{plan.price}</p>
         </span>
-        <span
-          className="text-sm text-muted-foreground/40 leading-none transition-transform"
-          style={{ transform: open ? "rotate(45deg)" : "none" }}
-        >
-          +
-        </span>
-      </button>
-
-      <div
-        className="overflow-hidden transition-all"
-        style={{ maxHeight: open ? "400px" : "0", padding: open ? "0 1rem 0.75rem" : "0 1rem" }}
-      >
+        <span className="plan-card__toggle" aria-hidden="true">+</span>
+      </div>
+      <div className="plan-card__body">
         {plan.sections.map((sec) => (
           <div key={sec.app}>
-            <p className="mt-2 mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {sec.app}
-            </p>
-            <ul>
+            <p className="plan-card__app">{sec.app}</p>
+            <ul className="plan-card__features">
               {sec.features.map((f) => (
-                <li key={f} className="relative pl-3.5 text-[11px] leading-[1.7] text-muted-foreground">
-                  <span
-                    className="absolute left-1 top-0"
-                    style={{ color: plan.fellow ? "var(--gold)" : undefined, opacity: plan.fellow ? 0.6 : undefined }}
-                  >
-                    ·
-                  </span>
-                  {f}
-                </li>
+                <li key={f}>{f}</li>
               ))}
             </ul>
           </div>
@@ -145,68 +108,123 @@ export default function AuthGate({ onAuth }: AuthGateProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-background overflow-y-auto">
-      <div className="w-full max-w-sm px-6 py-8 space-y-6">
-        {/* Logo */}
-        <div className="text-center space-y-2">
-          <svg width="56" height="56" viewBox="0 0 100 100" fill="none" className="mx-auto">
-            <circle cx="50" cy="50" r="46" stroke="var(--gold)" strokeWidth="2" strokeDasharray="0 0 145 145" strokeLinecap="round" opacity="0.5"/>
-            <circle cx="50" cy="50" r="12" fill="var(--gold)" opacity="0.9"/>
+    <div className="gate">
+      <div className={`gate__inner ${error ? "gate__inner--shake" : ""}`}>
+        <div className="gate__mark" aria-hidden="true">
+          <svg width="200" height="160" viewBox="0 0 200 160" fill="none">
+            <circle cx="100" cy="80" r="28" stroke="currentColor" strokeWidth="0.5" opacity="0.15"/>
+            <line x1="100" y1="64" x2="100" y2="52" stroke="#FFD166" strokeWidth="2.5" strokeLinecap="round" opacity="0.9"/>
+            <line x1="100" y1="96" x2="100" y2="108" stroke="#FFD166" strokeWidth="2.5" strokeLinecap="round" opacity="0.9"/>
+            <line x1="84" y1="80" x2="72" y2="80" stroke="#FFD166" strokeWidth="2.5" strokeLinecap="round" opacity="0.9"/>
+            <line x1="116" y1="80" x2="128" y2="80" stroke="#FFD166" strokeWidth="2.5" strokeLinecap="round" opacity="0.9"/>
+            <line x1="88.7" y1="68.7" x2="80.2" y2="60.2" stroke="#FFD166" strokeWidth="1.4" strokeLinecap="round" opacity="0.38"/>
+            <line x1="111.3" y1="91.3" x2="119.8" y2="99.8" stroke="#FFD166" strokeWidth="1.4" strokeLinecap="round" opacity="0.38"/>
+            <line x1="111.3" y1="68.7" x2="119.8" y2="60.2" stroke="#FFD166" strokeWidth="1.4" strokeLinecap="round" opacity="0.38"/>
+            <line x1="88.7" y1="91.3" x2="80.2" y2="99.8" stroke="#FFD166" strokeWidth="1.4" strokeLinecap="round" opacity="0.38"/>
+            <circle cx="100" cy="80" r="4" fill="#FFD166" opacity="0.95"/>
+            <circle cx="100" cy="80" r="10" fill="none" stroke="#FFD166" strokeWidth="0.5" opacity="0.22"/>
+            <line x1="100" y1="40" x2="100" y2="47" stroke="#FFD166" strokeWidth="1" strokeLinecap="round" opacity="0.42"/>
+            <line x1="97" y1="47" x2="103" y2="47" stroke="#FFD166" strokeWidth="1" strokeLinecap="round" opacity="0.42"/>
+            <circle cx="135.5" cy="80" r="1.3" fill="#FFD166" opacity="0.42"/>
+            <circle cx="140" cy="80" r="1.3" fill="#FFD166" opacity="0.42"/>
+            <circle cx="100" cy="117" r="3.5" stroke="#FFD166" strokeWidth="0.9" fill="none" opacity="0.42"/>
+            <circle cx="62" cy="80" r="2.5" fill="#FFD166" opacity="0.42"/>
           </svg>
-          <h1 className="font-serif text-2xl font-semibold tracking-tight text-foreground">Lumen</h1>
-          <p className="text-xs text-muted-foreground">An operating system for the examined life</p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-4 justify-center border-b border-border/30 pb-1">
-          <button onClick={() => { setMode("login"); setError(""); }}
-            className={`text-xs font-mono uppercase tracking-wider pb-1 border-b-2 transition-colors ${mode === "login" ? "border-[var(--gold)] text-[var(--gold)]" : "border-transparent text-muted-foreground/40"}`}>
-            Sign In
-          </button>
-          <button onClick={() => { setMode("register"); setError(""); }}
-            className={`text-xs font-mono uppercase tracking-wider pb-1 border-b-2 transition-colors ${mode === "register" ? "border-[var(--gold)] text-[var(--gold)]" : "border-transparent text-muted-foreground/40"}`}>
-            Register
-          </button>
+        <p className="gate__wordmark">
+          <svg className="lumen-loop-inline" width="28" height="28" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+            <path d="M32 4C47.46 4 60 16.54 60 32S47.46 60 32 60" stroke="#FFD166" strokeWidth="1.6" strokeLinecap="round" opacity=".6"/>
+            <path d="M32 60C16.54 60 4 47.46 4 32S16.54 4 32 4" stroke="#FFD166" strokeWidth="1.6" strokeLinecap="round" strokeDasharray="4 3" opacity=".25"/>
+            <circle cx="32" cy="4" r="2.5" fill="#FFD166" opacity=".8"/>
+            <line x1="32" y1="14" x2="32" y2="22" stroke="#FFD166" strokeWidth="1.4" strokeLinecap="round" opacity=".7"/>
+            <circle cx="32" cy="32" r="5" fill="#FFD166" opacity=".5"/>
+            <circle cx="32" cy="32" r="3" fill="#FFD166" opacity=".8"/>
+            <circle cx="32" cy="32" r="1.5" fill="#FFD166"/>
+          </svg>
+          Lumen
+        </p>
+        <hr className="gate__rule" aria-hidden="true" />
+        <p className="gate__phrase">Where reflection becomes structure.</p>
+
+        <div className="gate__auth gate__auth--visible">
+          <div className="gate__tabs" role="tablist">
+            <button
+              className={`gate__tab ${mode === "login" ? "gate__tab--active" : ""}`}
+              onClick={() => { setMode("login"); setError(""); }}
+              role="tab"
+              aria-selected={mode === "login"}
+            >
+              Sign in
+            </button>
+            <button
+              className={`gate__tab ${mode === "register" ? "gate__tab--active" : ""}`}
+              onClick={() => { setMode("register"); setError(""); }}
+              role="tab"
+              aria-selected={mode === "register"}
+            >
+              Register
+            </button>
+          </div>
+
+          {mode === "login" ? (
+            <div className="gate__panel" role="tabpanel">
+              <form onSubmit={handleLogin} noValidate>
+                <div className="gate__field">
+                  <label htmlFor="login-email" className="sr-only">Username or email</label>
+                  <input type="text" id="login-email" className="gate__input" placeholder="Username or email"
+                    autoComplete="username" autoFocus value={emailOrUsername}
+                    onChange={(e) => setEmailOrUsername(e.target.value)} />
+                </div>
+                <div className="gate__field">
+                  <label htmlFor="login-password" className="sr-only">Password</label>
+                  <input type="password" id="login-password" className="gate__input" placeholder="Password"
+                    autoComplete="current-password" value={password}
+                    onChange={(e) => setPassword(e.target.value)} />
+                </div>
+                <button type="submit" className="gate__submit" disabled={loading}>
+                  {loading ? "Signing in\u2026" : <>Enter Lumen <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></>}
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="gate__panel" role="tabpanel">
+              <form onSubmit={handleRegister} noValidate>
+                <div className="gate__field">
+                  <label htmlFor="reg-username" className="sr-only">Username</label>
+                  <input type="text" id="reg-username" className="gate__input" placeholder="Username"
+                    autoComplete="username" autoFocus value={regUsername}
+                    onChange={(e) => setRegUsername(e.target.value)} />
+                </div>
+                <div className="gate__field">
+                  <label htmlFor="reg-email" className="sr-only">Email</label>
+                  <input type="email" id="reg-email" className="gate__input" placeholder="Email"
+                    autoComplete="email" value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)} />
+                </div>
+                <div className="gate__field">
+                  <label htmlFor="reg-password" className="sr-only">Password</label>
+                  <input type="password" id="reg-password" className="gate__input" placeholder="Password"
+                    autoComplete="new-password" value={password}
+                    onChange={(e) => setPassword(e.target.value)} />
+                </div>
+                <div className="gate__field">
+                  <label htmlFor="reg-confirm" className="sr-only">Confirm password</label>
+                  <input type="password" id="reg-confirm" className="gate__input" placeholder="Confirm password"
+                    autoComplete="new-password" value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)} />
+                </div>
+                <button type="submit" className="gate__submit" disabled={loading}>
+                  {loading ? "Creating account\u2026" : <>Create account <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></>}
+                </button>
+              </form>
+            </div>
+          )}
+
+          <p className="gate__error" role="alert">{error}</p>
         </div>
 
-        {mode === "login" ? (
-          <form onSubmit={handleLogin} className="space-y-3">
-            <input type="text" placeholder="Username or email" value={emailOrUsername}
-              onChange={(e) => setEmailOrUsername(e.target.value)} autoFocus autoComplete="username"
-              className="w-full px-3 py-2.5 rounded-lg bg-[var(--surface)] border border-border text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[var(--gold)]/30 transition-colors" />
-            <input type="password" placeholder="Password" value={password}
-              onChange={(e) => setPassword(e.target.value)} autoComplete="current-password"
-              className="w-full px-3 py-2.5 rounded-lg bg-[var(--surface)] border border-border text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[var(--gold)]/30 transition-colors" />
-            {error && <p className="text-xs text-red-400 text-center">{error}</p>}
-            <button type="submit" disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-[var(--gold)] text-background text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5">
-              {loading ? "Signing in…" : <>Enter Lumen <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></>}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleRegister} className="space-y-3">
-            <input type="text" placeholder="Username" value={regUsername}
-              onChange={(e) => setRegUsername(e.target.value)} autoFocus autoComplete="username"
-              className="w-full px-3 py-2.5 rounded-lg bg-[var(--surface)] border border-border text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[var(--gold)]/30 transition-colors" />
-            <input type="email" placeholder="Email" value={regEmail}
-              onChange={(e) => setRegEmail(e.target.value)} autoComplete="email"
-              className="w-full px-3 py-2.5 rounded-lg bg-[var(--surface)] border border-border text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[var(--gold)]/30 transition-colors" />
-            <input type="password" placeholder="Password" value={password}
-              onChange={(e) => setPassword(e.target.value)} autoComplete="new-password"
-              className="w-full px-3 py-2.5 rounded-lg bg-[var(--surface)] border border-border text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[var(--gold)]/30 transition-colors" />
-            <input type="password" placeholder="Confirm password" value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password"
-              className="w-full px-3 py-2.5 rounded-lg bg-[var(--surface)] border border-border text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-[var(--gold)]/30 transition-colors" />
-            {error && <p className="text-xs text-red-400 text-center">{error}</p>}
-            <button type="submit" disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-[var(--gold)] text-background text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-1.5">
-              {loading ? "Creating account…" : <>Create account <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></>}
-            </button>
-          </form>
-        )}
-
-        {/* Plan cards — collapsible, below auth form */}
-        <div className="space-y-1.5 pt-2">
+        <div className="gate__plans gate__plans--visible">
           {PLANS.map((plan) => (
             <PlanCard key={plan.id} plan={plan} />
           ))}

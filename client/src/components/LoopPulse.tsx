@@ -27,9 +27,9 @@ interface LoopPulseProps {
 
 const TOOL_COLORS: Record<string, string> = {
   liminal: "#9c8654",
-  parallax: "#4ECDC4",
-  praxis: "#E6A756",
-  axiom: "#6C8EBF",
+  parallax: "#4d8c9e",
+  praxis: "#c4943e",
+  axiom: "#3d7bba",
 };
 
 function formatDayLabel(dateStr: string): string {
@@ -38,6 +38,16 @@ function formatDayLabel(dateStr: string): string {
     return d.toLocaleDateString("en-US", { weekday: "short" }).charAt(0);
   } catch {
     return "·";
+  }
+}
+
+function isToday(dateStr: string): boolean {
+  try {
+    const d = new Date(dateStr);
+    const now = new Date();
+    return d.toDateString() === now.toDateString();
+  } catch {
+    return false;
   }
 }
 
@@ -53,87 +63,55 @@ export default function LoopPulse({ data: propData }: LoopPulseProps) {
   });
 
   const data = propData ?? fetchedData;
-
-  const totalReflections = data
-    ? Object.values(data.toolBreakdown).reduce((a, b) => a + b, 0)
-    : 0;
+  const totalReflections = data ? Object.values(data.toolBreakdown).reduce((a, b) => a + b, 0) : 0;
 
   return (
-    <section aria-label="Loop activity pulse" className="py-5">
-      {/* Header */}
-      <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--gold)] mb-1">
-        Loop Pulse
-      </p>
-      <h2 className="font-serif text-xl sm:text-2xl font-semibold text-foreground mb-3">
-        Last 7 Days
-      </h2>
+    <section className="pulse-band up" aria-label="Loop activity pulse">
+      <div className="wrap">
+        <div className="pulse-inner">
+          <div className="pulse-meta">
+            <span className="pulse-eye">Loop Pulse</span>
+            <h2 className="pulse-title">Last 7 Days</h2>
+            {isLoading ? (
+              <p className="pulse-empty">Loading…</p>
+            ) : data ? (
+              <>
+                <p className="pulse-total"><strong>{totalReflections}</strong> total reflections</p>
+                <div className="pulse-badges">
+                  {(["liminal", "parallax", "praxis", "axiom"] as const).map((tool) => (
+                    <span key={tool} className="pulse-badge">
+                      <span className={`pulse-badge__dot pulse-badge__dot--${tool}`} />
+                      {tool} {data.toolBreakdown[tool]}
+                    </span>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="pulse-empty">No data yet.</p>
+            )}
+          </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-start gap-6">
-        {/* Meta */}
-        <div className="flex-1 min-w-0">
-          {isLoading ? (
-            <p className="text-xs text-muted-foreground/50">Loading…</p>
-          ) : data ? (
-            <>
-              <p className="text-sm text-muted-foreground mb-3">
-                <span className="text-[var(--gold)] font-semibold">{totalReflections}</span>{" "}
-                total reflections
-              </p>
-
-              {/* Tool breakdown pills */}
-              <div className="flex flex-wrap gap-2">
-                {(["liminal", "parallax", "praxis", "axiom"] as const).map((tool) => (
-                  <span
-                    key={tool}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-border/50 bg-[var(--surface)] text-[10px] font-mono uppercase tracking-wider text-muted-foreground"
-                  >
-                    <span
-                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                      style={{ background: TOOL_COLORS[tool] }}
-                    />
-                    {tool} {data.toolBreakdown[tool]}
-                  </span>
-                ))}
+          {data && (
+            <div className="pulse-chart">
+              <div className="pulse-dots" aria-label="Seven-day activity sparkline">
+                {data.days.map((day, i) => {
+                  const active = day.count > 0;
+                  const size = active ? Math.max(6, Math.min(14, day.count * 3 + 4)) : 6;
+                  return (
+                    <div key={i} className={`pulse-day ${isToday(day.date) ? "pulse-day--today" : ""}`}>
+                      <span
+                        className={`pulse-day__dot ${!active ? "pulse-day__dot--zero" : ""}`}
+                        style={{ width: size, height: size }}
+                        title={active ? `${day.count} reflections` : "No activity"}
+                      />
+                      <span className="pulse-day__label">{formatDayLabel(day.date)}</span>
+                    </div>
+                  );
+                })}
               </div>
-            </>
-          ) : (
-            <p className="text-xs text-muted-foreground/50">No data yet.</p>
+            </div>
           )}
         </div>
-
-        {/* Day dots chart */}
-        {data && (
-          <div className="flex items-end gap-2" aria-label="Seven-day activity sparkline">
-            {data.days.map((day, i) => {
-              const active = day.count > 0;
-              return (
-                <div key={i} className="flex flex-col items-center gap-1.5">
-                  {/* Stacked tool dots */}
-                  <div className="flex flex-col gap-0.5 items-center">
-                    {active ? (
-                      (["liminal", "parallax", "praxis", "axiom"] as const).map((tool) =>
-                        day.tools[tool] > 0 ? (
-                          <span
-                            key={tool}
-                            className="w-2 h-2 rounded-full"
-                            style={{ background: TOOL_COLORS[tool] }}
-                            title={`${tool}: ${day.tools[tool]}`}
-                          />
-                        ) : null
-                      )
-                    ) : (
-                      <span className="w-2 h-2 rounded-full bg-border/30" />
-                    )}
-                  </div>
-                  {/* Day label */}
-                  <span className="text-[9px] font-mono text-muted-foreground/40 uppercase">
-                    {formatDayLabel(day.date)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
     </section>
   );

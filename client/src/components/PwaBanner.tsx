@@ -52,38 +52,10 @@ export default function PwaBanner() {
   if (!visible) return null;
 
   return (
-    <div
-      className={`fixed bottom-0 left-0 right-0 z-[9999] flex items-center justify-between gap-3 border-t px-5 py-3 transition-all duration-300 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:max-w-[480px] sm:rounded-t-md sm:border sm:border-b-0`}
-      style={{
-        background: "var(--surface)",
-        borderColor: "rgba(141,153,174,.17)",
-        paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
-      }}
-    >
-      <p className="flex-1 text-[13px]" style={{ color: "var(--text)" }}>
-        Add Lumen to your home screen for the full experience
-      </p>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={handleInstall}
-          className="whitespace-nowrap rounded px-4 py-2 text-xs font-semibold uppercase tracking-wider"
-          style={{
-            background: "var(--gold)",
-            color: "#1a1a2e",
-            minHeight: "44px",
-          }}
-        >
-          Install
-        </button>
-        <button
-          onClick={handleDismiss}
-          className="flex items-center justify-center text-lg"
-          style={{ color: "rgba(141,153,174,.4)", minWidth: "44px", minHeight: "44px" }}
-          aria-label="Dismiss"
-        >
-          ×
-        </button>
-      </div>
+    <div className={`pwa-banner ${visible ? "pwa-banner--visible" : ""}`}>
+      <p className="pwa-banner__text">Add Lumen to your home screen for the full experience</p>
+      <button className="pwa-banner__install" onClick={handleInstall}>Install</button>
+      <button className="pwa-banner__dismiss" onClick={handleDismiss} aria-label="Dismiss">×</button>
     </div>
   );
 }

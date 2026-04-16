@@ -85,10 +85,10 @@ export default function OnboardingOverlay() {
   const s = STEPS[step];
 
   return (
-    <div className="fixed inset-0 z-[9998] bg-background flex items-center justify-center">
-      <div className="max-w-[480px] px-6 text-center">
+    <div id="onboarding-overlay" style={{ display: "flex", position: "fixed", inset: 0, zIndex: 9998, background: "var(--bg)", alignItems: "center", justifyContent: "center" }}>
+      <div id="onboarding-card" style={{ maxWidth: "480px", padding: "2rem", textAlign: "center" }}>
         {/* Diamond diagram */}
-        <svg width="200" height="220" viewBox="0 0 200 220" className="mx-auto mb-6">
+        <svg width="200" height="220" viewBox="0 0 200 220" style={{ margin: "0 auto 1.5rem" }}>
           <path d="M100,15 L185,100 L100,185 L15,100 Z" fill="none" stroke="rgba(255,209,102,0.1)" strokeWidth="1" />
           {NODES.map((n, i) => {
             const isHighlight = s.highlight === i || s.highlight === -1;
@@ -105,10 +105,10 @@ export default function OnboardingOverlay() {
           })}
         </svg>
 
-        <h2 className="font-serif text-xl sm:text-2xl font-light text-foreground mb-4">{s.heading}</h2>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-8 max-w-[38ch] mx-auto">{s.body}</p>
+        <h2 style={{ fontFamily: "var(--font-head)", fontSize: "clamp(1.1rem, 2.5vw, 1.4rem)", fontWeight: 300, color: "var(--text)", marginBottom: "1rem" }}>{s.heading}</h2>
+        <p style={{ fontSize: "var(--text-sm)", color: "var(--muted)", lineHeight: 1.7, marginBottom: "2rem", maxWidth: "38ch", marginInline: "auto" }}>{s.body}</p>
         <button onClick={handleCta}
-          className="text-sm font-medium tracking-wide text-[var(--gold)] bg-[var(--gold-dim)] border border-[var(--gold)]/20 rounded-md px-8 py-3 hover:bg-[var(--gold)]/15 transition-colors">
+          style={{ fontSize: "var(--text-sm)", fontWeight: 500, letterSpacing: "0.05em", color: "var(--gold)", background: "var(--gold-dim, rgba(255,209,102,0.08))", border: "1px solid rgba(255,209,102,0.2)", borderRadius: "var(--r-sm)", padding: "0.75rem 2rem", cursor: "pointer", transition: "background 0.2s" }}>
           {s.cta}
         </button>
       </div>

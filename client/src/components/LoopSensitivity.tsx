@@ -43,32 +43,38 @@ export default function LoopSensitivity({ userId }: Props) {
 
   return (
     <div>
-      <div className="p-3 rounded-lg border border-border/30 flex items-center justify-between gap-3">
+      {/* Main sensitivity row — matches original inline styles from lines 3652-3662 */}
+      <div style={{ border: "1px solid rgba(141,153,174,0.15)", borderRadius: "6px", padding: "1rem 1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
         <div>
-          <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/50 mb-0.5">Loop Sensitivity</div>
-          <div className="text-[10px] text-muted-foreground/30">Controls how readily the loop promotes signals to candidates</div>
+          <div style={{ fontFamily: "monospace", fontSize: "10px", letterSpacing: "0.12em", color: "var(--muted)", textTransform: "uppercase" as const, marginBottom: "0.25rem" }}>Loop Sensitivity</div>
+          <div style={{ fontSize: "12px", color: "var(--muted)", opacity: 0.6 }}>Controls how readily the loop promotes signals to candidates</div>
         </div>
-        <div className="flex gap-1 flex-shrink-0">
+        <div style={{ display: "flex", gap: "0.375rem", flexShrink: 0 }}>
           {LEVELS.map((l) => (
             <button key={l} onClick={() => set(l)}
-              className={`px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wider border transition-all ${value === l ? "border-[var(--gold)] text-[var(--gold)] bg-[var(--gold-dim)]" : "border-border/50 text-muted-foreground/40 hover:border-[var(--gold)]/30"}`}>
+              className={`sens-pill ${value === l ? "sens-pill--active" : ""}`}
+              data-val={l}
+              style={{ fontFamily: "monospace", fontSize: "10px", letterSpacing: "0.1em", padding: "0.35rem 0.75rem", borderRadius: "4px", border: value === l ? "1px solid var(--gold)" : "1px solid rgba(141,153,174,0.25)", background: value === l ? "var(--gold-dim, rgba(255,209,102,0.08))" : "transparent", color: value === l ? "var(--gold)" : "var(--muted)", cursor: "pointer", transition: "all 0.15s", textTransform: "uppercase" as const }}>
               {l === "medium" ? "MED" : l.toUpperCase()}
             </button>
           ))}
         </div>
       </div>
-      <div className="mt-2">
-        <p className="text-[10px] text-muted-foreground/40">{DESCRIPTIONS[value]}</p>
-        <button onClick={() => setShowDetail(!showDetail)}
-          className="text-[10px] text-[var(--gold)]/40 hover:text-[var(--gold)] mt-1 transition-colors">
+
+      {/* Explanation section — matches original .sens-explain structure */}
+      <div className="sens-explain">
+        <p className="sens-explain__current">{DESCRIPTIONS[value]}</p>
+        <button className="sens-explain__more" onClick={() => setShowDetail(!showDetail)} aria-expanded={showDetail}>
           {showDetail ? "Hide details" : "What does this control?"}
         </button>
         {showDetail && (
-          <div className="mt-2 text-[10px] text-muted-foreground/40 space-y-1">
+          <div className="sens-explain__detail">
             <p>Sensitivity determines how quickly the loop promotes recurring material into candidates, prompts, and downstream actions.</p>
-            {DETAIL_DL.map((d) => (
-              <p key={d.dt}><strong className="text-muted-foreground/60">{d.dt}:</strong> {d.dd}</p>
-            ))}
+            <dl>
+              {DETAIL_DL.map((d) => (
+                <span key={d.dt}><dt>{d.dt}</dt><dd>{d.dd}</dd></span>
+              ))}
+            </dl>
           </div>
         )}
       </div>

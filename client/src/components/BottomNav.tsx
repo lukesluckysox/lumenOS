@@ -41,17 +41,16 @@ const APPS = [
 
 export default function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-background/90 backdrop-blur-md"
-         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-      <div className="flex items-center justify-around px-2 py-1">
+    <nav className="lumen-bottom-nav" aria-label="Quick app navigation">
+      <div className="lumen-bottom-nav__inner">
         {APPS.map(({ label, href, icon }) => (
           <button
             key={label}
             onClick={() => ssoNavigate(href)}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 px-2 rounded-lg transition-all min-h-[44px] text-muted-foreground/40 hover:text-[var(--gold)]"
+            className="lumen-bottom-nav__item"
           >
-            <span className="w-[18px] h-[18px]">{icon}</span>
-            <span className="text-[10px] font-mono">{label.toLowerCase()}</span>
+            {icon}
+            <span>{label.toLowerCase()}</span>
           </button>
         ))}
       </div>

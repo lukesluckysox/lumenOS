@@ -8,17 +8,23 @@ const APP_URLS: Record<string, string> = {
 };
 
 type Status = "ok" | "warn" | "err" | "off";
-const STATUS_COLORS: Record<Status, string> = {
-  ok: "bg-green-400",
-  warn: "bg-amber-400",
-  err: "bg-red-400",
-  off: "bg-muted-foreground/20",
+const STATUS_DOT_CLS: Record<Status, string> = {
+  ok: "pipeline__dot--ok",
+  warn: "pipeline__dot--warn",
+  err: "pipeline__dot--err",
+  off: "pipeline__dot--off",
 };
 const STATUS_LABELS: Record<Status, string> = { ok: "Online", warn: "Slow", err: "Down", off: "Unknown" };
+const STATUS_ROW_CLS: Record<Status, string> = {
+  ok: "pipeline__row-status--ok",
+  warn: "pipeline__row-status--warn",
+  err: "pipeline__row-status--err",
+  off: "pipeline__row-status--off",
+};
 
 export default function PipelineHealth() {
   const [results, setResults] = useState<Record<string, Status>>({});
-  const [tooltipOpen, setTooltipOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     async function check() {
@@ -37,32 +43,30 @@ export default function PipelineHealth() {
         })
       );
       setResults(Object.fromEntries(res));
+      setVisible(true);
     }
     check();
   }, []);
 
   return (
-    <div className="relative inline-flex items-center gap-1">
-      <button onClick={() => setTooltipOpen(!tooltipOpen)} className="flex items-center gap-0.5">
+    <div className={`pipeline ${visible ? "pipeline--visible" : ""}`} aria-label="Connection status">
+      <span className="pipeline__label">Status</span>
+      <div className="pipeline__dots">
         {Object.keys(APP_URLS).map((name) => (
-          <span key={name} className={`w-1.5 h-1.5 rounded-full ${STATUS_COLORS[results[name] || "off"]}`} />
+          <span key={name} className={`pipeline__dot ${STATUS_DOT_CLS[results[name] || "off"]}`} title={name} />
         ))}
-      </button>
-      {tooltipOpen && (
-        <div className="absolute top-full right-0 mt-2 z-50 bg-[var(--surface)] border border-border/30 rounded-lg p-2.5 min-w-[160px] shadow-lg">
-          {Object.keys(APP_URLS).map((name) => {
-            const st = results[name] || "off";
-            return (
-              <div key={name} className="flex items-center justify-between py-0.5 text-[10px] font-mono">
-                <span className="text-muted-foreground/60">{name.charAt(0).toUpperCase() + name.slice(1)}</span>
-                <span className={`${st === "ok" ? "text-green-400" : st === "warn" ? "text-amber-400" : st === "err" ? "text-red-400" : "text-muted-foreground/30"}`}>
-                  {STATUS_LABELS[st]}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      </div>
+      <div className="pipeline__tooltip">
+        {Object.keys(APP_URLS).map((name) => {
+          const st = results[name] || "off";
+          return (
+            <div key={name} className="pipeline__row">
+              <span className="pipeline__row-name">{name.charAt(0).toUpperCase() + name.slice(1)}</span>
+              <span className={`pipeline__row-status ${STATUS_ROW_CLS[st]}`}>{STATUS_LABELS[st]}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

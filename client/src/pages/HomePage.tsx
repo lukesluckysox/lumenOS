@@ -5,7 +5,6 @@ import LoopPulse from "@/components/LoopPulse";
 import ToolCards from "@/components/ToolCards";
 import LoopSensitivity from "@/components/LoopSensitivity";
 import ActivityLog from "@/components/ActivityLog";
-import Footer from "@/components/Footer";
 
 interface Props {
   userId?: number;
@@ -13,35 +12,47 @@ interface Props {
 
 export default function HomePage({ userId }: Props) {
   return (
-    <main className="max-w-4xl mx-auto px-4 pb-20">
-      {/* Hero headline */}
-      <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-foreground mt-6 mb-2 leading-tight">
-        Where reflection<br />becomes structure.
-      </h1>
+    <main>
+      {/* ═══ HERO ═══ */}
+      <section className="hero" id="hero" aria-label="Introduction">
+        <div className="hero__atmo" aria-hidden="true">
+          <div className="hero__glow hero__glow--a"></div>
+          <div className="hero__glow hero__glow--b"></div>
+          <div className="hero__grid"></div>
+        </div>
 
-      {/* Sundial / Solar Cockpit */}
-      <SundialCockpit />
+        <div className="wrap hero__body">
+          <SundialCockpit />
 
-      {/* Current State KPIs */}
-      <StateCards />
-
-      {/* What Advanced */}
-      <WhatAdvanced />
-
-      {/* Loop Pulse */}
-      <LoopPulse />
-
-      {/* Tool Cards + Architecture */}
-      <ToolCards />
-
-      {/* Bottom row: Sensitivity + Activity Log */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6">
-        <LoopSensitivity userId={userId} />
-        <ActivityLog />
+          <h1 className="hero__headline up d1">
+            Where reflection<br />becomes structure.
+          </h1>
+        </div>
       </section>
 
-      {/* Footer */}
-      <Footer />
+      {/* ═══ COCKPIT — authenticated user modules ═══ */}
+      <div id="cockpit" className="cockpit" aria-label="Personal observation cockpit">
+        <StateCards />
+        <WhatAdvanced />
+        <LoopPulse />
+      </div>
+
+      {/* ═══ TOOLS ═══ */}
+      <ToolCards />
+
+      {/* ═══ BOTTOM ROW — Sensitivity + Event History ═══ */}
+      <section className="section bottom-row-band" aria-label="Controls and history">
+        <div className="wrap">
+          <div className="bottom-row">
+            <div className="bottom-row__col">
+              <LoopSensitivity userId={userId} />
+            </div>
+            <div className="bottom-row__col">
+              <ActivityLog />
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

@@ -47,7 +47,6 @@ export default function ProfilePanel({ open, onClose, onLogout }: Props) {
   const [oracleLoading, setOracleLoading] = useState(false);
   const [wide, setWide] = useState(false);
 
-  // Load profile when opened
   useEffect(() => {
     if (!open) return;
     fetch("/api/auth/profile", { credentials: "same-origin" })
@@ -70,7 +69,6 @@ export default function ProfilePanel({ open, onClose, onLogout }: Props) {
     setOracleLoading(false);
   }, []);
 
-  // Close on Escape
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -127,113 +125,99 @@ export default function ProfilePanel({ open, onClose, onLogout }: Props) {
     } catch (e: any) { alert("Error: " + e.message); }
   }
 
-  if (!open) return null;
-
   const oracleRows = oracleData ? (oracleData as any)[oracleTab] || [] : [];
   const hasEmail = oracleRows.some((u: OracleUser) => u.email);
 
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-[998] bg-black/50 transition-opacity" onClick={onClose} />
-
-      {/* Panel */}
-      <div className={`fixed top-0 right-0 bottom-0 z-[999] bg-background border-l border-border/30 overflow-y-auto transition-all ${wide ? "w-[90vw] max-w-[800px]" : "w-[340px] max-w-[90vw]"}`}>
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm flex items-center justify-between px-4 py-3 border-b border-border/20">
-          <h2 className="font-serif text-base font-semibold text-foreground">Profile</h2>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setWide(!wide)}
-              className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground/40 border border-border/30 rounded px-2 py-0.5 hover:text-foreground hover:border-foreground/30 transition-colors">
+      <div className={`profile-backdrop ${open ? "profile-backdrop--open" : ""}`} onClick={onClose} />
+      <div className={`profile-panel ${open ? "profile-panel--open" : ""} ${wide ? "profile-panel--wide" : ""}`}>
+        <div className="profile-panel__head">
+          <h2 className="profile-panel__title">Profile</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)" }}>
+            <button onClick={() => setWide(!wide)} className="oracle-plan-btn">
               {wide ? "Collapse" : "Expand"}
             </button>
-            <button onClick={onClose} className="text-muted-foreground/40 hover:text-foreground transition-colors">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M18 6L6 18M6 6l12 12" /></svg>
+            <button className="profile-panel__close" onClick={onClose}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
           </div>
         </div>
 
-        <div className="p-4 space-y-4">
-          {/* Profile info */}
+        <div className="profile-panel__body">
           {profile && (
-            <div className="space-y-2">
-              <p className="font-serif text-lg font-semibold text-foreground">{profile.username}</p>
-              <div className="space-y-1">
-                <div className="flex justify-between text-[10px]">
-                  <span className="font-mono uppercase tracking-wider text-muted-foreground/40">Email</span>
-                  <span className="text-muted-foreground/60">{profile.email}</span>
-                </div>
-                <div className="flex justify-between text-[10px]">
-                  <span className="font-mono uppercase tracking-wider text-muted-foreground/40">Member since</span>
-                  <span className="text-muted-foreground/60">{formatDate(profile.createdAt)}</span>
-                </div>
-                <div className="flex justify-between text-[10px]">
-                  <span className="font-mono uppercase tracking-wider text-muted-foreground/40">Sensitivity</span>
-                  <span className="text-muted-foreground/60 capitalize">{profile.sensitivity || "medium"}</span>
-                </div>
+            <div>
+              <p className="pf-username">{profile.username}</p>
+              <div className="pf-field">
+                <span className="pf-label">Email</span>
+                <span className="pf-value">{profile.email}</span>
               </div>
-              <button onClick={onLogout}
-                className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground/40 hover:text-red-400 transition-colors mt-2">
+              <div className="pf-field">
+                <span className="pf-label">Member since</span>
+                <span className="pf-value">{formatDate(profile.createdAt)}</span>
+              </div>
+              <div className="pf-field">
+                <span className="pf-label">Sensitivity</span>
+                <span className="pf-value" style={{ textTransform: "capitalize" }}>{profile.sensitivity || "medium"}</span>
+              </div>
+              <button className="pf-signout" onClick={onLogout}>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
                 </svg>
                 Sign out
               </button>
             </div>
           )}
 
-          {/* Oracle section */}
           {profile?.isOwner && (
-            <div className="border-t border-border/20 pt-4">
-              <div className="flex items-center gap-1.5 mb-3">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="1.5">
-                  <ellipse cx="12" cy="12" rx="10" ry="4" />
-                  <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
-                </svg>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--gold)]/60">Oracle</span>
+            <>
+              <div className="oracle-divider">
+                <span className="oracle-divider__label">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ verticalAlign: "middle", marginRight: ".3em" }}>
+                    <ellipse cx="12" cy="12" rx="10" ry="4"/>
+                    <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/>
+                  </svg>
+                  Oracle
+                </span>
               </div>
 
               {oracleLoading ? (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground/40">
-                  <div className="w-3 h-3 border border-[var(--gold)]/30 border-t-[var(--gold)] rounded-full animate-spin" />
+                <div className="oracle-loading">
+                  <span className="oracle-spinner" />
                   Loading oracle data...
                 </div>
               ) : oracleData ? (
                 <>
-                  {/* Tabs */}
-                  <div className="flex gap-1 mb-3 flex-wrap">
+                  <div className="oracle-tabs">
                     {APPS.map((app) => {
                       const status = app === "lumen" ? "online" : (oracleData.subAppStatus[app] || "offline");
                       return (
                         <button key={app} onClick={() => setOracleTab(app)}
-                          className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${oracleTab === app ? "bg-[var(--gold-dim)] text-[var(--gold)] border border-[var(--gold)]/20" : "text-muted-foreground/40 border border-transparent hover:text-muted-foreground/60"}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${status === "online" ? "bg-green-400" : "bg-muted-foreground/20"}`} />
+                          className={`oracle-tab ${oracleTab === app ? "oracle-tab--active" : ""}`}>
+                          <span className={`oracle-tab__dot ${status === "online" ? "oracle-tab__dot--online" : "oracle-tab__dot--offline"}`} />
                           {APP_LABELS[app]}
                         </button>
                       );
                     })}
                   </div>
 
-                  {/* Table */}
                   {oracleRows.length === 0 ? (
-                    <p className="text-[10px] text-muted-foreground/30">
+                    <p className="oracle-empty">
                       {oracleTab !== "lumen" && oracleData.subAppStatus[oracleTab] === "offline"
                         ? "Service offline — unable to fetch users."
                         : "No registered users."}
                     </p>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <p className="text-[10px] text-muted-foreground/40 mb-1">
-                        <strong>{oracleRows.length}</strong> registered user{oracleRows.length !== 1 ? "s" : ""}
-                      </p>
-                      <table className="w-full text-[10px]">
+                    <>
+                      <p className="oracle-count"><strong>{oracleRows.length}</strong> registered user{oracleRows.length !== 1 ? "s" : ""}</p>
+                      <table className="oracle-table">
                         <thead>
-                          <tr className="text-left text-muted-foreground/30 border-b border-border/20">
-                            <th className="pb-1 pr-2 font-mono">Username</th>
-                            {hasEmail && <th className="pb-1 pr-2 font-mono">Email</th>}
-                            <th className="pb-1 pr-2 font-mono">Joined</th>
-                            <th className="pb-1 pr-2 font-mono">Plan</th>
-                            <th className="pb-1 font-mono"></th>
+                          <tr>
+                            <th>Username</th>
+                            {hasEmail && <th>Email</th>}
+                            <th>Joined</th>
+                            <th>Plan</th>
+                            <th></th>
                           </tr>
                         </thead>
                         <tbody>
@@ -243,32 +227,35 @@ export default function ProfilePanel({ open, onClose, onLogout }: Props) {
                             const currentPlan = u.plan || "aspirant";
                             const isOracle = u.role === "oracle";
                             return (
-                              <tr key={i} className="border-b border-border/10">
-                                <td className="py-1 pr-2 text-muted-foreground/60">
-                                  {uname} {isOracle && <span className="text-[var(--gold)] text-[9px]">◆</span>}
+                              <tr key={i}>
+                                <td>
+                                  {uname} {isOracle && <span style={{ color: "var(--gold)", fontSize: "9px" }}>◆</span>}
                                 </td>
-                                {hasEmail && <td className="py-1 pr-2 text-muted-foreground/30">{u.email || "—"}</td>}
-                                <td className="py-1 pr-2 text-muted-foreground/30 whitespace-nowrap">{joined}</td>
-                                <td className="py-1 pr-2">
+                                {hasEmail && <td className="muted">{u.email || "—"}</td>}
+                                <td className="muted">{joined}</td>
+                                <td>
                                   {oracleTab === "lumen" ? (
-                                    <span className="flex gap-0.5">
+                                    <span className="oracle-plan-group">
                                       {["aspirant", "fellow", "founder"].map((p) => (
                                         <button key={p} onClick={() => setPlan(u.id, p)}
-                                          className={`px-1.5 py-0.5 rounded text-[9px] font-mono transition-colors ${currentPlan === p ? "bg-[var(--gold-dim)] text-[var(--gold)] border border-[var(--gold)]/20" : "text-muted-foreground/30 border border-border/20 hover:text-muted-foreground/50"}`}>
+                                          className={`oracle-plan-btn ${currentPlan === p ? "oracle-plan-btn--active" : ""}`}>
                                           {p}
                                         </button>
                                       ))}
                                     </span>
                                   ) : (
-                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-[var(--gold-dim)] text-[var(--gold)]">{currentPlan}</span>
+                                    <span className="oracle-plan-btn oracle-plan-btn--active">{currentPlan}</span>
                                   )}
                                 </td>
-                                <td className="py-1">
+                                <td>
                                   {!isOracle && (
-                                    <button onClick={() => oracleTab === "lumen" ? deleteUser(u.id, uname) : deleteAppUser(oracleTab, uname, u.email || "")}
-                                      className="text-muted-foreground/20 hover:text-red-400 transition-colors text-sm" title={oracleTab === "lumen" ? "Delete from Lumen + all sub-apps" : `Delete from ${oracleTab} only`}>
-                                      ×
-                                    </button>
+                                    <span className="oracle-actions">
+                                      <button onClick={() => oracleTab === "lumen" ? deleteUser(u.id, uname) : deleteAppUser(oracleTab, uname, u.email || "")}
+                                        className="oracle-del-btn"
+                                        title={oracleTab === "lumen" ? "Delete from Lumen + all sub-apps" : `Delete from ${oracleTab} only`}>
+                                        ×
+                                      </button>
+                                    </span>
                                   )}
                                 </td>
                               </tr>
@@ -276,11 +263,11 @@ export default function ProfilePanel({ open, onClose, onLogout }: Props) {
                           })}
                         </tbody>
                       </table>
-                    </div>
+                    </>
                   )}
                 </>
               ) : null}
-            </div>
+            </>
           )}
         </div>
       </div>

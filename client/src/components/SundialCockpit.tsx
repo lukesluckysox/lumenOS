@@ -284,12 +284,14 @@ export default function SundialCockpit() {
   const sourceNames: Record<string, string> = { parallax: "Parallax", epistemic: "Loop", praxis: "Praxis", axiom: "Axiom" };
 
   return (
-    <div className="mb-6">
-      {/* ─ Compact sundial (collapsed) ─ */}
+    <div id="cockpit-wrapper" className={expanded ? "cockpit-wrapper--expanded" : "cockpit-wrapper--collapsed"}>
+
+      {/* ─ Compact sundial (collapsed view) ─ */}
       {!expanded && (
-        <button onClick={() => setExpanded(true)} className="w-full flex items-center gap-4 py-4 group cursor-pointer">
-          <div className="w-20 h-20 flex-shrink-0">
-            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+        <div className="sundial-compact" tabIndex={0} role="button" aria-label="Expand alignment sundial"
+          onClick={() => setExpanded(true)}>
+          <div className="sundial-compact__svg-wrap">
+            <svg className="sundial-compact__svg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <radialGradient id="sc-orb-glow" cx="50%" cy="50%" r="50%">
                   <stop offset="0%" stopColor="#FFD166" stopOpacity="0.25" />
@@ -308,49 +310,54 @@ export default function SundialCockpit() {
               </defs>
               <g>{sundialRays(mergedState.dimensions)}</g>
               <circle cx="100" cy="100" r="36" stroke="rgba(255,209,102,0.1)" strokeWidth="0.5" fill="none" />
-              <circle cx="100" cy="100" r="50" fill="url(#sc-orb-glow)" />
+              <circle cx="100" cy="100" r="50" fill="url(#sc-orb-glow)" className="sundial-compact__orb-pulse" />
               <circle cx="100" cy="100" r="24" fill="url(#sc-orb-fill)" />
               <circle cx="100" cy="100" r="24" stroke="rgba(255,209,102,0.22)" strokeWidth="0.7" fill="none" />
               <circle cx="100" cy="100" r="15" stroke="rgba(255,209,102,0.1)" strokeWidth="0.4" fill="none" />
             </svg>
           </div>
-          <div className="text-left">
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-serif text-2xl font-light text-[var(--gold)]">{pct}</span>
-              <span className="text-xs text-[var(--gold)]/50">%</span>
-              <span className="text-xs text-muted-foreground/40 ml-1">Alignment</span>
+          <div className="sundial-compact__summary">
+            <div className="sundial-compact__alignment-line">
+              <span className="sundial-compact__pct">
+                <span>{pct}</span>
+                <span className="sundial-compact__pct-sign">%</span>
+              </span>
+              <span className="sundial-compact__label">Alignment</span>
             </div>
-            <div className="text-[10px] font-mono text-muted-foreground/30 mt-0.5">
-              Current: <strong className="text-muted-foreground/50">{Math.round(totalFed)}</strong> / Target: <strong className="text-muted-foreground/50">{Math.round(totalTarget)}</strong>
+            <div className="sundial-compact__tally">
+              Current: <strong>{Math.round(totalFed)}</strong> / Target: <strong>{Math.round(totalTarget)}</strong>
             </div>
           </div>
-        </button>
+        </div>
       )}
 
-      {/* ─ Expanded view ─ */}
+      {/* ─ Expanded solar cockpit ─ */}
       {expanded && (
-        <div className="py-4 space-y-4">
-          {/* Canvas */}
-          <div className="relative max-w-[420px] mx-auto aspect-square">
-            <canvas ref={canvasRef} width={840} height={840} onClick={handleCanvasClick}
-              className="w-full h-full cursor-default" style={{ cursor: "default" }} />
+        <>
+          <div className="solar-cockpit up" aria-label="Alignment cockpit — 9 dimensions">
+            <canvas ref={canvasRef} id="solar-canvas" width={840} height={840} onClick={handleCanvasClick} />
           </div>
 
-          {/* Dimension detail */}
-          <div className="grid grid-cols-3 gap-2">
-            {mergedState.dimensions.map((d) => {
-              const dp = d.target > 0 ? Math.min(100, Math.round((d.fed / d.target) * 100)) : 0;
-              return (
-                <button key={d.name} onClick={() => setActiveDim(activeDim === d.name ? null : d.name)}
-                  className={`text-left p-2 rounded-md border transition-colors ${activeDim === d.name ? "border-[var(--gold)]/30 bg-[var(--gold-dim)]" : "border-border/30 bg-[var(--surface)]/50"}`}>
-                  <div className="text-[10px] font-mono text-muted-foreground/60">{d.label}</div>
-                  <div className="h-1 rounded-full bg-border/30 mt-1 mb-0.5">
-                    <div className="h-full rounded-full bg-[var(--gold)]" style={{ width: `${dp}%` }} />
-                  </div>
-                  <div className="text-[9px] font-mono text-muted-foreground/30">{Math.round(d.fed)} / {Math.round(d.target)} — {dp}%</div>
-                </button>
-              );
-            })}
+          {/* Dimension detail panel */}
+          <div className="sundial-detail" id="sundial-detail">
+            <div className="sundial-detail__grid" id="sundial-detail-grid">
+              {mergedState.dimensions.map((d) => {
+                const dp = d.target > 0 ? Math.min(100, Math.round((d.fed / d.target) * 100)) : 0;
+                return (
+                  <button key={d.name} className={`sundial-detail__item ${activeDim === d.name ? "sundial-detail__item--active" : ""}`}
+                    onClick={() => setActiveDim(activeDim === d.name ? null : d.name)}>
+                    <span className="sundial-detail__name">{d.label}</span>
+                    <span className="sundial-detail__bar">
+                      <span className="sundial-detail__bar-fill" style={{ width: `${dp}%` }} />
+                    </span>
+                    <span className="sundial-detail__vals">
+                      <span>{Math.round(d.fed)} / {Math.round(d.target)}</span>
+                      <strong>{dp}%</strong>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Drilldown */}
@@ -362,93 +369,78 @@ export default function SundialCockpit() {
               ? [{ label: "Integrity", value: bd.integrityFactor || 0, max: 40 }]
               : [{ label: "Parallax", value: bd.parallaxBase, max: 40 }, { label: "Epistemic", value: bd.epistemicBoost, max: 4 }, { label: "Praxis", value: bd.praxisBoost, max: 3 }];
             return (
-              <div className="p-3 rounded-lg border border-border/30 bg-[var(--surface)]/50 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-foreground">{dim.label}</h3>
-                  <button onClick={() => setActiveDim(null)} className="text-muted-foreground/40 hover:text-foreground">&times;</button>
+              <div style={{ padding: "var(--sp-3)", borderRadius: "var(--r-sm)", border: "1px solid rgba(141,153,174,0.15)", background: "rgba(255,209,102,0.03)", margin: "var(--sp-3) auto 0", maxWidth: "480px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--sp-2)" }}>
+                  <h3 style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--text)" }}>{dim.label}</h3>
+                  <button onClick={() => setActiveDim(null)} style={{ color: "var(--muted)", background: "none", border: "none", cursor: "pointer", fontSize: "18px" }}>&times;</button>
                 </div>
                 {bars.map((b) => {
                   const bp = b.max > 0 ? Math.round(Math.min(100, (b.value / b.max) * 100)) : 0;
                   return (
-                    <div key={b.label} className="flex items-center gap-2">
-                      <span className="w-16 text-[10px] font-mono text-muted-foreground/50">{b.label}</span>
-                      <div className="flex-1 h-1.5 rounded-full bg-border/30"><div className="h-full rounded-full bg-[var(--gold)]" style={{ width: `${bp}%` }} /></div>
-                      <span className="w-8 text-right text-[10px] font-mono text-muted-foreground/40">{(Math.round(b.value * 10) / 10)}</span>
+                    <div key={b.label} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "4px" }}>
+                      <span style={{ width: "4rem", fontSize: "10px", fontFamily: "monospace", color: "var(--muted)" }}>{b.label}</span>
+                      <span className="sundial-detail__bar" style={{ flex: 1 }}>
+                        <span className="sundial-detail__bar-fill" style={{ width: `${bp}%` }} />
+                      </span>
+                      <span style={{ width: "2rem", textAlign: "right" as const, fontSize: "10px", fontFamily: "monospace", color: "var(--muted)" }}>{(Math.round(b.value * 10) / 10)}</span>
                     </div>
                   );
                 })}
                 {bd.topContributors?.map((c, i) => (
-                  <p key={i} className="text-[10px] text-muted-foreground/40">{c}</p>
+                  <p key={i} style={{ fontSize: "10px", color: "var(--muted)", marginTop: "4px" }}>{c}</p>
                 ))}
               </div>
             );
           })()}
 
           {/* Sources */}
-          <div className="flex flex-wrap gap-3 justify-center">
+          <div className="cockpit-sources" id="cockpit-sources">
             {Object.entries(sourceNames).map(([k, v]) => (
-              <span key={k} className={`text-[9px] font-mono uppercase tracking-widest flex items-center gap-1.5 ${state.sources[k] ? "text-[var(--gold)]/60" : "text-muted-foreground/20"}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${state.sources[k] ? "bg-[var(--gold)]" : "bg-muted-foreground/20"}`} />
+              <span key={k} className={state.sources[k] ? "src-on" : ""}>
+                <span className="src-dot" />
                 {v}
               </span>
             ))}
           </div>
 
-          {/* Dimension chips */}
-          <div className="flex flex-wrap gap-1.5 justify-center">
-            {mergedState.dimensions.map((d) => (
-              <button key={d.name} onClick={() => setActiveDim(activeDim === d.name ? null : d.name)}
-                className={`px-2 py-0.5 rounded-full text-[10px] font-mono border transition-colors ${activeDim === d.name ? "border-[var(--gold)]/40 text-[var(--gold)] bg-[var(--gold-dim)]" : "border-border/30 text-muted-foreground/50 hover:text-[var(--gold)]"}`}>
-                {d.label} {Math.round(d.fed)}
-              </button>
-            ))}
-          </div>
-
           {/* Settings toggle */}
-          <div className="flex justify-center">
-            <button onClick={() => setSettingsOpen(!settingsOpen)}
-              className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/40 hover:text-[var(--gold)] transition-colors flex items-center gap-1">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                className={`transition-transform ${settingsOpen ? "rotate-180" : ""}`}>
-                <path d="M12 15.5l-6-6h12l-6 6z" fill="currentColor" stroke="none" />
-              </svg>
-              Set Targets
-            </button>
-          </div>
+          <button className="settings-toggle" id="settings-toggle" aria-expanded={settingsOpen}
+            onClick={() => setSettingsOpen(!settingsOpen)}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              style={{ transform: settingsOpen ? "rotate(180deg)" : undefined, transition: "transform 0.2s" }}>
+              <path d="M12 15.5l-6-6h12l-6 6z" fill="currentColor" stroke="none" />
+            </svg>
+            Set Targets
+          </button>
 
           {/* Settings panel */}
-          {settingsOpen && (
-            <div className="p-4 rounded-lg border border-border/30 bg-[var(--surface)]/50 space-y-3">
-              <div className="text-xs text-muted-foreground/50 text-center">
-                Target Total: <strong className="text-foreground">{Math.round(totalTarget)}</strong> / 360
-              </div>
-              <div className="space-y-2">
-                {mergedState.dimensions.map((d) => (
-                  <div key={d.name} className="flex items-center gap-3">
-                    <span className="w-24 text-[10px] font-mono text-muted-foreground/50">{d.label}</span>
-                    <input type="range" min={0} max={40} step={1} value={d.target}
-                      onChange={(e) => setLocalTargets((prev) => ({ ...prev, [d.name]: Number(e.target.value) }))}
-                      className="flex-1 accent-[var(--gold)]" />
-                    <span className="w-12 text-right text-[10px] font-mono text-muted-foreground/40">{Math.round(d.target)}/40</span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-center pt-1">
-                <button
-                  onClick={() => {
-                    const targets: Record<string, number> = {};
-                    mergedState.dimensions.forEach((d) => { targets[d.name] = d.target; });
-                    saveMutation.mutate(targets);
-                  }}
-                  disabled={saveMutation.isPending}
-                  className="px-6 py-1.5 rounded-md bg-[var(--gold)] text-background text-xs font-medium hover:opacity-90 disabled:opacity-40 transition-opacity"
-                >
-                  {saveMutation.isPending ? "Saving..." : saveMutation.isSuccess ? "Saved" : "Save Targets"}
-                </button>
-              </div>
+          <div className={`cockpit-settings ${settingsOpen ? "" : "collapsed"}`} id="cockpit-settings">
+            <div className="settings-total">
+              Target Total: <strong id="target-total">{Math.round(totalTarget)}</strong> / 360
             </div>
-          )}
-        </div>
+            <div className="settings-grid" id="settings-grid">
+              {mergedState.dimensions.map((d) => (
+                <div key={d.name} className="settings-row">
+                  <label>{d.label}</label>
+                  <input type="range" min={0} max={40} step={1} value={d.target}
+                    onChange={(e) => setLocalTargets((prev) => ({ ...prev, [d.name]: Number(e.target.value) }))} />
+                  <span className="val-display">{Math.round(d.target)}<span className="suffix">/40</span></span>
+                </div>
+              ))}
+            </div>
+            <div className="settings-save">
+              <button className="btn-save-targets" id="btn-save"
+                onClick={() => {
+                  const targets: Record<string, number> = {};
+                  mergedState.dimensions.forEach((d) => { targets[d.name] = d.target; });
+                  saveMutation.mutate(targets);
+                }}
+                disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? "Saving..." : saveMutation.isSuccess ? "Saved" : "Save Targets"}
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
