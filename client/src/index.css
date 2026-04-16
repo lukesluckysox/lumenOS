@@ -1543,11 +1543,10 @@ html,body{background:#191b2a;margin:0}
     }
     .gate__inner--shake { animation: gate-shake .4s ease both; }
     .nav__user {
-      display: none; align-items: center; gap: var(--sp-3);
+      display: flex; align-items: center; gap: var(--sp-3);
       font-family: 'Satoshi', sans-serif; font-size: var(--text-xs);
       letter-spacing: .08em; color: var(--muted);
     }
-    .nav__user--visible { display: flex; }
     .nav__username {
       background: none;
       border: none;
@@ -1762,9 +1761,6 @@ html,body{background:#191b2a;margin:0}
        COCKPIT — shared wrapper
     ───────────────────────────────────────────── */
     .cockpit {
-      display: none; /* hidden until authenticated */
-    }
-    .cockpit--visible {
       display: block;
     }
 
