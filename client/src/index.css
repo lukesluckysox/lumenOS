@@ -913,7 +913,11 @@ html,body{background:#191b2a;margin:0}
       max-width: 46ch;
     }
     .card__foot {
-      display: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: var(--sp-3);
     }
     .card__status {
       font-size: var(--text-xs);

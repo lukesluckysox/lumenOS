@@ -15,16 +15,17 @@ export default function ToolCards() {
           <article key={t.idx} className={`card ${t.cls} up ${i > 0 ? `d${i}` : ""}`} role="listitem">
             <p className="card__idx">{t.idx}</p>
             <div className="card__hd">
-              <div className="card__hd-row">
-                <h3 className="card__name">{t.name}</h3>
-                <button onClick={() => ssoNavigate(t.href)} className="card__cta card__cta--live" aria-label={`Enter ${t.name}`}>
-                  Enter
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </button>
-              </div>
+              <h3 className="card__name">{t.name}</h3>
               <span className="card__fn">{t.fn}</span>
             </div>
             <p className="card__desc">{t.desc}</p>
+            <div className="card__foot">
+              <span className="card__status card__status--live">Live</span>
+              <button onClick={() => ssoNavigate(t.href)} className="card__cta card__cta--live" aria-label={`Enter ${t.name}`}>
+                Enter
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
           </article>
         ))}
       </div>
