@@ -44,6 +44,7 @@ function Shell() {
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = useCallback(() => {
     logout();
@@ -80,6 +81,16 @@ function Shell() {
             <a href="#" className="nav__brand" aria-label="Lumen home">
               <span className="nav__name"><LumenLoopSVG />Lumen</span>
             </a>
+
+            {/* Hamburger toggle — mobile only */}
+            <button
+              className="nav__hamburger"
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? "✕" : "☰"}
+            </button>
 
             <ul className="nav__links" role="list">
               <li><a href="#tools" className="nav__link">Tools</a></li>
@@ -132,6 +143,47 @@ function Shell() {
             </div>
 
           </div>
+
+          {/* ═══ Mobile hamburger dropdown ═══ */}
+          {mobileMenuOpen && (
+            <div className="nav__mobile-dropdown" onClick={() => setMobileMenuOpen(false)}>
+              <ul className="nav__mobile-links" role="list">
+                <li><a href="#tools" className="nav__mobile-link">Tools</a></li>
+                <li><a href="#cockpit" className="nav__mobile-link">Overview</a></li>
+                <li><button className="nav__mobile-link" onClick={() => { setAboutOpen(true); setMobileMenuOpen(false); }}>About</button></li>
+              </ul>
+
+              <div className="nav__mobile-palette" role="group" aria-label="Color palette">
+                {PALETTES.map((p) => (
+                  <button
+                    key={p.id}
+                    className={`palette-dot${palette === p.id ? " active" : ""}`}
+                    data-palette={p.id}
+                    style={{ background: p.color }}
+                    aria-label={`${p.label} palette`}
+                    onClick={(e) => { e.stopPropagation(); setPalette(p.id as any); }}
+                  />
+                ))}
+              </div>
+
+              <button className="nav__mobile-theme" onClick={(e) => { e.stopPropagation(); toggleTheme(); }}>
+                {theme === "dark" ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                )}
+                <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+              </button>
+
+              <div className="nav__mobile-status">
+                <PipelineHealth />
+              </div>
+            </div>
+          )}
         </nav>
       </header>
 
