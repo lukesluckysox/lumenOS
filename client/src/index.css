@@ -3099,7 +3099,137 @@ html,body{background:#191b2a;margin:0}
     /* Body padding for bottom nav — always applied */
     body { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 16px)) !important; }
 
-  
+/* ═══════════════════════════════════════════════════════
+   MOBILE NAV ENHANCEMENTS
+   Make top nav and bottom nav bigger, fully visible,
+   and functional on mobile devices.
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ─── TOP NAV ─── */
+  .nav {
+    padding-block: 0.75rem;
+  }
+  .nav__row {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .nav__brand {
+    flex: 0 0 auto;
+  }
+  .nav__name {
+    font-size: 1.1rem;
+  }
+  .nav__right {
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  /* Show nav links on mobile as a compact row */
+  .nav__links {
+    display: flex !important;
+    gap: 0.5rem;
+    order: 10;
+    flex-basis: 100%;
+    justify-content: center;
+    padding-top: 0.25rem;
+  }
+  .nav__link {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  /* Enlarge user controls for touch */
+  .nav__user {
+    gap: 0.35rem;
+  }
+  .nav__username {
+    font-size: 0.8rem;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.25rem;
+  }
+  .nav__signout {
+    font-size: 0.75rem;
+    min-height: 44px;
+    padding: 0.35rem 0.75rem;
+    display: inline-flex;
+    align-items: center;
+  }
+  .btn-ghost {
+    display: inline-flex !important;
+    min-height: 44px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    align-items: center;
+  }
+  /* Palette dots: enlarge touch area without making them huge */
+  .palette-dots {
+    gap: 0.35rem;
+  }
+  .palette-dot {
+    width: 24px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    /* Use padding to create 44px touch target around smaller dot */
+    padding: 10px;
+    box-sizing: content-box;
+  }
+
+  /* ─── Hero: push down below taller mobile nav ─── */
+  .hero {
+    padding-top: calc(clamp(var(--sp-12), 8vw, var(--sp-20)) + 120px) !important;
+  }
+
+  /* ─── BOTTOM NAV (.lumen-bottom-nav) ─── */
+  .lumen-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+  }
+  .lumen-bottom-nav__inner {
+    padding: 0.5rem 0.25rem;
+  }
+  .lumen-bottom-nav__item {
+    min-height: 56px;
+    padding: 0.5rem 0.25rem;
+    gap: 4px;
+  }
+  .lumen-bottom-nav__item svg {
+    width: 26px;
+    height: 26px;
+  }
+  .lumen-bottom-nav__item span {
+    font-size: 12px;
+  }
+
+  /* ─── BOTTOM NAV (.bottom-nav — legacy/alternate) ─── */
+  .bottom-nav__inner {
+    padding: 0.5rem 0.25rem;
+  }
+  .bottom-nav__item {
+    min-height: 60px;
+    padding: 0.5rem 0.5rem;
+    gap: 5px;
+  }
+  .bottom-nav__item svg {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    min-height: 26px !important;
+  }
+  .bottom-nav__label {
+    font-size: 12px;
+  }
+
+  /* ─── Body spacing for larger mobile navs ─── */
+  body {
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 16px)) !important;
+  }
+}
+
 @keyframes lumen-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18);opacity:1}}
 
 /* ═══════════════════════════════════════════════════════
